@@ -32,12 +32,52 @@ export class TmdbController {
   @Get('search') search(
     @Query('query') query: string,
     @Query('page') page?: string,
+    @Query('year') year?: string,
   ) {
     const normalizedQuery = query?.trim();
     if (!normalizedQuery) {
       throw new BadRequestException('Từ khóa tìm kiếm không được để trống');
     }
-    return this.tmdb.search(normalizedQuery, this.page(page));
+    const parsedYear = year ? Number(year) : undefined;
+    if (parsedYear !== undefined && (!Number.isInteger(parsedYear) || parsedYear < 1900 || parsedYear > 2100)) {
+      throw new BadRequestException('Năm phát hành không hợp lệ');
+    }
+    return this.tmdb.search(normalizedQuery, this.page(page), parsedYear);
+  }
+  @Get('discover') discover(
+    @Query('page') page?: string,
+    @Query('genreId') genreId?: string,
+    @Query('year') year?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('minRating') minRating?: string,
+  ) {
+    const allowedSorts = [
+      'popularity.desc',
+      'vote_average.desc',
+      'primary_release_date.desc',
+    ];
+    if (sortBy && !allowedSorts.includes(sortBy)) {
+      throw new BadRequestException('Kiểu sắp xếp không hợp lệ');
+    }
+    const parsedGenre = genreId ? Number(genreId) : undefined;
+    const parsedYear = year ? Number(year) : undefined;
+    const parsedRating = minRating ? Number(minRating) : undefined;
+    if (parsedGenre !== undefined && (!Number.isInteger(parsedGenre) || parsedGenre < 1)) {
+      throw new BadRequestException('Thể loại không hợp lệ');
+    }
+    if (parsedYear !== undefined && (!Number.isInteger(parsedYear) || parsedYear < 1900 || parsedYear > 2100)) {
+      throw new BadRequestException('Năm phát hành không hợp lệ');
+    }
+    if (parsedRating !== undefined && (parsedRating < 0 || parsedRating > 10)) {
+      throw new BadRequestException('Điểm đánh giá phải từ 0 đến 10');
+    }
+    return this.tmdb.discover({
+      page: this.page(page),
+      genreId: parsedGenre,
+      year: parsedYear,
+      sortBy,
+      minRating: parsedRating,
+    });
   }
   @Get(':id') detail(@Param('id', ParseIntPipe) id: number) {
     return this.tmdb.detail(id);

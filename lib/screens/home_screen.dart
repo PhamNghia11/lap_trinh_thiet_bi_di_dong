@@ -9,6 +9,8 @@ import '../widgets/movie_card.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../data/tmdb_repository.dart';
+import '../models/movie_filter.dart';
+import '../widgets/flix_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _bannerIndex = 0;
   final TmdbRepository _repository = TmdbRepository();
   List<Movie> _movies = mockMovies;
+  final Map<String, List<Movie>> _genreMovies = {};
 
   @override
   void initState() {
@@ -30,17 +33,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadMovies() async {
     try {
-      final movies = await _repository.popular();
+      final movies = await _repository.trending();
+      final popular = await _repository.popular();
+      final unique = <String, Movie>{
+        for (final movie in [...movies, ...popular]) movie.id: movie,
+      };
+      final collections = await Future.wait(genreList.map((genre) async {
+        try {
+          final result = await _repository.discover(genreId: movieGenreOptions[genre]);
+          return MapEntry(genre, result);
+        } catch (_) {
+          return MapEntry(genre, const <Movie>[]);
+        }
+      }));
       if (!mounted || movies.isEmpty) return;
-      setState(() => _movies = movies);
+      setState(() {
+        _movies = unique.values.toList();
+        for (final entry in collections) {
+          if (entry.value.isNotEmpty) _genreMovies[entry.key] = entry.value;
+        }
+      });
     } catch (_) {
       // Giữ dữ liệu mẫu để ứng dụng vẫn sử dụng được khi backend đang tắt.
     }
   }
 
   List<Movie> _moviesByGenre(String genre) {
-    final matched = _movies.where((movie) => movie.genres.contains(genre)).toList();
-    return matched.isEmpty ? _movies.take(4).toList() : matched;
+    return _genreMovies[genre] ?? const [];
   }
 
   @override
@@ -52,10 +71,10 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: AppTheme.appBarBg,
         elevation: 0,
-        leading: IconButton(
+        leading: Builder(builder: (context) => IconButton(
           icon: const Icon(Icons.menu, color: AppTheme.textMuted),
-          onPressed: () => Navigator.pushNamed(context, AppRoutes.settings),
-        ),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        )),
         title: const Text('FLIX', style: AppTheme.logoStyle),
         actions: [
           IconButton(
@@ -283,6 +302,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+      drawer: const FlixDrawer(),
       bottomNavigationBar: const FlixBottomNavBar(currentIndex: 0),
     );
   }

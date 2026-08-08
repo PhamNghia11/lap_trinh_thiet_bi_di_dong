@@ -33,8 +33,31 @@ export class TmdbService {
   trending() {
     return this.get('/trending/movie/week');
   }
-  search(query: string, page = 1) {
-    return this.get('/search/movie', { query, page, include_adult: false });
+  search(query: string, page = 1, year?: number) {
+    return this.get('/search/movie', {
+      query,
+      page,
+      include_adult: false,
+      ...(year && { primary_release_year: year }),
+    });
+  }
+  discover(options: {
+    page?: number;
+    genreId?: number;
+    year?: number;
+    sortBy?: string;
+    minRating?: number;
+  }) {
+    return this.get('/discover/movie', {
+      page: options.page ?? 1,
+      include_adult: false,
+      include_video: false,
+      sort_by: options.sortBy ?? 'popularity.desc',
+      ...(options.genreId && { with_genres: options.genreId }),
+      ...(options.year && { primary_release_year: options.year }),
+      ...(options.minRating && { 'vote_average.gte': options.minRating }),
+      'vote_count.gte': 50,
+    });
   }
   detail(id: number) {
     return this.get(`/movie/${id}`, { append_to_response: 'credits,videos' });
