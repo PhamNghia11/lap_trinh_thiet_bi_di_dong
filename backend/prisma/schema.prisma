@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String          @id @default(uuid()) @db.Uuid
+  email        String          @unique
+  passwordHash String
+  fullName     String?
+  avatarUrl    String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  favorites    Favorite[]
+  history      WatchHistory[]
+  reviews      Review[]
+}
+
+model MovieCache {
+  tmdbId    Int      @id
+  payload   Json
+  cachedAt  DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}
+
+model Favorite {
+  userId      String   @db.Uuid
+  tmdbMovieId Int
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, tmdbMovieId])
+  @@index([tmdbMovieId])
+}
+
+model WatchHistory {
+  userId          String   @db.Uuid
+  tmdbMovieId     Int
+  progress        Float    @default(0)
+  watchedSeconds  Int      @default(0)
+  durationSeconds Int?
+  lastWatchedAt   DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, tmdbMovieId])
+  @@index([lastWatchedAt])
+}
+
+model Review {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  tmdbMovieId Int
+  rating      Int
+  comment     String
+  hasSpoiler  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tmdbMovieId])
+  @@index([tmdbMovieId, createdAt])
+}

@@ -23,6 +23,11 @@ flutter run
 ## Cấu trúc Project
 
 ```
+
+## Backend
+
+Backend NestJS nằm trong thư mục `backend/`, sử dụng Prisma và PostgreSQL trên
+Supabase. Xem `backend/README.md` để cấu hình database, TMDB và chạy API.
 lib/
 ├── main.dart              # Entry point
 ├── models/                # Data models (Movie)
