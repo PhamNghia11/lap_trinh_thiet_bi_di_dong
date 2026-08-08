@@ -553,34 +553,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required VoidCallback onTap,
     String? badgeText,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: iconColor),
-      title: Text(title,
-          style: const TextStyle(color: Colors.white, fontSize: 14)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (badgeText != null)
-            Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: Colors.purple.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.purpleAccent, width: 0.6),
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        leading: Icon(icon, color: iconColor),
+        title: Text(title,
+            style: const TextStyle(color: Colors.white, fontSize: 14)),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (badgeText != null)
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.purpleAccent, width: 0.6),
+                ),
+                child: Text(
+                  badgeText,
+                  style: const TextStyle(
+                      color: Colors.purpleAccent,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold),
+                ),
               ),
-              child: Text(
-                badgeText,
-                style: const TextStyle(
-                    color: Colors.purpleAccent,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-          const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
-        ],
+            const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+          ],
+        ),
+        onTap: onTap,
       ),
-      onTap: onTap,
     );
   }
 
