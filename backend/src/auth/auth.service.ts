@@ -6,7 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { ChangePasswordDto, LoginDto, RegisterDto } from './auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -56,5 +56,20 @@ export class AuthService {
         email: user.email,
       }),
     };
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !(await compare(dto.currentPassword, user.passwordHash))) {
+      throw new UnauthorizedException('Mật khẩu hiện tại không đúng');
+    }
+    if (dto.currentPassword === dto.newPassword) {
+      throw new ConflictException('Mật khẩu mới phải khác mật khẩu hiện tại');
+    }
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: await hash(dto.newPassword, 12) },
+    });
+    return { changed: true };
   }
 }

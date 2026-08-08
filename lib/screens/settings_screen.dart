@@ -1,6 +1,10 @@
 // lib/screens/settings_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../core/app_preferences.dart';
+import '../core/app_session.dart';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
 
@@ -12,14 +16,40 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  final _preferences = AppPreferences.instance;
+  final _session = AppSession.instance;
   bool _notifications = true;
-  bool _darkMode = true;
+  final bool _darkMode = true;
   bool _autoPlay = false;
   bool _wifiOnlyDownload = true;
 
   String _cacheSize = '1.2 GB';
 
+  @override
+  void initState() {
+    super.initState();
+    _preferences.addListener(_syncPreferences);
+    _syncPreferences();
+  }
+
+  @override
+  void dispose() {
+    _preferences.removeListener(_syncPreferences);
+    super.dispose();
+  }
+
+  void _syncPreferences() {
+    if (!mounted) return;
+    setState(() {
+      _notifications = _preferences.notifications;
+      _autoPlay = _preferences.autoPlayTrailer;
+      _wifiOnlyDownload = _preferences.wifiOnly;
+    });
+  }
+
   void _clearCache() {
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -40,9 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: AppTheme.primaryButtonStyle(),
             onPressed: () {
               Navigator.pop(context);
-              setState(() {
-                _cacheSize = '0 MB';
-              });
+              setState(() => _cacheSize = '0 MB');
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Đã xóa bộ nhớ đệm thành công!')),
               );
@@ -84,6 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: AppTheme.primaryButtonStyle(),
             onPressed: () {
               Navigator.pop(context);
+              _session.logout();
               Navigator.pushNamedAndRemoveUntil(
                   context, AppRoutes.login, (route) => false);
             },
@@ -91,6 +120,71 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(
                     color: Colors.white, fontWeight: FontWeight.bold)),
           ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _chooseQuality() async {
+    final value = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppTheme.cardBg,
+      builder: (_) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Padding(
+              padding: EdgeInsets.all(20),
+              child: Text('Chất lượng video', style: AppTheme.headingMedium)),
+          for (final quality in [
+            'Tự động',
+            'Tiết kiệm dữ liệu',
+            'HD 720p',
+            'Full HD 1080p'
+          ])
+            ListTile(
+              title: Text(quality, style: const TextStyle(color: Colors.white)),
+              trailing: _preferences.videoQuality == quality
+                  ? const Icon(Icons.check_circle, color: AppTheme.primaryRed)
+                  : null,
+              onTap: () => Navigator.pop(context, quality),
+            ),
+        ]),
+      ),
+    );
+    if (value != null) await _preferences.setVideoQuality(value);
+  }
+
+  void _showDownloads() {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.cardBg,
+        title: const Text('Quản lý dung lượng tải xuống',
+            style: TextStyle(color: Colors.white)),
+        content: const Text('Chưa có nội dung tải xuống.',
+            style: AppTheme.mutedText),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Đóng'))
+        ],
+      ),
+    );
+  }
+
+  void _showLegal() {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.cardBg,
+        title: const Text('Điều khoản & Chính sách bảo mật',
+            style: TextStyle(color: Colors.white)),
+        content: const Text(
+            'FLIX dùng TMDB cho dữ liệu phim. Tài khoản, yêu thích, lịch sử và đánh giá được lưu an toàn trên Supabase.',
+            style: AppTheme.mutedText),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Đóng'))
         ],
       ),
     );
@@ -137,17 +231,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Nguyễn Văn A',
-                        style: TextStyle(
+                      Text(
+                        _session.user?['fullName'] as String? ?? 'Khách FLIX',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
-                        'nguyenvana@gmail.com',
+                      Text(
+                        _session.user?['email'] as String? ?? 'Chưa đăng nhập',
                         style: AppTheme.smallText,
                       ),
                       const SizedBox(height: 4),
@@ -161,7 +255,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               color: AppTheme.accentGold, width: 0.5),
                         ),
                         child: const Text(
-                          'VIP PREMIUM',
+                          'TÀI KHOẢN FLIX',
                           style: TextStyle(
                             color: AppTheme.accentGold,
                             fontSize: 10,
@@ -216,7 +310,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('Tự động phát Trailer',
                 style: TextStyle(color: Colors.white)),
             value: _autoPlay,
-            onChanged: (val) => setState(() => _autoPlay = val),
+            onChanged: (val) => _preferences.setAutoPlayTrailer(val),
           ),
           SwitchListTile(
             activeThumbColor: AppTheme.primaryRed,
@@ -225,28 +319,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('Chỉ tải xuống qua Wi-Fi',
                 style: TextStyle(color: Colors.white)),
             value: _wifiOnlyDownload,
-            onChanged: (val) => setState(() => _wifiOnlyDownload = val),
+            onChanged: (val) => _preferences.setWifiOnly(val),
           ),
           ListTile(
             leading: const Icon(Icons.high_quality_rounded,
                 color: AppTheme.textMuted),
             title: const Text('Chất lượng video',
                 style: TextStyle(color: Colors.white)),
-            subtitle: const Text('Tự động (Full HD 1080p)',
-                style: AppTheme.mutedText),
+            subtitle:
+                Text(_preferences.videoQuality, style: AppTheme.mutedText),
             trailing: const Icon(Icons.chevron_right_rounded,
                 color: AppTheme.textMuted),
-            onTap: () {},
+            onTap: _chooseQuality,
           ),
           ListTile(
             leading: const Icon(Icons.download_for_offline_outlined,
                 color: AppTheme.textMuted),
             title: const Text('Quản lý dung lượng tải xuống',
                 style: TextStyle(color: Colors.white)),
-            subtitle: const Text('Đã dùng 3.4 GB', style: AppTheme.mutedText),
+            subtitle: const Text('Chưa có nội dung tải xuống',
+                style: AppTheme.mutedText),
             trailing: const Icon(Icons.chevron_right_rounded,
                 color: AppTheme.textMuted),
-            onTap: () {},
+            onTap: _showDownloads,
           ),
           ListTile(
             leading: const Icon(Icons.cleaning_services_rounded,
@@ -270,7 +365,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('Giao diện tối (Cinematic Noir)',
                 style: TextStyle(color: Colors.white)),
             value: _darkMode,
-            onChanged: (val) => setState(() => _darkMode = val),
+            onChanged: null,
           ),
           ListTile(
             leading:
@@ -280,7 +375,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: const Text('Tiếng Việt', style: AppTheme.mutedText),
             trailing: const Icon(Icons.chevron_right_rounded,
                 color: AppTheme.textMuted),
-            onTap: () {},
+            onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('FLIX hiện chỉ hỗ trợ Tiếng Việt'))),
           ),
           const Divider(color: Colors.white12, height: 24),
 
@@ -293,7 +390,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('Thông báo phim mới & cập nhật',
                 style: TextStyle(color: Colors.white)),
             value: _notifications,
-            onChanged: (val) => setState(() => _notifications = val),
+            onChanged: (val) => _preferences.setNotifications(val),
           ),
           const Divider(color: Colors.white12, height: 24),
 
@@ -319,7 +416,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(color: Colors.white)),
             trailing: const Icon(Icons.chevron_right_rounded,
                 color: AppTheme.textMuted),
-            onTap: () {},
+            onTap: () async {
+              await Clipboard.setData(const ClipboardData(
+                  text:
+                      'https://github.com/PhamNghia11/lap_trinh_thiet_bi_di_dong'));
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã sao chép liên kết FLIX')));
+              }
+            },
           ),
           ListTile(
             leading: const Icon(Icons.headset_mic_outlined,
@@ -328,7 +433,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(color: Colors.white)),
             trailing: const Icon(Icons.chevron_right_rounded,
                 color: AppTheme.textMuted),
-            onTap: () {},
+            onTap: () => launchUrl(
+                Uri.parse('mailto:support@flix.local?subject=Hỗ trợ FLIX')),
           ),
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined,
@@ -337,7 +443,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(color: Colors.white)),
             trailing: const Icon(Icons.chevron_right_rounded,
                 color: AppTheme.textMuted),
-            onTap: () {},
+            onTap: _showLegal,
           ),
           const ListTile(
             leading:

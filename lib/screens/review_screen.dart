@@ -95,7 +95,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      final tags = _selectedQuickTags.isEmpty ? '' : '\n${_selectedQuickTags.join(', ')}';
+      final tags = _selectedQuickTags.isEmpty
+          ? ''
+          : '\n${_selectedQuickTags.join(', ')}';
       await UserDataRepository().saveReview(
         _targetMovie.id,
         _rating,
@@ -105,7 +107,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
     } catch (error) {
       if (mounted) {
         setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$error')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$error')));
       }
       return;
     }
@@ -113,7 +116,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     if (!mounted) return;
     setState(() => _isSubmitting = false);
 
-    showDialog(
+    await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (context) {
@@ -121,43 +124,45 @@ class _ReviewScreenState extends State<ReviewScreen> {
           backgroundColor: AppTheme.cardBg,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          content: Column(
+          content: const Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Colors.green,
-                  shape: BoxShape.circle,
+              DecoratedBox(
+                decoration:
+                    BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child:
+                      Icon(Icons.check_rounded, color: Colors.white, size: 40),
                 ),
-                child: const Icon(Icons.check_rounded,
-                    color: Colors.white, size: 40),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 'Cảm ơn bạn đã đánh giá!',
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
-              const Text(
+              SizedBox(height: 8),
+              Text(
                 'Đánh giá của bạn đã được đóng góp cho cộng đồng người xem FLIX.',
                 textAlign: TextAlign.center,
                 style: AppTheme.bodyText,
               ),
             ],
           ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Hoàn tất'),
+            ),
+          ],
         );
       },
     );
 
-    await Future.delayed(const Duration(milliseconds: 1500));
-    if (mounted) {
-      Navigator.pop(context); // Tắt dialog
-      Navigator.pop(context); // Quay lại màn hình trước
-    }
+    if (mounted) Navigator.pop(context);
   }
 
   @override

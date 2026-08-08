@@ -13,7 +13,8 @@ class AppSession extends ChangeNotifier {
     await ApiClient.instance.restoreToken();
     if (!isAuthenticated) return;
     try {
-      user = Map<String, dynamic>.from(await ApiClient.instance.get('/me', authenticated: true));
+      user = Map<String, dynamic>.from(
+          await ApiClient.instance.get('/me', authenticated: true));
     } catch (_) {
       await ApiClient.instance.clearToken();
     }
@@ -41,7 +42,8 @@ class AppSession extends ChangeNotifier {
   }
 
   Future<void> refreshProfile() async {
-    user = Map<String, dynamic>.from(await ApiClient.instance.get('/me', authenticated: true));
+    user = Map<String, dynamic>.from(
+        await ApiClient.instance.get('/me', authenticated: true));
     notifyListeners();
   }
 
@@ -49,7 +51,10 @@ class AppSession extends ChangeNotifier {
     user = Map<String, dynamic>.from(await ApiClient.instance.patch(
       '/me',
       authenticated: true,
-      body: {'fullName': fullName, if (avatarUrl != null) 'avatarUrl': avatarUrl},
+      body: {
+        'fullName': fullName,
+        if (avatarUrl != null) 'avatarUrl': avatarUrl
+      },
     ));
     notifyListeners();
   }
@@ -58,5 +63,14 @@ class AppSession extends ChangeNotifier {
     await ApiClient.instance.clearToken();
     user = null;
     notifyListeners();
+  }
+
+  Future<void> changePassword(
+      String currentPassword, String newPassword) async {
+    await ApiClient.instance.patch(
+      '/auth/password',
+      authenticated: true,
+      body: {'currentPassword': currentPassword, 'newPassword': newPassword},
+    );
   }
 }

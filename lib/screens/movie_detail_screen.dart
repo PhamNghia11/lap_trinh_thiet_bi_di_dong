@@ -2,6 +2,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
 import '../models/movie_model.dart';
@@ -12,6 +13,7 @@ import '../widgets/flix_network_image.dart';
 import '../data/tmdb_repository.dart';
 import '../data/user_data_repository.dart';
 import '../core/app_session.dart';
+import '../models/movie_filter.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   final Movie? movie;
@@ -28,11 +30,11 @@ class MovieDetailScreen extends StatefulWidget {
 class _MovieDetailScreenState extends State<MovieDetailScreen> {
   late Movie _currentMovie;
   bool _isFavorite = false;
-  bool _isInPlaylist = false;
   bool _isRatingExpanded = false;
   bool _isDescriptionExpanded = false;
   final _movies = TmdbRepository();
   final _userData = UserDataRepository();
+  List<Movie> _relatedMovies = [];
 
   @override
   void initState() {
@@ -59,15 +61,61 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
               : row['comment'] as String? ?? '',
         );
       }).toList();
+      final genreId =
+          detail.genres.isEmpty ? null : movieGenreOptions[detail.genres.first];
+      final related = genreId == null
+          ? <Movie>[]
+          : (await _movies.discover(genreId: genreId))
+              .where((item) => item.id != detail.id)
+              .take(8)
+              .toList();
       if (mounted) {
         setState(() => _currentMovie = detail.copyWith(
               isFavorite: _isFavorite,
               reviews: reviews,
             ));
+        setState(() => _relatedMovies = related);
       }
     } catch (_) {
       // Giữ dữ liệu hiện tại khi kết nối tạm thời không khả dụng.
     }
+  }
+
+  void _showAllCast() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.cardBg,
+      builder: (_) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: .72,
+        maxChildSize: .92,
+        builder: (context, controller) => ListView.separated(
+          controller: controller,
+          padding: const EdgeInsets.all(20),
+          itemCount: _currentMovie.castList.length,
+          separatorBuilder: (_, __) => const Divider(color: Colors.white10),
+          itemBuilder: (context, index) {
+            final actor = _currentMovie.castList[index];
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundColor: AppTheme.inputBg,
+                backgroundImage: actor.avatarUrl.isEmpty
+                    ? null
+                    : NetworkImage(actor.avatarUrl),
+                child: actor.avatarUrl.isEmpty
+                    ? const Icon(Icons.person, color: AppTheme.textMuted)
+                    : null,
+              ),
+              title:
+                  Text(actor.name, style: const TextStyle(color: Colors.white)),
+              subtitle: Text(actor.role, style: AppTheme.smallText),
+              onTap: () => _showActorInfoBottomSheet(actor),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _toggleFavorite() async {
@@ -83,13 +131,16 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
           : await _userData.removeFavorite(_currentMovie.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next ? 'Đã thêm vào Yêu thích' : 'Đã xóa khỏi Yêu thích')),
+          SnackBar(
+              content: Text(
+                  next ? 'Đã thêm vào Yêu thích' : 'Đã xóa khỏi Yêu thích')),
         );
       }
     } catch (error) {
       if (mounted) {
         setState(() => _isFavorite = !next);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$error')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$error')));
       }
     }
   }
@@ -155,8 +206,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final movie = _currentMovie;
-    final relatedMovies =
-        mockMovies.where((m) => m.id != movie.id).take(6).toList();
+    final relatedMovies = _relatedMovies;
 
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
@@ -210,11 +260,14 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                       child: const Icon(Icons.share,
                           color: Colors.white, size: 20),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
+                      await Clipboard.setData(ClipboardData(
+                        text: 'https://www.themoviedb.org/movie/${movie.id}',
+                      ));
+                      if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                            content:
-                                Text('Đã sao chép liên kết chia sẻ phim!')),
+                            content: Text('Đã sao chép liên kết phim')),
                       );
                     },
                   ),
@@ -389,36 +442,14 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                           ),
                           OutlinedButton.icon(
                             style: AppTheme.outlinedButtonStyle(),
-                            onPressed: () {
-                              setState(() {
-                                _isInPlaylist = !_isInPlaylist;
-                              });
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    _isInPlaylist
-                                        ? 'Đã thêm vào Danh sách của tôi'
-                                        : 'Đã xóa khỏi Danh sách của tôi',
-                                  ),
-                                ),
-                              );
-                            },
-                            icon: Icon(
-                              _isInPlaylist
-                                  ? Icons.bookmark
-                                  : Icons.bookmark_add_outlined,
-                              color: _isInPlaylist
-                                  ? AppTheme.accentGold
-                                  : Colors.white,
-                              size: 18,
-                            ),
-                            label: Text(
-                              _isInPlaylist ? 'Đã lưu' : '+ Danh sách',
-                              style: TextStyle(
-                                  color: _isInPlaylist
-                                      ? AppTheme.accentGold
-                                      : Colors.white),
-                            ),
+                            onPressed: () => Navigator.pushNamed(
+                                context, AppRoutes.favorites),
+                            icon: const Icon(
+                                Icons.collections_bookmark_outlined,
+                                color: Colors.white,
+                                size: 18),
+                            label: const Text('Danh sách của tôi',
+                                style: TextStyle(color: Colors.white)),
                           ),
                         ],
                       ),
@@ -500,7 +531,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                           const Text('Diễn Viên Chính',
                               style: AppTheme.headingMedium),
                           TextButton(
-                            onPressed: () {},
+                            onPressed:
+                                movie.castList.isEmpty ? null : _showAllCast,
                             child: const Text('Xem tất cả',
                                 style: TextStyle(color: AppTheme.primaryRed)),
                           ),
