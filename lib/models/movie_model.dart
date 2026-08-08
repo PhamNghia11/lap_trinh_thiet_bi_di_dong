@@ -99,6 +99,50 @@ class Movie {
   });
 
   /// Trả về chuỗi thể loại nối bằng dấu " • "
+  factory Movie.fromTmdbJson(Map<String, dynamic> json) {
+    final releaseDate = (json['release_date'] as String?) ?? '';
+    final poster = json['poster_path'] as String?;
+    final genreNames = (json['genres'] as List<dynamic>?)
+            ?.whereType<Map<String, dynamic>>()
+            .map((genre) => genre['name'] as String? ?? '')
+            .where((name) => name.isNotEmpty)
+            .toList() ??
+        (json['genre_ids'] as List<dynamic>?)
+            ?.whereType<num>()
+            .map((id) => _tmdbGenreNames[id.toInt()])
+            .whereType<String>()
+            .toList() ??
+        const <String>[];
+    return Movie(
+      id: '${json['id'] ?? ''}',
+      title: (json['title'] as String?) ?? (json['name'] as String?) ?? 'Chưa có tên',
+      genres: genreNames,
+      year: int.tryParse(releaseDate.split('-').first) ?? 0,
+      rating: (json['vote_average'] as num?)?.toDouble() ?? 0,
+      ratingCount: (json['vote_count'] as num?)?.toInt() ?? 0,
+      duration: '${json['runtime'] ?? 0} phút',
+      description: (json['overview'] as String?) ?? 'Chưa có mô tả.',
+      imageUrl: poster == null ? '' : 'https://image.tmdb.org/t/p/w500$poster',
+      releaseDate: releaseDate,
+    );
+  }
+
+  static const Map<int, String> _tmdbGenreNames = {
+    28: 'Hành Động',
+    12: 'Phiêu Lưu',
+    16: 'Hoạt Hình',
+    35: 'Hài Hước',
+    80: 'Tội Phạm',
+    18: 'Chính Kịch',
+    14: 'Kỳ Ảo',
+    27: 'Kinh Dị',
+    9648: 'Bí Ẩn',
+    10749: 'Tình Cảm',
+    878: 'Viễn Tưởng',
+    53: 'Giật Gân',
+    10752: 'Chiến Tranh',
+  };
+
   String get genreText => genres.join(' • ');
 
   /// Trả về chuỗi thông tin tóm tắt: "2024 • 2h 46m"

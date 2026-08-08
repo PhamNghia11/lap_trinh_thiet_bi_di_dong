@@ -8,6 +8,7 @@ import '../data/mock_data.dart';
 import '../widgets/movie_card.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../data/tmdb_repository.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,10 +19,33 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _bannerIndex = 0;
+  final TmdbRepository _repository = TmdbRepository();
+  List<Movie> _movies = mockMovies;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMovies();
+  }
+
+  Future<void> _loadMovies() async {
+    try {
+      final movies = await _repository.popular();
+      if (!mounted || movies.isEmpty) return;
+      setState(() => _movies = movies);
+    } catch (_) {
+      // Giữ dữ liệu mẫu để ứng dụng vẫn sử dụng được khi backend đang tắt.
+    }
+  }
+
+  List<Movie> _moviesByGenre(String genre) {
+    final matched = _movies.where((movie) => movie.genres.contains(genre)).toList();
+    return matched.isEmpty ? _movies.take(4).toList() : matched;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final List<Movie> featuredMovies = bannerMovies;
+    final List<Movie> featuredMovies = _movies.take(4).toList();
 
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
@@ -213,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // Các hàng phim theo từng thể loại
             ...genreList.map((genre) {
-              final movies = getMoviesByGenre(genre);
+              final movies = _moviesByGenre(genre);
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
