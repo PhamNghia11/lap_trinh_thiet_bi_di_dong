@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
+import '../data/mock_data.dart';
+import '../widgets/flix_network_image.dart';
 
 class MovieListScreen extends StatelessWidget {
   const MovieListScreen({super.key});
@@ -17,14 +19,17 @@ class MovieListScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: AppTheme.primaryRed),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Danh Sách Phim Nổi Bật', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Danh Sách Phim Nổi Bật',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: 10,
+        itemCount: mockMovies.length,
         itemBuilder: (context, index) {
+          final movie = mockMovies[index];
           return GestureDetector(
-            onTap: () => Navigator.pushNamed(context, AppRoutes.movieDetail),
+            onTap: () => Navigator.pushNamed(context, AppRoutes.movieDetail,
+                arguments: movie),
             child: Container(
               margin: const EdgeInsets.only(bottom: 14),
               padding: const EdgeInsets.all(12),
@@ -37,22 +42,34 @@ class MovieListScreen extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    child: Image.network('https://picsum.photos/id/${1050 + index}/120/180', width: 80, height: 110, fit: BoxFit.cover),
+                    child: FlixNetworkImage(movie.imageUrl,
+                        width: 80, height: 110, fit: BoxFit.cover),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Phim Bom Tấn ${index + 1}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text(movie.title,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16)),
                         const SizedBox(height: 6),
-                        const Text('2024 • Hành Động, Viễn Tưởng', style: TextStyle(color: AppTheme.textMuted, fontSize: 13)),
+                        Text('${movie.year} • ${movie.genreText}',
+                            style: const TextStyle(
+                                color: AppTheme.textMuted, fontSize: 13)),
                         const SizedBox(height: 10),
-                        const Row(
+                        Row(
                           children: [
-                            Icon(Icons.star, color: AppTheme.accentGold, size: 16),
-                            SizedBox(width: 4),
-                            Text('4.8 / 5', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                            const Icon(Icons.star,
+                                color: AppTheme.accentGold, size: 16),
+                            const SizedBox(width: 4),
+                            Text('${movie.rating} / 5',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13)),
                           ],
                         )
                       ],

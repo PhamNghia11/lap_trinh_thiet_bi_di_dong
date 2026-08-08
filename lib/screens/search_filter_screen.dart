@@ -23,7 +23,8 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Bộ Lọc Phim', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Bộ Lọc Phim',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppTheme.primaryRed),
           onPressed: () => Navigator.pop(context),
@@ -46,7 +47,8 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                   selected: selected,
                   selectedColor: AppTheme.primaryRed,
                   backgroundColor: AppTheme.cardBg,
-                  labelStyle: TextStyle(color: selected ? Colors.white : AppTheme.textLight),
+                  labelStyle: TextStyle(
+                      color: selected ? Colors.white : AppTheme.textLight),
                   onSelected: (val) {
                     setState(() => _selectedGenre = genre);
                   },
@@ -66,7 +68,8 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                   selected: selected,
                   selectedColor: AppTheme.primaryRed,
                   backgroundColor: AppTheme.cardBg,
-                  labelStyle: TextStyle(color: selected ? Colors.white : AppTheme.textLight),
+                  labelStyle: TextStyle(
+                      color: selected ? Colors.white : AppTheme.textLight),
                   onSelected: (val) {
                     setState(() => _selectedYear = year);
                   },
@@ -86,7 +89,8 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                   selected: selected,
                   selectedColor: AppTheme.primaryRed,
                   backgroundColor: AppTheme.cardBg,
-                  labelStyle: TextStyle(color: selected ? Colors.white : AppTheme.textLight),
+                  labelStyle: TextStyle(
+                      color: selected ? Colors.white : AppTheme.textLight),
                   onSelected: (val) {
                     setState(() => _selectedSort = sort);
                   },

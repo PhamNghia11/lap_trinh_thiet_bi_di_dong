@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../models/movie_model.dart';
 import '../data/mock_data.dart';
+import '../widgets/flix_network_image.dart';
 
 class ReviewScreen extends StatefulWidget {
   final Movie? movie;
@@ -96,7 +97,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: AppTheme.cardBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -106,12 +108,16 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   color: Colors.green,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_rounded, color: Colors.white, size: 40),
+                child: const Icon(Icons.check_rounded,
+                    color: Colors.white, size: 40),
               ),
               const SizedBox(height: 16),
               const Text(
                 'Cảm ơn bạn đã đánh giá!',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -148,7 +154,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
           icon: const Icon(Icons.arrow_back, color: AppTheme.primaryRed),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Viết Đánh Giá Phim', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Viết Đánh Giá Phim',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -167,7 +174,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    child: Image.network(
+                    child: FlixNetworkImage(
                       movie.imageUrl,
                       width: 55,
                       height: 75,
@@ -181,7 +188,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       children: [
                         Text(
                           movie.title,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -195,11 +205,15 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            const Icon(Icons.star_rounded, color: AppTheme.accentGold, size: 16),
+                            const Icon(Icons.star_rounded,
+                                color: AppTheme.accentGold, size: 16),
                             const SizedBox(width: 4),
                             Text(
                               movie.ratingText,
-                              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -241,8 +255,12 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 4),
                             child: Icon(
-                              isSelected ? Icons.star_rounded : Icons.star_border_rounded,
-                              color: isSelected ? AppTheme.accentGold : AppTheme.textMuted,
+                              isSelected
+                                  ? Icons.star_rounded
+                                  : Icons.star_border_rounded,
+                              color: isSelected
+                                  ? AppTheme.accentGold
+                                  : AppTheme.textMuted,
                               size: 40,
                             ),
                           ),
@@ -259,7 +277,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       Text(
                         _getRatingLabel(_rating),
                         style: TextStyle(
-                          color: _rating > 0 ? AppTheme.accentGold : AppTheme.textMuted,
+                          color: _rating > 0
+                              ? AppTheme.accentGold
+                              : AppTheme.textMuted,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
@@ -268,7 +288,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         const SizedBox(width: 8),
                         Text(
                           '($_rating.0 / 5)',
-                          style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
+                          style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500),
                         ),
                       ],
                     ],
@@ -291,7 +314,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   selected: selected,
                   selectedColor: AppTheme.primaryRed,
                   backgroundColor: AppTheme.cardBg,
-                  side: BorderSide(color: selected ? AppTheme.primaryRed : Colors.white12),
+                  side: BorderSide(
+                      color: selected ? AppTheme.primaryRed : Colors.white12),
                   labelStyle: TextStyle(
                     color: selected ? Colors.white : AppTheme.textLight,
                     fontSize: 12,
@@ -311,7 +335,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 Text(
                   '$textLength / 500',
                   style: TextStyle(
-                    color: textLength > 450 ? AppTheme.primaryRed : AppTheme.textMuted,
+                    color: textLength > 450
+                        ? AppTheme.primaryRed
+                        : AppTheme.textMuted,
                     fontSize: 12,
                   ),
                 ),
@@ -322,11 +348,17 @@ class _ReviewScreenState extends State<ReviewScreen> {
               controller: _reviewController,
               maxLines: 5,
               maxLength: 500,
-              buildCounter: (context, {required currentLength, required isFocused, maxLength}) => const SizedBox.shrink(),
+              buildCounter: (context,
+                      {required currentLength,
+                      required isFocused,
+                      maxLength}) =>
+                  const SizedBox.shrink(),
               style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
-                hintText: 'Chia sẻ cảm nghĩ của bạn về diễn xuất, kịch bản, âm nhạc...',
-                hintStyle: const TextStyle(color: Color(0x80E9BCB6), fontSize: 13),
+                hintText:
+                    'Chia sẻ cảm nghĩ của bạn về diễn xuất, kịch bản, âm nhạc...',
+                hintStyle:
+                    const TextStyle(color: Color(0x80E9BCB6), fontSize: 13),
                 filled: true,
                 fillColor: AppTheme.cardBg,
                 border: OutlineInputBorder(
@@ -335,7 +367,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                  borderSide: const BorderSide(color: AppTheme.primaryRed, width: 1.5),
+                  borderSide:
+                      const BorderSide(color: AppTheme.primaryRed, width: 1.5),
                 ),
               ),
             ),
@@ -345,25 +378,37 @@ class _ReviewScreenState extends State<ReviewScreen> {
             Row(
               children: [
                 OutlinedButton.icon(
-                  style: AppTheme.outlinedButtonStyle(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+                  style: AppTheme.outlinedButtonStyle(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8)),
                   onPressed: () {
                     setState(() {
                       _hasAttachedImage = !_hasAttachedImage;
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(_hasAttachedImage ? 'Đã đính kèm ảnh minh họa' : 'Đã hủy đính kèm ảnh'),
+                        content: Text(_hasAttachedImage
+                            ? 'Đã đính kèm ảnh minh họa'
+                            : 'Đã hủy đính kèm ảnh'),
                       ),
                     );
                   },
                   icon: Icon(
-                    _hasAttachedImage ? Icons.image_rounded : Icons.add_a_photo_outlined,
-                    color: _hasAttachedImage ? AppTheme.accentGold : AppTheme.textMuted,
+                    _hasAttachedImage
+                        ? Icons.image_rounded
+                        : Icons.add_a_photo_outlined,
+                    color: _hasAttachedImage
+                        ? AppTheme.accentGold
+                        : AppTheme.textMuted,
                     size: 18,
                   ),
                   label: Text(
                     _hasAttachedImage ? 'Đã chọn ảnh' : 'Đính kèm ảnh',
-                    style: TextStyle(color: _hasAttachedImage ? AppTheme.accentGold : AppTheme.textMuted, fontSize: 12),
+                    style: TextStyle(
+                        color: _hasAttachedImage
+                            ? AppTheme.accentGold
+                            : AppTheme.textMuted,
+                        fontSize: 12),
                   ),
                 ),
                 const Spacer(),
@@ -378,7 +423,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         });
                       },
                     ),
-                    const Text('Tiết lộ nội dung (Spoiler)', style: TextStyle(color: AppTheme.textMuted, fontSize: 12)),
+                    const Text('Tiết lộ nội dung (Spoiler)',
+                        style:
+                            TextStyle(color: AppTheme.textMuted, fontSize: 12)),
                   ],
                 ),
               ],
@@ -391,8 +438,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
               height: 50,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isSubmitEnabled ? AppTheme.primaryRed : Colors.white12,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLg)),
+                  backgroundColor:
+                      isSubmitEnabled ? AppTheme.primaryRed : Colors.white12,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusLg)),
                   elevation: isSubmitEnabled ? 6 : 0,
                 ),
                 onPressed: isSubmitEnabled ? _submitReview : null,
@@ -402,7 +451,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         height: 24,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
                     : Text(
@@ -410,7 +460,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isSubmitEnabled ? Colors.white : Colors.white38,
+                          color:
+                              isSubmitEnabled ? Colors.white : Colors.white38,
                         ),
                       ),
               ),
@@ -418,7 +469,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
             const SizedBox(height: 36),
 
             // ─── Đánh Giá Từ Người Dùng Khác (Review Mẫu) ───────────────
-            const Text('Đánh giá từ người xem khác', style: AppTheme.headingSmall),
+            const Text('Đánh giá từ người xem khác',
+                style: AppTheme.headingSmall),
             const SizedBox(height: 12),
             Column(
               children: movie.reviews.map((rev) {
@@ -443,16 +495,23 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           Expanded(
                             child: Text(
                               rev.userName,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13),
                             ),
                           ),
                           Row(
                             children: [
-                              const Icon(Icons.star_rounded, color: AppTheme.accentGold, size: 16),
+                              const Icon(Icons.star_rounded,
+                                  color: AppTheme.accentGold, size: 16),
                               const SizedBox(width: 2),
                               Text(
                                 '${rev.rating}',
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12),
                               ),
                             ],
                           ),

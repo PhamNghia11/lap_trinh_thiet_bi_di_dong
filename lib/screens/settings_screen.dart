@@ -24,7 +24,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.cardBg,
-        title: const Text('Xóa bộ nhớ đệm', style: TextStyle(color: Colors.white)),
+        title:
+            const Text('Xóa bộ nhớ đệm', style: TextStyle(color: Colors.white)),
         content: Text(
           'Bạn có chắc chắn muốn xóa bộ nhớ đệm ($_cacheSize) không?',
           style: const TextStyle(color: AppTheme.textMuted),
@@ -32,7 +33,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
+            child:
+                const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
           ),
           ElevatedButton(
             style: AppTheme.primaryButtonStyle(),
@@ -45,7 +47,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SnackBar(content: Text('Đã xóa bộ nhớ đệm thành công!')),
               );
             },
-            child: const Text('Xóa ngay', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Xóa ngay',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -62,7 +66,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Icon(Icons.logout_rounded, color: AppTheme.primaryRed),
             SizedBox(width: 10),
-            Text('Đăng Xuất', style: TextStyle(color: Colors.white, fontSize: 18)),
+            Text('Đăng Xuất',
+                style: TextStyle(color: Colors.white, fontSize: 18)),
           ],
         ),
         content: const Text(
@@ -72,15 +77,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
+            child:
+                const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
           ),
           ElevatedButton(
             style: AppTheme.primaryButtonStyle(),
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (route) => false);
+              Navigator.pushNamedAndRemoveUntil(
+                  context, AppRoutes.login, (route) => false);
             },
-            child: const Text('Đăng xuất', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Đăng xuất',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -98,7 +107,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: const Icon(Icons.arrow_back, color: AppTheme.primaryRed),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Cài Đặt', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Cài Đặt',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -111,14 +121,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
               border: Border.all(color: Colors.white10),
               boxShadow: const [
-                BoxShadow(color: Colors.black38, blurRadius: 6, offset: Offset(0, 3)),
+                BoxShadow(
+                    color: Colors.black38, blurRadius: 6, offset: Offset(0, 3)),
               ],
             ),
             child: Row(
               children: [
                 const CircleAvatar(
                   radius: 28,
-                  backgroundImage: NetworkImage('https://picsum.photos/id/1005/200/200'),
+                  backgroundImage:
+                      NetworkImage('https://picsum.photos/id/1005/200/200'),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -140,11 +152,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: AppTheme.accentGold.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: AppTheme.accentGold, width: 0.5),
+                          border: Border.all(
+                              color: AppTheme.accentGold, width: 0.5),
                         ),
                         child: const Text(
                           'VIP PREMIUM',
@@ -159,8 +173,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
-                  child: const Text('Sửa', style: TextStyle(color: AppTheme.primaryRed, fontWeight: FontWeight.bold)),
+                  onPressed: () =>
+                      Navigator.pushNamed(context, AppRoutes.profile),
+                  child: const Text('Sửa',
+                      style: TextStyle(
+                          color: AppTheme.primaryRed,
+                          fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -170,15 +188,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // ─── Nhóm 1: Tài khoản & Bảo mật ──────────────────────────
           _buildSectionHeader('TÀI KHOẢN & BẢO MẬT'),
           ListTile(
-            leading: const Icon(Icons.person_outline_rounded, color: AppTheme.textMuted),
-            title: const Text('Thông tin cá nhân', style: TextStyle(color: Colors.white)),
-            trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+            leading: const Icon(Icons.person_outline_rounded,
+                color: AppTheme.textMuted),
+            title: const Text('Thông tin cá nhân',
+                style: TextStyle(color: Colors.white)),
+            trailing: const Icon(Icons.chevron_right_rounded,
+                color: AppTheme.textMuted),
             onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
           ),
           ListTile(
-            leading: const Icon(Icons.lock_outline_rounded, color: AppTheme.textMuted),
-            title: const Text('Đổi mật khẩu', style: TextStyle(color: Colors.white)),
-            trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+            leading: const Icon(Icons.lock_outline_rounded,
+                color: AppTheme.textMuted),
+            title: const Text('Đổi mật khẩu',
+                style: TextStyle(color: Colors.white)),
+            trailing: const Icon(Icons.chevron_right_rounded,
+                color: AppTheme.textMuted),
             onTap: () => Navigator.pushNamed(context, AppRoutes.forgotPassword),
           ),
           const Divider(color: Colors.white12, height: 24),
@@ -187,37 +211,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('PHÁT VIDEO & TẢI XUỐNG'),
           SwitchListTile(
             activeThumbColor: AppTheme.primaryRed,
-            secondary: const Icon(Icons.play_circle_outline_rounded, color: AppTheme.textMuted),
-            title: const Text('Tự động phát Trailer', style: TextStyle(color: Colors.white)),
+            secondary: const Icon(Icons.play_circle_outline_rounded,
+                color: AppTheme.textMuted),
+            title: const Text('Tự động phát Trailer',
+                style: TextStyle(color: Colors.white)),
             value: _autoPlay,
             onChanged: (val) => setState(() => _autoPlay = val),
           ),
           SwitchListTile(
             activeThumbColor: AppTheme.primaryRed,
-            secondary: const Icon(Icons.wifi_rounded, color: AppTheme.textMuted),
-            title: const Text('Chỉ tải xuống qua Wi-Fi', style: TextStyle(color: Colors.white)),
+            secondary:
+                const Icon(Icons.wifi_rounded, color: AppTheme.textMuted),
+            title: const Text('Chỉ tải xuống qua Wi-Fi',
+                style: TextStyle(color: Colors.white)),
             value: _wifiOnlyDownload,
             onChanged: (val) => setState(() => _wifiOnlyDownload = val),
           ),
           ListTile(
-            leading: const Icon(Icons.high_quality_rounded, color: AppTheme.textMuted),
-            title: const Text('Chất lượng video', style: TextStyle(color: Colors.white)),
-            subtitle: const Text('Tự động (Full HD 1080p)', style: AppTheme.mutedText),
-            trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+            leading: const Icon(Icons.high_quality_rounded,
+                color: AppTheme.textMuted),
+            title: const Text('Chất lượng video',
+                style: TextStyle(color: Colors.white)),
+            subtitle: const Text('Tự động (Full HD 1080p)',
+                style: AppTheme.mutedText),
+            trailing: const Icon(Icons.chevron_right_rounded,
+                color: AppTheme.textMuted),
             onTap: () {},
           ),
           ListTile(
-            leading: const Icon(Icons.download_for_offline_outlined, color: AppTheme.textMuted),
-            title: const Text('Quản lý dung lượng tải xuống', style: TextStyle(color: Colors.white)),
+            leading: const Icon(Icons.download_for_offline_outlined,
+                color: AppTheme.textMuted),
+            title: const Text('Quản lý dung lượng tải xuống',
+                style: TextStyle(color: Colors.white)),
             subtitle: const Text('Đã dùng 3.4 GB', style: AppTheme.mutedText),
-            trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+            trailing: const Icon(Icons.chevron_right_rounded,
+                color: AppTheme.textMuted),
             onTap: () {},
           ),
           ListTile(
-            leading: const Icon(Icons.cleaning_services_rounded, color: AppTheme.textMuted),
-            title: const Text('Xóa bộ nhớ đệm', style: TextStyle(color: Colors.white)),
-            subtitle: Text('Dung lượng đệm: $_cacheSize', style: AppTheme.mutedText),
-            trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+            leading: const Icon(Icons.cleaning_services_rounded,
+                color: AppTheme.textMuted),
+            title: const Text('Xóa bộ nhớ đệm',
+                style: TextStyle(color: Colors.white)),
+            subtitle:
+                Text('Dung lượng đệm: $_cacheSize', style: AppTheme.mutedText),
+            trailing: const Icon(Icons.chevron_right_rounded,
+                color: AppTheme.textMuted),
             onTap: _clearCache,
           ),
           const Divider(color: Colors.white12, height: 24),
@@ -226,16 +265,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('GIAO DIỆN & NGÔN NGỮ'),
           SwitchListTile(
             activeThumbColor: AppTheme.primaryRed,
-            secondary: const Icon(Icons.dark_mode_outlined, color: AppTheme.textMuted),
-            title: const Text('Giao diện tối (Cinematic Noir)', style: TextStyle(color: Colors.white)),
+            secondary:
+                const Icon(Icons.dark_mode_outlined, color: AppTheme.textMuted),
+            title: const Text('Giao diện tối (Cinematic Noir)',
+                style: TextStyle(color: Colors.white)),
             value: _darkMode,
             onChanged: (val) => setState(() => _darkMode = val),
           ),
           ListTile(
-            leading: const Icon(Icons.language_rounded, color: AppTheme.textMuted),
-            title: const Text('Ngôn ngữ ứng dụng', style: TextStyle(color: Colors.white)),
+            leading:
+                const Icon(Icons.language_rounded, color: AppTheme.textMuted),
+            title: const Text('Ngôn ngữ ứng dụng',
+                style: TextStyle(color: Colors.white)),
             subtitle: const Text('Tiếng Việt', style: AppTheme.mutedText),
-            trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+            trailing: const Icon(Icons.chevron_right_rounded,
+                color: AppTheme.textMuted),
             onTap: () {},
           ),
           const Divider(color: Colors.white12, height: 24),
@@ -244,8 +288,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('THÔNG BÁO'),
           SwitchListTile(
             activeThumbColor: AppTheme.primaryRed,
-            secondary: const Icon(Icons.notifications_none_rounded, color: AppTheme.textMuted),
-            title: const Text('Thông báo phim mới & cập nhật', style: TextStyle(color: Colors.white)),
+            secondary: const Icon(Icons.notifications_none_rounded,
+                color: AppTheme.textMuted),
+            title: const Text('Thông báo phim mới & cập nhật',
+                style: TextStyle(color: Colors.white)),
             value: _notifications,
             onChanged: (val) => setState(() => _notifications = val),
           ),
@@ -254,37 +300,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // ─── Nhóm 5: Hỗ trợ & Về ứng dụng ─────────────────────────
           _buildSectionHeader('VỀ ỨNG DỤNG'),
           ListTile(
-            leading: const Icon(Icons.star_rate_rounded, color: AppTheme.accentGold),
-            title: const Text('Đánh giá ứng dụng', style: TextStyle(color: Colors.white)),
-            trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+            leading:
+                const Icon(Icons.star_rate_rounded, color: AppTheme.accentGold),
+            title: const Text('Đánh giá ứng dụng',
+                style: TextStyle(color: Colors.white)),
+            trailing: const Icon(Icons.chevron_right_rounded,
+                color: AppTheme.textMuted),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Cảm ơn bạn đã đánh giá 5 sao cho FLIX!')),
+                const SnackBar(
+                    content: Text('Cảm ơn bạn đã đánh giá 5 sao cho FLIX!')),
               );
             },
           ),
           ListTile(
             leading: const Icon(Icons.share_rounded, color: AppTheme.textMuted),
-            title: const Text('Chia sẻ ứng dụng', style: TextStyle(color: Colors.white)),
-            trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+            title: const Text('Chia sẻ ứng dụng',
+                style: TextStyle(color: Colors.white)),
+            trailing: const Icon(Icons.chevron_right_rounded,
+                color: AppTheme.textMuted),
             onTap: () {},
           ),
           ListTile(
-            leading: const Icon(Icons.headset_mic_outlined, color: AppTheme.textMuted),
-            title: const Text('Liên hệ hỗ trợ', style: TextStyle(color: Colors.white)),
-            trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+            leading: const Icon(Icons.headset_mic_outlined,
+                color: AppTheme.textMuted),
+            title: const Text('Liên hệ hỗ trợ',
+                style: TextStyle(color: Colors.white)),
+            trailing: const Icon(Icons.chevron_right_rounded,
+                color: AppTheme.textMuted),
             onTap: () {},
           ),
           ListTile(
-            leading: const Icon(Icons.privacy_tip_outlined, color: AppTheme.textMuted),
-            title: const Text('Điều khoản & Chính sách bảo mật', style: TextStyle(color: Colors.white)),
-            trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+            leading: const Icon(Icons.privacy_tip_outlined,
+                color: AppTheme.textMuted),
+            title: const Text('Điều khoản & Chính sách bảo mật',
+                style: TextStyle(color: Colors.white)),
+            trailing: const Icon(Icons.chevron_right_rounded,
+                color: AppTheme.textMuted),
             onTap: () {},
           ),
           const ListTile(
-            leading: Icon(Icons.info_outline_rounded, color: AppTheme.textMuted),
-            title: Text('Phiên bản ứng dụng', style: TextStyle(color: Colors.white)),
-            subtitle: Text('FLIX v1.2.0 (Build 2026)', style: AppTheme.mutedText),
+            leading:
+                Icon(Icons.info_outline_rounded, color: AppTheme.textMuted),
+            title: Text('Phiên bản ứng dụng',
+                style: TextStyle(color: Colors.white)),
+            subtitle:
+                Text('FLIX v1.2.0 (Build 2026)', style: AppTheme.mutedText),
           ),
           const SizedBox(height: 28),
 
@@ -295,13 +356,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppTheme.primaryRed, width: 1.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: _confirmLogout,
-              icon: const Icon(Icons.logout_rounded, color: AppTheme.primaryRed),
+              icon:
+                  const Icon(Icons.logout_rounded, color: AppTheme.primaryRed),
               label: const Text(
                 'Đăng Xuất Tài Khoản',
-                style: TextStyle(color: AppTheme.primaryRed, fontWeight: FontWeight.bold, fontSize: 15),
+                style: TextStyle(
+                    color: AppTheme.primaryRed,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15),
               ),
             ),
           ),

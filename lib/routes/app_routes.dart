@@ -18,6 +18,7 @@ import '../screens/favorites_screen.dart';
 import '../screens/history_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/settings_screen.dart';
+import '../models/movie_model.dart';
 
 /// Lớp quản lý toàn bộ route/điều hướng của ứng dụng.
 class AppRoutes {
@@ -52,14 +53,41 @@ class AppRoutes {
         home: (context) => const HomeScreen(),
         search: (context) => const SearchScreen(),
         searchFilter: (context) => const SearchFilterScreen(),
-        genreDetail: (context) => const GenreDetailScreen(),
         movieList: (context) => const MovieListScreen(),
-        movieDetail: (context) => const MovieDetailScreen(),
-        trailer: (context) => const TrailerScreen(),
-        review: (context) => const ReviewScreen(),
         favorites: (context) => const FavoritesScreen(),
         history: (context) => const HistoryScreen(),
         profile: (context) => const ProfileScreen(),
         settings: (context) => const SettingsScreen(),
       };
+
+  static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case movieDetail:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) =>
+              MovieDetailScreen(movie: settings.arguments as Movie?),
+        );
+      case trailer:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => TrailerScreen(movie: settings.arguments as Movie?),
+        );
+      case review:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => ReviewScreen(movie: settings.arguments as Movie?),
+        );
+      case genreDetail:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => GenreDetailScreen(
+            genreTitle: settings.arguments is String
+                ? settings.arguments! as String
+                : 'Phim Hành Động',
+          ),
+        );
+    }
+    return null;
+  }
 }

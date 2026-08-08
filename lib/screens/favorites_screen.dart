@@ -6,6 +6,7 @@ import '../routes/app_routes.dart';
 import '../models/movie_model.dart';
 import '../data/mock_data.dart';
 import '../widgets/movie_card.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -44,7 +45,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     // Lọc theo từ khóa tìm kiếm
     if (_searchQuery.isNotEmpty) {
       list = list
-          .where((m) => m.title.toLowerCase().contains(_searchQuery.toLowerCase()))
+          .where(
+              (m) => m.title.toLowerCase().contains(_searchQuery.toLowerCase()))
           .toList();
     }
 
@@ -83,7 +85,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.cardBg,
-        title: const Text('Xác nhận xóa', style: TextStyle(color: Colors.white)),
+        title:
+            const Text('Xác nhận xóa', style: TextStyle(color: Colors.white)),
         content: Text(
           'Bạn có chắc chắn muốn xóa ${_selectedIds.length} phim đã chọn khỏi danh sách yêu thích?',
           style: const TextStyle(color: AppTheme.textMuted),
@@ -91,7 +94,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
+            child:
+                const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
           ),
           ElevatedButton(
             style: AppTheme.primaryButtonStyle(),
@@ -103,10 +107,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 _isMultiSelectMode = false;
               });
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Đã xóa phim khỏi danh sách yêu thích!')),
+                const SnackBar(
+                    content: Text('Đã xóa phim khỏi danh sách yêu thích!')),
               );
             },
-            child: const Text('Xóa', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Xóa',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -147,7 +154,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           _isMultiSelectMode
               ? 'Đã chọn ${_selectedIds.length}'
               : 'Phim Yêu Thích',
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
           if (_isMultiSelectMode) ...[
@@ -161,7 +169,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.primaryRed),
+              icon: const Icon(Icons.delete_outline_rounded,
+                  color: AppTheme.primaryRed),
               tooltip: 'Xóa mục đã chọn',
               onPressed: _selectedIds.isEmpty ? null : _deleteSelectedItems,
             ),
@@ -176,7 +185,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             ),
           ] else if (!isEmpty) ...[
             IconButton(
-              icon: const Icon(Icons.checklist_rtl_rounded, color: Colors.white),
+              icon:
+                  const Icon(Icons.checklist_rtl_rounded, color: Colors.white),
               tooltip: 'Chế độ chọn nhiều',
               onPressed: () {
                 setState(() {
@@ -206,10 +216,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         },
                         decoration: AppTheme.inputDecoration(
                           hintText: 'Tìm phim yêu thích...',
-                          prefixIcon: const Icon(Icons.search, color: AppTheme.primaryRed),
+                          prefixIcon: const Icon(Icons.search,
+                              color: AppTheme.primaryRed),
                           suffixIcon: _searchQuery.isNotEmpty
                               ? IconButton(
-                                  icon: const Icon(Icons.clear, color: AppTheme.textMuted),
+                                  icon: const Icon(Icons.clear,
+                                      color: AppTheme.textMuted),
                                   onPressed: () {
                                     _searchController.clear();
                                     setState(() => _searchQuery = '');
@@ -225,8 +237,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         height: 36,
                         child: ListView(
                           scrollDirection: Axis.horizontal,
-                          children: ['Tất cả', 'Hành Động', 'Viễn Tưởng', 'Kinh Dị', 'Tình Cảm', 'Hài Hước']
-                              .map((genre) {
+                          children: [
+                            'Tất cả',
+                            'Hành Động',
+                            'Viễn Tưởng',
+                            'Kinh Dị',
+                            'Tình Cảm',
+                            'Hài Hước'
+                          ].map((genre) {
                             final selected = _selectedGenre == genre;
                             return Padding(
                               padding: const EdgeInsets.only(right: 8),
@@ -238,7 +256,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                 visualDensity: VisualDensity.compact,
                                 labelStyle: TextStyle(
                                   fontSize: 12,
-                                  color: selected ? Colors.white : AppTheme.textMuted,
+                                  color: selected
+                                      ? Colors.white
+                                      : AppTheme.textMuted,
                                 ),
                                 onSelected: (val) {
                                   setState(() => _selectedGenre = genre);
@@ -254,7 +274,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
                 // ─── Header Thống kê & Dropdown Sắp Xếp ────────────
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -270,7 +291,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         value: _selectedSort,
                         dropdownColor: AppTheme.cardBg,
                         underline: const SizedBox(),
-                        icon: const Icon(Icons.arrow_drop_down, color: AppTheme.primaryRed),
+                        icon: const Icon(Icons.arrow_drop_down,
+                            color: AppTheme.primaryRed),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 13,
@@ -303,7 +325,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         )
                       : GridView.builder(
                           padding: const EdgeInsets.all(16),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             childAspectRatio: 0.65,
                             crossAxisSpacing: 14,
@@ -327,7 +350,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                 if (_isMultiSelectMode) {
                                   _toggleSelection(movie.id);
                                 } else {
-                                  Navigator.pushNamed(context, AppRoutes.movieDetail);
+                                  Navigator.pushNamed(
+                                      context, AppRoutes.movieDetail,
+                                      arguments: movie);
                                 }
                               },
                               child: Stack(
@@ -344,11 +369,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: isSelected
-                                              ? AppTheme.primaryRed.withValues(alpha: 0.3)
+                                              ? AppTheme.primaryRed
+                                                  .withValues(alpha: 0.3)
                                               : Colors.black45,
-                                          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                                          borderRadius: BorderRadius.circular(
+                                              AppTheme.radiusLg),
                                           border: Border.all(
-                                            color: isSelected ? AppTheme.primaryRed : Colors.white30,
+                                            color: isSelected
+                                                ? AppTheme.primaryRed
+                                                : Colors.white30,
                                             width: 2,
                                           ),
                                         ),
@@ -358,11 +387,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                             padding: const EdgeInsets.all(8),
                                             child: Container(
                                               decoration: BoxDecoration(
-                                                color: isSelected ? AppTheme.primaryRed : Colors.black54,
+                                                color: isSelected
+                                                    ? AppTheme.primaryRed
+                                                    : Colors.black54,
                                                 shape: BoxShape.circle,
                                               ),
                                               child: Icon(
-                                                isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                                                isSelected
+                                                    ? Icons.check_circle
+                                                    : Icons
+                                                        .radio_button_unchecked,
                                                 color: Colors.white,
                                                 size: 24,
                                               ),
@@ -377,7 +411,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                       top: 8,
                                       right: 8,
                                       child: InkWell(
-                                        onTap: () => _removeSingleFavorite(movie),
+                                        onTap: () =>
+                                            _removeSingleFavorite(movie),
                                         child: Container(
                                           padding: const EdgeInsets.all(6),
                                           decoration: const BoxDecoration(
@@ -400,6 +435,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 ),
               ],
             ),
+      bottomNavigationBar: const FlixBottomNavBar(currentIndex: 2),
     );
   }
 
@@ -418,12 +454,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white12),
               ),
-              child: const Icon(Icons.favorite_border_rounded, size: 64, color: AppTheme.primaryRed),
+              child: const Icon(Icons.favorite_border_rounded,
+                  size: 64, color: AppTheme.primaryRed),
             ),
             const SizedBox(height: 20),
             const Text(
               'Chưa Có Phim Yêu Thích',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -434,8 +474,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             const SizedBox(height: 28),
             ElevatedButton(
               style: AppTheme.primaryButtonStyle(),
-              onPressed: () => Navigator.pushReplacementNamed(context, AppRoutes.home),
-              child: const Text('Khám phá phim ngay', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              onPressed: () =>
+                  Navigator.pushReplacementNamed(context, AppRoutes.home),
+              child: const Text('Khám phá phim ngay',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         ),

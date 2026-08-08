@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/flix_network_image.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -13,8 +14,8 @@ class OnboardingScreen extends StatelessWidget {
       body: Stack(
         children: [
           // Background Theater/Cinema Image
-          Positioned.fill(
-            child: Image.network(
+          const Positioned.fill(
+            child: FlixNetworkImage(
               'https://picsum.photos/id/1050/800/1200',
               fit: BoxFit.cover,
             ),
@@ -26,7 +27,7 @@ class OnboardingScreen extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: [
                     AppTheme.scaffoldBg,
-                    AppTheme.scaffoldBg.withOpacity(0.85),
+                    AppTheme.scaffoldBg.withValues(alpha: 0.85),
                     Colors.transparent,
                   ],
                   begin: Alignment.bottomCenter,
@@ -112,7 +113,8 @@ class OnboardingScreen extends StatelessWidget {
                       text: 'Tiếp tục',
                       height: 52,
                       fontSize: 18,
-                      onPressed: () => Navigator.pushNamed(context, AppRoutes.login),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, AppRoutes.login),
                     ),
                   ],
                 ),

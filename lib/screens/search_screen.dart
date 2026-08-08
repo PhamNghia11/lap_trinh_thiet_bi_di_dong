@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
 import '../data/mock_data.dart';
+import '../widgets/bottom_nav_bar.dart';
+import '../widgets/flix_network_image.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -16,8 +18,21 @@ class _SearchScreenState extends State<SearchScreen> {
   final List<String> _recentSearches = List.from(defaultRecentSearches);
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final suggestions = suggestedMovies;
+    final query = _searchController.text.trim().toLowerCase();
+    final suggestions = query.isEmpty
+        ? suggestedMovies
+        : mockMovies.where((movie) {
+            return movie.title.toLowerCase().contains(query) ||
+                movie.genres
+                    .any((genre) => genre.toLowerCase().contains(query));
+          }).toList();
 
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
@@ -26,6 +41,7 @@ class _SearchScreenState extends State<SearchScreen> {
         elevation: 0,
         title: TextField(
           controller: _searchController,
+          onChanged: (_) => setState(() {}),
           autofocus: true,
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
@@ -34,11 +50,14 @@ class _SearchScreenState extends State<SearchScreen> {
             prefixIcon: const Icon(Icons.search, color: AppTheme.primaryRed),
             suffixIcon: IconButton(
               icon: const Icon(Icons.tune, color: AppTheme.textMuted),
-              onPressed: () => Navigator.pushNamed(context, AppRoutes.searchFilter),
+              onPressed: () =>
+                  Navigator.pushNamed(context, AppRoutes.searchFilter),
             ),
             filled: true,
             fillColor: AppTheme.cardBg,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLg), borderSide: BorderSide.none),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                borderSide: BorderSide.none),
           ),
         ),
       ),
@@ -55,8 +74,10 @@ class _SearchScreenState extends State<SearchScreen> {
               children: _recentSearches.map((keyword) {
                 return Chip(
                   backgroundColor: AppTheme.cardBg,
-                  label: Text(keyword, style: const TextStyle(color: AppTheme.textMuted)),
-                  deleteIcon: const Icon(Icons.close, size: 16, color: AppTheme.textMuted),
+                  label: Text(keyword,
+                      style: const TextStyle(color: AppTheme.textMuted)),
+                  deleteIcon: const Icon(Icons.close,
+                      size: 16, color: AppTheme.textMuted),
                   onDeleted: () {
                     setState(() {
                       _recentSearches.remove(keyword);
@@ -78,18 +99,25 @@ class _SearchScreenState extends State<SearchScreen> {
                   contentPadding: const EdgeInsets.symmetric(vertical: 6),
                   leading: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.network(movie.imageUrl, width: 50, height: 75, fit: BoxFit.cover),
+                    child: FlixNetworkImage(movie.imageUrl,
+                        width: 50, height: 75, fit: BoxFit.cover),
                   ),
-                  title: Text(movie.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  title: Text(movie.title,
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
                   subtitle: Text(movie.infoText, style: AppTheme.smallText),
-                  trailing: const Icon(Icons.chevron_right, color: AppTheme.textMuted),
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.movieDetail),
+                  trailing: const Icon(Icons.chevron_right,
+                      color: AppTheme.textMuted),
+                  onTap: () => Navigator.pushNamed(
+                      context, AppRoutes.movieDetail,
+                      arguments: movie),
                 );
               },
             ),
           ],
         ),
       ),
+      bottomNavigationBar: const FlixBottomNavBar(currentIndex: 1),
     );
   }
 }

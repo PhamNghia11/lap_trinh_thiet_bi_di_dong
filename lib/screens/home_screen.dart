@@ -17,7 +17,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
   int _bannerIndex = 0;
 
   @override
@@ -58,7 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     viewportFraction: 1.0,
                     autoPlay: true,
                     autoPlayInterval: const Duration(seconds: 3),
-                    autoPlayAnimationDuration: const Duration(milliseconds: 800),
+                    autoPlayAnimationDuration:
+                        const Duration(milliseconds: 800),
                     onPageChanged: (index, reason) {
                       setState(() {
                         _bannerIndex = index;
@@ -69,7 +69,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     return Builder(
                       builder: (BuildContext context) {
                         return GestureDetector(
-                          onTap: () => Navigator.pushNamed(context, AppRoutes.movieDetail),
+                          onTap: () => Navigator.pushNamed(
+                              context, AppRoutes.movieDetail,
+                              arguments: movie),
                           child: Stack(
                             children: [
                               Container(
@@ -84,7 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               Container(
                                 height: 380,
-                                decoration: BoxDecoration(gradient: AppTheme.bannerGradient()),
+                                decoration: BoxDecoration(
+                                    gradient: AppTheme.bannerGradient()),
                               ),
                               Positioned(
                                 bottom: 24,
@@ -94,18 +97,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 4),
                                       decoration: BoxDecoration(
                                         color: AppTheme.primaryRed,
-                                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                                        borderRadius: BorderRadius.circular(
+                                            AppTheme.radiusSm),
                                       ),
                                       child: const Text(
                                         'NỔI BẬT',
-                                        style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold),
                                       ),
                                     ),
                                     const SizedBox(height: 8),
-                                    Text(movie.title, style: AppTheme.headingLarge),
+                                    Text(movie.title,
+                                        style: AppTheme.headingLarge),
                                     const SizedBox(height: 4),
                                     Text(
                                       '${movie.genreText.toUpperCase()} • ${movie.duration}',
@@ -117,13 +126,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                         PrimaryIconButton(
                                           text: 'Xem Trailer',
                                           icon: Icons.play_arrow,
-                                          onPressed: () => Navigator.pushNamed(context, AppRoutes.trailer),
+                                          onPressed: () => Navigator.pushNamed(
+                                              context, AppRoutes.trailer,
+                                              arguments: movie),
                                         ),
                                         const SizedBox(width: 12),
                                         OutlinedActionButton(
                                           text: 'Chi tiết',
                                           icon: Icons.info_outline,
-                                          onPressed: () => Navigator.pushNamed(context, AppRoutes.movieDetail),
+                                          onPressed: () => Navigator.pushNamed(
+                                              context, AppRoutes.movieDetail,
+                                              arguments: movie),
                                         ),
                                       ],
                                     ),
@@ -154,7 +167,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         margin: const EdgeInsets.symmetric(horizontal: 4.0),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(4.0),
-                          color: isSelected ? AppTheme.primaryRed : Colors.white38,
+                          color:
+                              isSelected ? AppTheme.primaryRed : Colors.white38,
                         ),
                       );
                     }).toList(),
@@ -181,10 +195,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.only(right: 10),
                           child: ActionChip(
                             backgroundColor: AppTheme.cardBg,
-                            labelStyle: const TextStyle(color: AppTheme.textLight),
+                            labelStyle:
+                                const TextStyle(color: AppTheme.textLight),
                             side: const BorderSide(color: Colors.white12),
                             label: Text(genreList[index]),
-                            onPressed: () => Navigator.pushNamed(context, AppRoutes.genreDetail),
+                            onPressed: () => Navigator.pushNamed(
+                                context, AppRoutes.genreDetail,
+                                arguments: 'Phim ${genreList[index]}'),
                           ),
                         );
                       },
@@ -207,8 +224,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Text('Phim $genre', style: AppTheme.headingMedium),
                         TextButton(
-                          onPressed: () => Navigator.pushNamed(context, AppRoutes.genreDetail),
-                          child: const Text('Xem tất cả', style: TextStyle(color: AppTheme.primaryRed)),
+                          onPressed: () => Navigator.pushNamed(
+                              context, AppRoutes.genreDetail,
+                              arguments: 'Phim $genre'),
+                          child: const Text('Xem tất cả',
+                              style: TextStyle(color: AppTheme.primaryRed)),
                         ),
                       ],
                     ),
@@ -223,7 +243,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         final movie = movies[index];
                         return MovieCard.poster(
                           movie: movie,
-                          onTap: () => Navigator.pushNamed(context, AppRoutes.movieDetail),
+                          onTap: () => Navigator.pushNamed(
+                              context, AppRoutes.movieDetail,
+                              arguments: movie),
                         );
                       },
                     ),
@@ -237,16 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: FlixBottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() => _currentIndex = index);
-          if (index == 1) Navigator.pushNamed(context, AppRoutes.search);
-          if (index == 2) Navigator.pushNamed(context, AppRoutes.favorites);
-          if (index == 3) Navigator.pushNamed(context, AppRoutes.history);
-          if (index == 4) Navigator.pushNamed(context, AppRoutes.profile);
-        },
-      ),
+      bottomNavigationBar: const FlixBottomNavBar(currentIndex: 0),
     );
   }
 }

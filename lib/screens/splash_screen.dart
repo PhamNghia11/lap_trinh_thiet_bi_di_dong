@@ -37,7 +37,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.primaryRed.withOpacity(0.35),
+                    AppTheme.primaryRed.withValues(alpha: 0.35),
                     Colors.black,
                   ],
                 ),
@@ -92,7 +92,8 @@ class _SplashScreenState extends State<SplashScreen> {
                 height: 32,
                 child: CircularProgressIndicator(
                   strokeWidth: 3,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryRed),
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(AppTheme.primaryRed),
                 ),
               ),
             ),

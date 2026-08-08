@@ -27,23 +27,30 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
 
   bool _isLoadingMore = false;
   int _visibleCount = 8;
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _gridScrollController = ScrollController();
+  final ScrollController _listScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
+    _gridScrollController.addListener(_onGridScroll);
+    _listScrollController.addListener(_onListScroll);
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _gridScrollController.dispose();
+    _listScrollController.dispose();
     super.dispose();
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent - 200 &&
+  void _onGridScroll() => _onScroll(_gridScrollController);
+
+  void _onListScroll() => _onScroll(_listScrollController);
+
+  void _onScroll(ScrollController controller) {
+    if (controller.position.pixels >=
+            controller.position.maxScrollExtent - 200 &&
         !_isLoadingMore &&
         _visibleCount < 24) {
       _loadMore();
@@ -75,7 +82,9 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
 
     // Lọc theo năm phát hành
     if (_selectedYearFilter != 'Tất cả') {
-      fullList = fullList.where((m) => m.year.toString() == _selectedYearFilter).toList();
+      fullList = fullList
+          .where((m) => m.year.toString() == _selectedYearFilter)
+          .toList();
     }
 
     // Sắp xếp
@@ -120,7 +129,8 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close, color: AppTheme.textMuted),
+                        icon:
+                            const Icon(Icons.close, color: AppTheme.textMuted),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ],
@@ -152,7 +162,12 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
-                    children: ['Tất cả', '< 90 phút', '90-120 phút', '> 120 phút'].map((dur) {
+                    children: [
+                      'Tất cả',
+                      '< 90 phút',
+                      '90-120 phút',
+                      '> 120 phút'
+                    ].map((dur) {
                       final selected = _selectedDurationFilter == dur;
                       return ChoiceChip(
                         label: Text(dur),
@@ -198,7 +213,7 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final movies = _getProcessedMovies();
-    final totalResults = 128; // Giả lập tổng kết quả
+    const totalResults = 128; // Giả lập tổng kết quả
 
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
@@ -211,7 +226,8 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
         ),
         title: Text(
           widget.genreTitle,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
           // Icon nút chuyển đổi Layout Grid 2 cột / List dọc
@@ -244,9 +260,9 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       '$totalResults kết quả',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppTheme.textMuted,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -256,10 +272,12 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
                       onTap: _openFilterBottomSheet,
                       borderRadius: BorderRadius.circular(6),
                       child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         child: Row(
                           children: [
-                            Icon(Icons.tune_rounded, color: AppTheme.primaryRed, size: 18),
+                            Icon(Icons.tune_rounded,
+                                color: AppTheme.primaryRed, size: 18),
                             SizedBox(width: 4),
                             Text(
                               'Bộ lọc',
@@ -278,7 +296,8 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
                 const SizedBox(height: 8),
                 // Thanh Chip Sắp xếp ("Mới nhất", "Đánh giá cao", "A-Z")
                 Row(
-                  children: ['Mới nhất', 'Đánh giá cao', 'A-Z'].map((sortOption) {
+                  children:
+                      ['Mới nhất', 'Đánh giá cao', 'A-Z'].map((sortOption) {
                     final isSelected = _selectedSort == sortOption;
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
@@ -291,7 +310,8 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
                         labelStyle: TextStyle(
                           fontSize: 12,
                           color: isSelected ? Colors.white : AppTheme.textMuted,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
                         onSelected: (selected) {
                           if (selected) {
@@ -315,9 +335,10 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
               child: _isGridView
                   ? GridView.builder(
                       key: const ValueKey('grid_view'),
-                      controller: _scrollController,
+                      controller: _gridScrollController,
                       padding: const EdgeInsets.all(16),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         childAspectRatio: 0.65,
                         crossAxisSpacing: 14,
@@ -328,26 +349,30 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
                         if (index == movies.length) {
                           return const Center(
                             child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryRed),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppTheme.primaryRed),
                             ),
                           );
                         }
                         final movie = movies[index];
                         return AnimatedOpacity(
-                          duration: Duration(milliseconds: 300 + (index % 4) * 100),
+                          duration:
+                              Duration(milliseconds: 300 + (index % 4) * 100),
                           opacity: 1.0,
                           child: MovieCard.grid(
                             movie: movie,
                             showBadge: true,
                             showRating: true,
-                            onTap: () => Navigator.pushNamed(context, AppRoutes.movieDetail),
+                            onTap: () => Navigator.pushNamed(
+                                context, AppRoutes.movieDetail,
+                                arguments: movie),
                           ),
                         );
                       },
                     )
                   : ListView.builder(
                       key: const ValueKey('list_view'),
-                      controller: _scrollController,
+                      controller: _listScrollController,
                       padding: const EdgeInsets.all(16),
                       itemCount: movies.length + (_isLoadingMore ? 1 : 0),
                       itemBuilder: (context, index) {
@@ -356,7 +381,8 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
                             padding: EdgeInsets.all(16),
                             child: Center(
                               child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryRed),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppTheme.primaryRed),
                               ),
                             ),
                           );
@@ -365,7 +391,9 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
                         return MovieCard.listTile(
                           movie: movie,
                           showBadge: true,
-                          onTap: () => Navigator.pushNamed(context, AppRoutes.movieDetail),
+                          onTap: () => Navigator.pushNamed(
+                              context, AppRoutes.movieDetail,
+                              arguments: movie),
                         );
                       },
                     ),

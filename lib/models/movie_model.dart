@@ -11,7 +11,8 @@ class CastMember {
     required this.name,
     required this.role,
     required this.avatarUrl,
-    this.bio = 'Diễn viên điện ảnh nổi tiếng với nhiều vai diễn ấn tượng trong các phim bom tấn.',
+    this.bio =
+        'Diễn viên điện ảnh nổi tiếng với nhiều vai diễn ấn tượng trong các phim bom tấn.',
   });
 }
 
@@ -73,35 +74,10 @@ class Movie {
     this.quality = '4K Ultra HD',
     this.ageRating = 'T16',
     this.languageInfo = 'Việt sub / Lồng tiếng',
-    this.director = 'Denis Villeneuve',
-    this.country = 'Mỹ (USA)',
-    this.releaseDate = '01/03/2024',
-    this.castList = const [
-      CastMember(
-        name: 'Timothée Chalamet',
-        role: 'vai Paul Atreides',
-        avatarUrl: 'https://picsum.photos/id/1062/200/200',
-        bio: 'Timothée Chalamet là nam diễn viên người Mỹ từng nhận đề cử giải Oscar.',
-      ),
-      CastMember(
-        name: 'Zendaya',
-        role: 'vai Chani',
-        avatarUrl: 'https://picsum.photos/id/1063/200/200',
-        bio: 'Zendaya là nữ diễn viên, ca sĩ nổi tiếng đoạt 2 giải Emmy.',
-      ),
-      CastMember(
-        name: 'Rebecca Ferguson',
-        role: 'vai Lady Jessica',
-        avatarUrl: 'https://picsum.photos/id/1064/200/200',
-        bio: 'Nữ diễn viên Thụy Điển nổi tiếng qua serie Mission: Impossible.',
-      ),
-      CastMember(
-        name: 'Javier Bardem',
-        role: 'vai Stilgar',
-        avatarUrl: 'https://picsum.photos/id/1065/200/200',
-        bio: 'Nam diễn viên Tây Ban Nha huyền thoại từng đoạt giải Oscar.',
-      ),
-    ],
+    this.director = 'Đang cập nhật',
+    this.country = 'Đang cập nhật',
+    this.releaseDate = 'Đang cập nhật',
+    this.castList = const [],
     this.reviews = const [
       UserReview(
         userName: 'Trần Minh Đức',

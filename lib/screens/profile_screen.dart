@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -12,7 +13,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-
   void _confirmLogout() {
     showDialog(
       context: context,
@@ -23,7 +23,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Icon(Icons.logout_rounded, color: AppTheme.primaryRed),
             SizedBox(width: 10),
-            Text('Đăng Xuất', style: TextStyle(color: Colors.white, fontSize: 18)),
+            Text('Đăng Xuất',
+                style: TextStyle(color: Colors.white, fontSize: 18)),
           ],
         ),
         content: const Text(
@@ -33,15 +34,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
+            child:
+                const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
           ),
           ElevatedButton(
             style: AppTheme.primaryButtonStyle(),
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (route) => false);
+              Navigator.pushNamedAndRemoveUntil(
+                  context, AppRoutes.login, (route) => false);
             },
-            child: const Text('Đăng xuất', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Đăng xuất',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -54,7 +59,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Chỉnh Sửa Hồ Sơ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Chỉnh Sửa Hồ Sơ',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -72,17 +78,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
+            child:
+                const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
           ),
           ElevatedButton(
             style: AppTheme.primaryButtonStyle(),
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Cập nhật thông tin hồ sơ thành công!')),
+                const SnackBar(
+                    content: Text('Cập nhật thông tin hồ sơ thành công!')),
               );
             },
-            child: const Text('Lưu thay đổi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Lưu thay đổi',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -96,7 +106,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Trang Cá Nhân', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Trang Cá Nhân',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined, color: Colors.white),
@@ -139,7 +150,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         child: const CircleAvatar(
                           radius: 46,
-                          backgroundImage: NetworkImage('https://picsum.photos/id/1005/200/200'),
+                          backgroundImage: NetworkImage(
+                              'https://picsum.photos/id/1005/200/200'),
                         ),
                       ),
 
@@ -154,9 +166,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             decoration: BoxDecoration(
                               color: AppTheme.primaryRed,
                               shape: BoxShape.circle,
-                              border: Border.all(color: AppTheme.scaffoldBg, width: 2),
+                              border: Border.all(
+                                  color: AppTheme.scaffoldBg, width: 2),
                             ),
-                            child: const Icon(Icons.edit_rounded, color: Colors.white, size: 16),
+                            child: const Icon(Icons.edit_rounded,
+                                color: Colors.white, size: 16),
                           ),
                         ),
                       ),
@@ -165,7 +179,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 12),
                   const Text(
                     'Nguyễn Văn A',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                   ),
                   const SizedBox(height: 4),
                   const Text('nguyenvana@gmail.com', style: AppTheme.mutedText),
@@ -173,16 +190,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   // Badge Hạng Thành Viên ("GOLD MEMBER • Thành viên từ 2023")
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppTheme.accentGold.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppTheme.accentGold, width: 0.8),
+                      border:
+                          Border.all(color: AppTheme.accentGold, width: 0.8),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.military_tech_rounded, color: AppTheme.accentGold, size: 16),
+                        Icon(Icons.military_tech_rounded,
+                            color: AppTheme.accentGold, size: 16),
                         SizedBox(width: 4),
                         Text(
                           'GOLD MEMBER • Từ 2023',
@@ -209,7 +229,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(AppTheme.radiusXl),
                 border: Border.all(color: Colors.white10),
                 boxShadow: const [
-                  BoxShadow(color: Colors.black38, blurRadius: 6, offset: Offset(0, 3)),
+                  BoxShadow(
+                      color: Colors.black38,
+                      blurRadius: 6,
+                      offset: Offset(0, 3)),
                 ],
               ),
               child: Row(
@@ -218,7 +241,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: _buildClickableStatItem(
                       count: '24',
                       label: 'Đã xem',
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.history),
+                      onTap: () =>
+                          Navigator.pushNamed(context, AppRoutes.history),
                     ),
                   ),
                   Container(height: 32, width: 1, color: Colors.white12),
@@ -226,7 +250,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: _buildClickableStatItem(
                       count: '12',
                       label: 'Yêu thích',
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.favorites),
+                      onTap: () =>
+                          Navigator.pushNamed(context, AppRoutes.favorites),
                     ),
                   ),
                   Container(height: 32, width: 1, color: Colors.white12),
@@ -234,7 +259,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: _buildClickableStatItem(
                       count: '5',
                       label: 'Đánh giá',
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.review),
+                      onTap: () =>
+                          Navigator.pushNamed(context, AppRoutes.review),
                     ),
                   ),
                 ],
@@ -255,7 +281,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                border: Border.all(color: AppTheme.accentGold.withValues(alpha: 0.6), width: 1.2),
+                border: Border.all(
+                    color: AppTheme.accentGold.withValues(alpha: 0.6),
+                    width: 1.2),
                 boxShadow: [
                   BoxShadow(
                     color: AppTheme.primaryRed.withValues(alpha: 0.3),
@@ -272,13 +300,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: AppTheme.accentGold.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.workspace_premium_rounded, color: AppTheme.accentGold, size: 28),
+                    child: const Icon(Icons.workspace_premium_rounded,
+                        color: AppTheme.accentGold, size: 28),
                   ),
                   const SizedBox(width: 14),
-                  Expanded(
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           'Gói VIP Premium',
                           style: TextStyle(
@@ -290,7 +319,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         SizedBox(height: 2),
                         Text(
                           'Xem không giới hạn, không quảng cáo, 4K Ultra HD',
-                          style: TextStyle(color: AppTheme.textLight, fontSize: 11),
+                          style: TextStyle(
+                              color: AppTheme.textLight, fontSize: 11),
                         ),
                       ],
                     ),
@@ -298,17 +328,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.accentGold,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
                     ),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Tính năng đăng ký VIP Premium đang mở rộng!')),
+                        const SnackBar(
+                            content: Text(
+                                'Tính năng đăng ký VIP Premium đang mở rộng!')),
                       );
                     },
                     child: const Text(
                       'Nâng cấp',
-                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12),
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12),
                     ),
                   ),
                 ],
@@ -329,14 +366,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     icon: Icons.history_rounded,
                     iconColor: AppTheme.textMuted,
                     title: 'Lịch sử xem phim',
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.history),
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppRoutes.history),
                   ),
                   const Divider(color: Colors.white10, height: 1),
                   _buildNavTile(
                     icon: Icons.favorite_border_rounded,
                     iconColor: AppTheme.primaryRed,
                     title: 'Phim đã lưu & Yêu thích',
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.favorites),
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppRoutes.favorites),
                   ),
                   const Divider(color: Colors.white10, height: 1),
                   _buildNavTile(
@@ -360,7 +399,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     badgeText: '+50 điểm',
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Đã sao chép mã giới thiệu bạn bè!')),
+                        const SnackBar(
+                            content: Text('Đã sao chép mã giới thiệu bạn bè!')),
                       );
                     },
                   ),
@@ -369,7 +409,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     icon: Icons.settings_outlined,
                     iconColor: AppTheme.textMuted,
                     title: 'Cài đặt hệ thống',
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppRoutes.settings),
                   ),
                 ],
               ),
@@ -377,7 +418,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 28),
 
             // ─── Phần Hoạt Động Gần Đây (Timeline) ──────────────────
-            Align(
+            const Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 'HOẠT ĐỘNG GẦN ĐÂY',
@@ -430,14 +471,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               height: 48,
               child: OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppTheme.primaryRed, width: 1.5),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  side:
+                      const BorderSide(color: AppTheme.primaryRed, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: _confirmLogout,
-                icon: const Icon(Icons.logout_rounded, color: AppTheme.primaryRed),
+                icon: const Icon(Icons.logout_rounded,
+                    color: AppTheme.primaryRed),
                 label: const Text(
                   'Đăng Xuất Tài Khoản',
-                  style: TextStyle(color: AppTheme.primaryRed, fontWeight: FontWeight.bold, fontSize: 15),
+                  style: TextStyle(
+                      color: AppTheme.primaryRed,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15),
                 ),
               ),
             ),
@@ -445,6 +492,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: const FlixBottomNavBar(currentIndex: 4),
     );
   }
 
@@ -460,7 +508,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Text(
             count,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.primaryRed),
+            style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primaryRed),
           ),
           const SizedBox(height: 4),
           Text(label, style: AppTheme.smallText),
@@ -478,7 +529,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }) {
     return ListTile(
       leading: Icon(icon, color: iconColor),
-      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 14)),
+      title: Text(title,
+          style: const TextStyle(color: Colors.white, fontSize: 14)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -493,7 +545,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Text(
                 badgeText,
-                style: const TextStyle(color: Colors.purpleAccent, fontSize: 10, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.purpleAccent,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold),
               ),
             ),
           const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
@@ -514,7 +569,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Icon(icon, color: iconColor, size: 18),
         const SizedBox(width: 10),
         Expanded(
-          child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 13)),
+          child: Text(text,
+              style: const TextStyle(color: Colors.white, fontSize: 13)),
         ),
         Text(time, style: AppTheme.smallText),
       ],

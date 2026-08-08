@@ -5,6 +5,8 @@ import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
 import '../models/movie_model.dart';
 import '../data/mock_data.dart';
+import '../widgets/bottom_nav_bar.dart';
+import '../widgets/flix_network_image.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -24,7 +26,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _initMockHistory() {
-    final movies = mockMovies;
+    const movies = mockMovies;
     _groupedHistory = {
       'Hôm nay': [
         _HistoryItemData(
@@ -100,7 +102,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         content: Text('Đã xóa "${item.movie.title}" khỏi lịch sử'),
         action: SnackBarAction(
           label: 'Hoàn tác',
-          onPressed: () => _initMockHistory(),
+          onPressed: () => setState(_initMockHistory),
         ),
       ),
     );
@@ -113,12 +115,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: AppTheme.cardBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Row(
             children: [
               Icon(Icons.warning_amber_rounded, color: AppTheme.primaryRed),
               SizedBox(width: 10),
-              Text('Xóa Lịch Sử Xem', style: TextStyle(color: Colors.white, fontSize: 18)),
+              Text('Xóa Lịch Sử Xem',
+                  style: TextStyle(color: Colors.white, fontSize: 18)),
             ],
           ),
           content: const Text(
@@ -128,7 +132,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
+              child: const Text('Hủy',
+                  style: TextStyle(color: AppTheme.textMuted)),
             ),
             ElevatedButton(
               style: AppTheme.primaryButtonStyle(),
@@ -138,10 +143,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   _groupedHistory.clear();
                 });
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đã xóa toàn bộ lịch sử xem phim!')),
+                  const SnackBar(
+                      content: Text('Đã xóa toàn bộ lịch sử xem phim!')),
                 );
               },
-              child: const Text('Xóa tất cả', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text('Xóa tất cả',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         );
@@ -158,11 +166,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
       appBar: AppBar(
         backgroundColor: AppTheme.appBarBg,
         elevation: 0,
-        title: const Text('Lịch Sử Xem', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Lịch Sử Xem',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
           if (!isHistoryEmpty)
             IconButton(
-              icon: const Icon(Icons.delete_sweep_rounded, color: AppTheme.primaryRed),
+              icon: const Icon(Icons.delete_sweep_rounded,
+                  color: AppTheme.primaryRed),
               tooltip: 'Xóa toàn bộ lịch sử',
               onPressed: _confirmClearAllHistory,
             ),
@@ -216,6 +226,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 const SizedBox(height: 40),
               ],
             ),
+      bottomNavigationBar: const FlixBottomNavBar(currentIndex: 3),
     );
   }
 
@@ -317,7 +328,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: [
             Text(
               'Xóa',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             SizedBox(width: 6),
             Icon(Icons.delete_outline_rounded, color: Colors.white),
@@ -332,7 +344,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           borderRadius: BorderRadius.circular(AppTheme.radiusXl),
           border: Border.all(color: Colors.white10),
           boxShadow: const [
-            BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+            BoxShadow(
+                color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
           ],
         ),
         child: Row(
@@ -342,7 +355,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  child: Image.network(
+                  child: FlixNetworkImage(
                     movie.imageUrl,
                     width: 70,
                     height: 95,
@@ -388,14 +401,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                       // Menu 3 chấm (Xóa / Yêu thích)
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert_rounded, color: AppTheme.textMuted, size: 20),
+                        icon: const Icon(Icons.more_vert_rounded,
+                            color: AppTheme.textMuted, size: 20),
                         color: AppTheme.cardBg,
                         onSelected: (val) {
                           if (val == 'delete') {
                             _removeItem(category, index);
                           } else if (val == 'favorite') {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Đã thêm "${movie.title}" vào Yêu thích')),
+                              SnackBar(
+                                  content: Text(
+                                      'Đã thêm "${movie.title}" vào Yêu thích')),
                             );
                           }
                         },
@@ -404,9 +420,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             value: 'favorite',
                             child: Row(
                               children: [
-                                Icon(Icons.favorite_border, color: AppTheme.primaryRed, size: 18),
+                                Icon(Icons.favorite_border,
+                                    color: AppTheme.primaryRed, size: 18),
                                 SizedBox(width: 8),
-                                Text('Thêm vào Yêu thích', style: TextStyle(color: Colors.white, fontSize: 13)),
+                                Text('Thêm vào Yêu thích',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 13)),
                               ],
                             ),
                           ),
@@ -414,9 +433,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete_outline, color: Colors.white70, size: 18),
+                                Icon(Icons.delete_outline,
+                                    color: Colors.white70, size: 18),
                                 SizedBox(width: 8),
-                                Text('Xóa khỏi lịch sử', style: TextStyle(color: Colors.white, fontSize: 13)),
+                                Text('Xóa khỏi lịch sử',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 13)),
                               ],
                             ),
                           ),
@@ -438,7 +460,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             value: data.progress,
                             minHeight: 6,
                             backgroundColor: Colors.white12,
-                            valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryRed),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                                AppTheme.primaryRed),
                           ),
                         ),
                       ),
@@ -446,7 +469,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       Text(
                         '$percentInt%',
                         style: TextStyle(
-                          color: data.progress >= 1.0 ? AppTheme.accentGold : AppTheme.textMuted,
+                          color: data.progress >= 1.0
+                              ? AppTheme.accentGold
+                              : AppTheme.textMuted,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
@@ -459,19 +484,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: InkWell(
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.movieDetail),
+                      onTap: () => Navigator.pushNamed(
+                          context, AppRoutes.movieDetail,
+                          arguments: movie),
                       borderRadius: BorderRadius.circular(6),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: AppTheme.primaryRed.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.5)),
+                          border: Border.all(
+                              color:
+                                  AppTheme.primaryRed.withValues(alpha: 0.5)),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(Icons.play_arrow_rounded, color: AppTheme.primaryRed, size: 14),
+                          children: [
+                            Icon(Icons.play_arrow_rounded,
+                                color: AppTheme.primaryRed, size: 14),
                             SizedBox(width: 4),
                             Text(
                               'Tiếp tục xem',
@@ -510,12 +541,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white12),
               ),
-              child: const Icon(Icons.history_toggle_off_rounded, size: 64, color: AppTheme.textMuted),
+              child: const Icon(Icons.history_toggle_off_rounded,
+                  size: 64, color: AppTheme.textMuted),
             ),
             const SizedBox(height: 20),
             const Text(
               'Lịch Sử Xem Trống',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -526,8 +561,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
             const SizedBox(height: 28),
             ElevatedButton(
               style: AppTheme.primaryButtonStyle(),
-              onPressed: () => Navigator.pushReplacementNamed(context, AppRoutes.home),
-              child: const Text('Khám phá phim ngay', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              onPressed: () =>
+                  Navigator.pushReplacementNamed(context, AppRoutes.home),
+              child: const Text('Khám phá phim ngay',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         ),

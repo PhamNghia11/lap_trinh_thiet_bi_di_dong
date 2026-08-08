@@ -18,6 +18,7 @@ class FlixApp extends StatelessWidget {
       theme: AppTheme.darkTheme(),
       initialRoute: AppRoutes.splash,
       routes: AppRoutes.routes,
+      onGenerateRoute: AppRoutes.onGenerateRoute,
     );
   }
 }

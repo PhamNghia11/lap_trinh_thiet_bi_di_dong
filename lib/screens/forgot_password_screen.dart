@@ -30,12 +30,16 @@ class ForgotPasswordScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white12),
                 ),
-                child: const Icon(Icons.lock_reset, size: 40, color: Color(0xFFE50914)),
+                child: const Icon(Icons.lock_reset,
+                    size: 40, color: Color(0xFFE50914)),
               ),
               const SizedBox(height: 24),
               const Text(
                 'Quên Mật Khẩu',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -47,12 +51,15 @@ class ForgotPasswordScreen extends StatelessWidget {
               TextField(
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFFE9BCB6)),
+                  prefixIcon: const Icon(Icons.email_outlined,
+                      color: Color(0xFFE9BCB6)),
                   hintText: 'Địa chỉ Email',
                   hintStyle: const TextStyle(color: Color(0x80E9BCB6)),
                   filled: true,
                   fillColor: const Color(0xFF121212),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none),
                 ),
               ),
               const SizedBox(height: 24),
@@ -62,15 +69,22 @@ class ForgotPasswordScreen extends StatelessWidget {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE50914),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đã gửi liên kết khôi phục tới Email của bạn!')),
+                      const SnackBar(
+                          content: Text(
+                              'Đã gửi liên kết khôi phục tới Email của bạn!')),
                     );
                     Navigator.pop(context);
                   },
-                  child: const Text('Gửi Yêu Cầu', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  child: const Text('Gửi Yêu Cầu',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
                 ),
               ),
             ],

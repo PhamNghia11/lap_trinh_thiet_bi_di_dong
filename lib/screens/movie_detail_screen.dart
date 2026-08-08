@@ -8,6 +8,7 @@ import '../models/movie_model.dart';
 import '../data/mock_data.dart';
 import '../widgets/movie_card.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/flix_network_image.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   final Movie? movie;
@@ -56,12 +57,18 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
               const SizedBox(height: 12),
               Text(
                 actor.name,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
               const SizedBox(height: 4),
               Text(
                 actor.role,
-                style: const TextStyle(color: AppTheme.primaryRed, fontWeight: FontWeight.w600, fontSize: 14),
+                style: const TextStyle(
+                    color: AppTheme.primaryRed,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14),
               ),
               const SizedBox(height: 16),
               Text(
@@ -75,7 +82,9 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                 child: ElevatedButton(
                   style: AppTheme.primaryButtonStyle(),
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Đóng', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: const Text('Đóng',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -88,7 +97,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final movie = _currentMovie;
-    final relatedMovies = mockMovies.where((m) => m.id != movie.id).take(6).toList();
+    final relatedMovies =
+        mockMovies.where((m) => m.id != movie.id).take(6).toList();
 
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
@@ -108,7 +118,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                       color: Colors.black45,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                    child: const Icon(Icons.arrow_back,
+                        color: Colors.white, size: 20),
                   ),
                   onPressed: () => Navigator.pop(context),
                 ),
@@ -151,11 +162,14 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         color: Colors.black45,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.share, color: Colors.white, size: 20),
+                      child: const Icon(Icons.share,
+                          color: Colors.white, size: 20),
                     ),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Đã sao chép liên kết chia sẻ phim!')),
+                        const SnackBar(
+                            content:
+                                Text('Đã sao chép liên kết chia sẻ phim!')),
                       );
                     },
                   ),
@@ -166,7 +180,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(
+                      FlixNetworkImage(
                         movie.imageUrl,
                         fit: BoxFit.cover,
                       ),
@@ -197,12 +211,16 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white30, width: 1.5),
+                                border: Border.all(
+                                    color: Colors.white30, width: 1.5),
                               ),
                               child: IconButton(
                                 iconSize: 38,
-                                icon: const Icon(Icons.play_arrow_rounded, color: Colors.white),
-                                onPressed: () => Navigator.pushNamed(context, AppRoutes.trailer),
+                                icon: const Icon(Icons.play_arrow_rounded,
+                                    color: Colors.white),
+                                onPressed: () => Navigator.pushNamed(
+                                    context, AppRoutes.trailer,
+                                    arguments: movie),
                               ),
                             ),
                           ),
@@ -216,7 +234,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
               // ─── Thân Bài Nội Dung Phim ─────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 100), // chừa lề dưới cho Sticky Bottom Bar
+                  padding: const EdgeInsets.fromLTRB(
+                      20, 10, 20, 100), // chừa lề dưới cho Sticky Bottom Bar
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -248,17 +267,23 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Row(
                             children: [
-                              const Icon(Icons.star_rounded, color: AppTheme.accentGold, size: 22),
+                              const Icon(Icons.star_rounded,
+                                  color: AppTheme.accentGold, size: 22),
                               const SizedBox(width: 4),
                               Text(
                                 movie.ratingText,
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14),
                               ),
                               const SizedBox(width: 12),
                               Text(movie.infoText, style: AppTheme.mutedText),
                               const Spacer(),
                               Icon(
-                                _isRatingExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                _isRatingExpanded
+                                    ? Icons.keyboard_arrow_up
+                                    : Icons.keyboard_arrow_down,
                                 color: AppTheme.textMuted,
                                 size: 20,
                               ),
@@ -274,13 +299,18 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             color: AppTheme.cardBg,
-                            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
                             border: Border.all(color: Colors.white10),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Phân bố đánh giá', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                              const Text('Phân bố đánh giá',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13)),
                               const SizedBox(height: 8),
                               _buildRatingBar(5, 0.85),
                               _buildRatingBar(4, 0.10),
@@ -301,12 +331,16 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                           PrimaryIconButton(
                             text: 'Xem Trailer',
                             icon: Icons.play_arrow_rounded,
-                            onPressed: () => Navigator.pushNamed(context, AppRoutes.trailer),
+                            onPressed: () => Navigator.pushNamed(
+                                context, AppRoutes.trailer,
+                                arguments: movie),
                           ),
                           OutlinedActionButton(
                             text: 'Đánh giá',
                             icon: Icons.rate_review_outlined,
-                            onPressed: () => Navigator.pushNamed(context, AppRoutes.review),
+                            onPressed: () => Navigator.pushNamed(
+                                context, AppRoutes.review,
+                                arguments: movie),
                           ),
                           OutlinedButton.icon(
                             style: AppTheme.outlinedButtonStyle(),
@@ -325,13 +359,20 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                               );
                             },
                             icon: Icon(
-                              _isInPlaylist ? Icons.bookmark : Icons.bookmark_add_outlined,
-                              color: _isInPlaylist ? AppTheme.accentGold : Colors.white,
+                              _isInPlaylist
+                                  ? Icons.bookmark
+                                  : Icons.bookmark_add_outlined,
+                              color: _isInPlaylist
+                                  ? AppTheme.accentGold
+                                  : Colors.white,
                               size: 18,
                             ),
                             label: Text(
                               _isInPlaylist ? 'Đã lưu' : '+ Danh sách',
-                              style: TextStyle(color: _isInPlaylist ? AppTheme.accentGold : Colors.white),
+                              style: TextStyle(
+                                  color: _isInPlaylist
+                                      ? AppTheme.accentGold
+                                      : Colors.white),
                             ),
                           ),
                         ],
@@ -339,12 +380,15 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                       const SizedBox(height: 24),
 
                       // ─── Phần Nội Dung Phim ─────────────────────────
-                      const Text('Nội Dung Phim', style: AppTheme.headingMedium),
+                      const Text('Nội Dung Phim',
+                          style: AppTheme.headingMedium),
                       const SizedBox(height: 8),
                       Text(
                         movie.description,
                         maxLines: _isDescriptionExpanded ? null : 3,
-                        overflow: _isDescriptionExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                        overflow: _isDescriptionExpanded
+                            ? TextOverflow.visible
+                            : TextOverflow.ellipsis,
                         style: AppTheme.bodyText,
                       ),
                       GestureDetector(
@@ -357,7 +401,10 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
                             _isDescriptionExpanded ? 'Thu gọn ▲' : 'Xem thêm ▼',
-                            style: const TextStyle(color: AppTheme.primaryRed, fontWeight: FontWeight.bold, fontSize: 13),
+                            style: const TextStyle(
+                                color: AppTheme.primaryRed,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13),
                           ),
                         ),
                       ),
@@ -369,10 +416,13 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         children: movie.genres.map((genre) {
                           return ActionChip(
                             backgroundColor: AppTheme.cardBg,
-                            labelStyle: const TextStyle(color: AppTheme.textLight, fontSize: 12),
+                            labelStyle: const TextStyle(
+                                color: AppTheme.textLight, fontSize: 12),
                             side: const BorderSide(color: Colors.white12),
                             label: Text(genre),
-                            onPressed: () => Navigator.pushNamed(context, AppRoutes.genreDetail),
+                            onPressed: () => Navigator.pushNamed(
+                                context, AppRoutes.genreDetail,
+                                arguments: 'Phim $genre'),
                           );
                         }).toList(),
                       ),
@@ -383,7 +433,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           color: AppTheme.cardBg.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusMd),
                         ),
                         child: Column(
                           children: [
@@ -401,10 +452,12 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Diễn Viên Chính', style: AppTheme.headingMedium),
+                          const Text('Diễn Viên Chính',
+                              style: AppTheme.headingMedium),
                           TextButton(
                             onPressed: () {},
-                            child: const Text('Xem tất cả', style: TextStyle(color: AppTheme.primaryRed)),
+                            child: const Text('Xem tất cả',
+                                style: TextStyle(color: AppTheme.primaryRed)),
                           ),
                         ],
                       ),
@@ -425,12 +478,16 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                                   children: [
                                     CircleAvatar(
                                       radius: 32,
-                                      backgroundImage: NetworkImage(actor.avatarUrl),
+                                      backgroundImage:
+                                          NetworkImage(actor.avatarUrl),
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
                                       actor.name,
-                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       textAlign: TextAlign.center,
@@ -455,10 +512,14 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Đánh Giá Từ Người Xem', style: AppTheme.headingMedium),
+                          const Text('Đánh Giá Từ Người Xem',
+                              style: AppTheme.headingMedium),
                           TextButton(
-                            onPressed: () => Navigator.pushNamed(context, AppRoutes.review),
-                            child: const Text('Viết đánh giá', style: TextStyle(color: AppTheme.primaryRed)),
+                            onPressed: () => Navigator.pushNamed(
+                                context, AppRoutes.review,
+                                arguments: movie),
+                            child: const Text('Viết đánh giá',
+                                style: TextStyle(color: AppTheme.primaryRed)),
                           ),
                         ],
                       ),
@@ -470,7 +531,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
                               color: AppTheme.cardBg,
-                              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusLg),
                               border: Border.all(color: Colors.white10),
                             ),
                             child: Column(
@@ -480,28 +542,39 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                                   children: [
                                     CircleAvatar(
                                       radius: 18,
-                                      backgroundImage: NetworkImage(rev.userAvatar),
+                                      backgroundImage:
+                                          NetworkImage(rev.userAvatar),
                                     ),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             rev.userName,
-                                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14),
                                           ),
-                                          Text(rev.date, style: AppTheme.smallText),
+                                          Text(rev.date,
+                                              style: AppTheme.smallText),
                                         ],
                                       ),
                                     ),
                                     Row(
                                       children: [
-                                        const Icon(Icons.star_rounded, color: AppTheme.accentGold, size: 16),
+                                        const Icon(Icons.star_rounded,
+                                            color: AppTheme.accentGold,
+                                            size: 16),
                                         const SizedBox(width: 2),
                                         Text(
                                           '${rev.rating}',
-                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13),
                                         ),
                                       ],
                                     ),
@@ -517,7 +590,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                       const SizedBox(height: 24),
 
                       // ─── Phần Có Thể Bạn Cũng Thích ─────────────────
-                      const Text('Có Thể Bạn Cũng Thích', style: AppTheme.headingMedium),
+                      const Text('Có Thể Bạn Cũng Thích',
+                          style: AppTheme.headingMedium),
                       const SizedBox(height: 12),
                       SizedBox(
                         height: 220,
@@ -532,7 +606,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => MovieDetailScreen(movie: relMovie),
+                                    builder: (context) =>
+                                        MovieDetailScreen(movie: relMovie),
                                   ),
                                 );
                               },
@@ -554,10 +629,12 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
                     color: AppTheme.cardBg.withValues(alpha: 0.85),
-                    border: const Border(top: BorderSide(color: Colors.white10)),
+                    border:
+                        const Border(top: BorderSide(color: Colors.white10)),
                   ),
                   child: SafeArea(
                     top: false,
@@ -565,12 +642,20 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton.icon(
-                        style: AppTheme.primaryButtonStyle(borderRadius: AppTheme.radiusXl),
-                        onPressed: () => Navigator.pushNamed(context, AppRoutes.trailer),
-                        icon: const Icon(Icons.play_circle_fill_rounded, color: Colors.white, size: 24),
+                        style: AppTheme.primaryButtonStyle(
+                            borderRadius: AppTheme.radiusXl),
+                        onPressed: () => Navigator.pushNamed(
+                            context, AppRoutes.trailer,
+                            arguments: movie),
+                        icon: const Icon(Icons.play_circle_fill_rounded,
+                            color: Colors.white, size: 24),
                         label: const Text(
                           '▶ XEM NGAY',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.5),
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 0.5),
                         ),
                       ),
                     ),
@@ -594,7 +679,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       ),
       child: Text(
         text,
-        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
+        style:
+            TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -604,7 +690,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Text('$stars', style: const TextStyle(color: AppTheme.textMuted, fontSize: 12)),
+          Text('$stars',
+              style: const TextStyle(color: AppTheme.textMuted, fontSize: 12)),
           const SizedBox(width: 4),
           const Icon(Icons.star, color: AppTheme.accentGold, size: 12),
           const SizedBox(width: 8),
@@ -615,7 +702,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                 value: ratio,
                 minHeight: 5,
                 backgroundColor: Colors.white10,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.accentGold),
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(AppTheme.accentGold),
               ),
             ),
           ),
@@ -631,7 +719,11 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: AppTheme.mutedText),
-        Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+        Text(value,
+            style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13)),
       ],
     );
   }

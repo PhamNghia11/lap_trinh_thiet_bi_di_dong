@@ -18,6 +18,27 @@ const List<Movie> mockMovies = [
         'trên con đường trả thù những kẻ âm mưu hủy hoại gia đình mình. Đứng trước sự lựa chọn '
         'giữa tình yêu của cuộc đời và số phận của vũ trụ, anh phải nỗ lực ngăn chặn một tương lai tồi tệ.',
     imageUrl: 'https://picsum.photos/id/1015/800/1200',
+    director: 'Denis Villeneuve',
+    country: 'Mỹ (USA)',
+    releaseDate: '01/03/2024',
+    castList: [
+      CastMember(
+          name: 'Timothée Chalamet',
+          role: 'Paul Atreides',
+          avatarUrl: 'https://picsum.photos/id/1062/200/200'),
+      CastMember(
+          name: 'Zendaya',
+          role: 'Chani',
+          avatarUrl: 'https://picsum.photos/id/1063/200/200'),
+      CastMember(
+          name: 'Rebecca Ferguson',
+          role: 'Lady Jessica',
+          avatarUrl: 'https://picsum.photos/id/1064/200/200'),
+      CastMember(
+          name: 'Javier Bardem',
+          role: 'Stilgar',
+          avatarUrl: 'https://picsum.photos/id/1065/200/200'),
+    ],
   ),
   Movie(
     id: 'neon-nights',
@@ -239,15 +260,14 @@ List<Movie> get trendingMovies => mockMovies.take(5).toList();
 List<Movie> getMoviesByGenre(String genre) {
   final filtered = mockMovies.where((m) => m.genres.contains(genre)).toList();
   if (filtered.length >= 3) return filtered;
-  final remaining = mockMovies.where((m) => !filtered.contains(m)).take(4 - filtered.length);
+  final remaining =
+      mockMovies.where((m) => !filtered.contains(m)).take(4 - filtered.length);
   return [...filtered, ...remaining];
 }
 
 /// Phim yêu thích (mock)
-List<Movie> get favoriteMovies => mockMovies
-    .take(6)
-    .map((m) => m.copyWith(isFavorite: true))
-    .toList();
+List<Movie> get favoriteMovies =>
+    mockMovies.take(6).map((m) => m.copyWith(isFavorite: true)).toList();
 
 /// Phim đã xem (mock với progress)
 List<Movie> get historyMovies => mockMovies
@@ -272,13 +292,36 @@ const List<String> genreList = [
 ];
 
 /// Từ khóa tìm kiếm gần đây (mock)
-const List<String> defaultRecentSearches = ['Dune', 'Cyberpunk', 'Avengers', 'Batman'];
+const List<String> defaultRecentSearches = [
+  'Dune',
+  'Cyberpunk',
+  'Avengers',
+  'Batman'
+];
 
 /// Danh sách năm phát hành cho bộ lọc
-const List<String> filterYears = ['Tất cả', '2024', '2023', '2022', '2021', 'Trở về trước'];
+const List<String> filterYears = [
+  'Tất cả',
+  '2024',
+  '2023',
+  '2022',
+  '2021',
+  'Trở về trước'
+];
 
 /// Danh sách sắp xếp cho bộ lọc
-const List<String> filterSortOptions = ['Mới nhất', 'Đánh giá cao', 'Phổ biến nhất'];
+const List<String> filterSortOptions = [
+  'Mới nhất',
+  'Đánh giá cao',
+  'Phổ biến nhất'
+];
 
 /// Danh sách thể loại cho bộ lọc (có "Tất cả")
-const List<String> filterGenres = ['Tất cả', 'Hành Động', 'Viễn Tưởng', 'Kinh Dị', 'Tình Cảm', 'Hài Hước'];
+const List<String> filterGenres = [
+  'Tất cả',
+  'Hành Động',
+  'Viễn Tưởng',
+  'Kinh Dị',
+  'Tình Cảm',
+  'Hài Hước'
+];

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../models/movie_model.dart';
 import '../theme/app_theme.dart';
+import 'flix_network_image.dart';
 
 /// Widget thẻ phim dùng chung cho toàn bộ ứng dụng.
 /// Có 3 dạng hiển thị: poster (ngang), grid (lưới 2 cột), listTile (hàng ngang).
@@ -72,7 +73,7 @@ class MovieCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              child: Image.network(
+              child: FlixNetworkImage(
                 movie.imageUrl,
                 height: 170,
                 width: 130,
@@ -120,7 +121,7 @@ class MovieCard extends StatelessWidget {
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(AppTheme.radiusLg),
                     ),
-                    child: Image.network(
+                    child: FlixNetworkImage(
                       movie.imageUrl,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -149,7 +150,8 @@ class MovieCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.star, color: AppTheme.accentGold, size: 14),
+                            const Icon(Icons.star,
+                                color: AppTheme.accentGold, size: 14),
                             const SizedBox(width: 4),
                             Text(
                               '${movie.rating}',
@@ -172,14 +174,17 @@ class MovieCard extends StatelessWidget {
                 top: 8,
                 left: 8,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                   decoration: BoxDecoration(
                     color: badgeText == 'TOP 10'
                         ? AppTheme.primaryRed
                         : Colors.black.withValues(alpha: 0.75),
                     borderRadius: BorderRadius.circular(4),
                     border: Border.all(
-                      color: badgeText == 'TOP 10' ? Colors.white30 : AppTheme.primaryRed,
+                      color: badgeText == 'TOP 10'
+                          ? Colors.white30
+                          : AppTheme.primaryRed,
                       width: 0.8,
                     ),
                   ),
@@ -243,7 +248,7 @@ class MovieCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  child: Image.network(
+                  child: FlixNetworkImage(
                     movie.imageUrl,
                     width: showProgress ? 60 : 80,
                     height: showProgress ? 85 : 110,
@@ -255,7 +260,8 @@ class MovieCard extends StatelessWidget {
                     top: 4,
                     left: 4,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 5, vertical: 2),
                       decoration: BoxDecoration(
                         color: AppTheme.primaryRed,
                         borderRadius: BorderRadius.circular(3),
@@ -295,7 +301,8 @@ class MovieCard extends StatelessWidget {
                     LinearProgressIndicator(
                       value: movie.watchProgress,
                       backgroundColor: Colors.white12,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryRed),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppTheme.primaryRed),
                     ),
                   ] else ...[
                     Text(
@@ -305,7 +312,8 @@ class MovieCard extends StatelessWidget {
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        const Icon(Icons.star, color: AppTheme.accentGold, size: 16),
+                        const Icon(Icons.star,
+                            color: AppTheme.accentGold, size: 16),
                         const SizedBox(width: 4),
                         Text(
                           '${movie.rating} / 5',

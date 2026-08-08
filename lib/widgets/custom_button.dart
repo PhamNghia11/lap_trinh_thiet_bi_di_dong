@@ -64,7 +64,8 @@ class PrimaryIconButton extends StatelessWidget {
       icon: Icon(icon, color: Colors.white),
       label: Text(
         text,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style:
+            const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
     );
   }
