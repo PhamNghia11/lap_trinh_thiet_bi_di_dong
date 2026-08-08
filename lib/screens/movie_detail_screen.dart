@@ -9,6 +9,9 @@ import '../data/mock_data.dart';
 import '../widgets/movie_card.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/flix_network_image.dart';
+import '../data/tmdb_repository.dart';
+import '../data/user_data_repository.dart';
+import '../core/app_session.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   final Movie? movie;
@@ -28,12 +31,67 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   bool _isInPlaylist = false;
   bool _isRatingExpanded = false;
   bool _isDescriptionExpanded = false;
+  final _movies = TmdbRepository();
+  final _userData = UserDataRepository();
 
   @override
   void initState() {
     super.initState();
     _currentMovie = widget.movie ?? mockMovies.first;
     _isFavorite = _currentMovie.isFavorite;
+    _loadDetail();
+  }
+
+  Future<void> _loadDetail() async {
+    if (int.tryParse(_currentMovie.id) == null) return;
+    try {
+      final detail = await _movies.detail(_currentMovie.id);
+      final rows = await _userData.reviews(_currentMovie.id);
+      final reviews = rows.map((row) {
+        final user = row['user'] as Map<String, dynamic>? ?? const {};
+        return UserReview(
+          userName: user['fullName'] as String? ?? 'Người dùng FLIX',
+          userAvatar: user['avatarUrl'] as String? ?? '',
+          rating: (row['rating'] as num?)?.toDouble() ?? 0,
+          date: (row['createdAt'] as String? ?? '').split('T').first,
+          comment: row['hasSpoiler'] == true
+              ? '[Có tiết lộ nội dung] ${row['comment'] ?? ''}'
+              : row['comment'] as String? ?? '',
+        );
+      }).toList();
+      if (mounted) {
+        setState(() => _currentMovie = detail.copyWith(
+              isFavorite: _isFavorite,
+              reviews: reviews,
+            ));
+      }
+    } catch (_) {
+      // Giữ dữ liệu hiện tại khi kết nối tạm thời không khả dụng.
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (!AppSession.instance.isAuthenticated) {
+      await Navigator.pushNamed(context, AppRoutes.login);
+      return;
+    }
+    final next = !_isFavorite;
+    setState(() => _isFavorite = next);
+    try {
+      next
+          ? await _userData.addFavorite(_currentMovie.id)
+          : await _userData.removeFavorite(_currentMovie.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next ? 'Đã thêm vào Yêu thích' : 'Đã xóa khỏi Yêu thích')),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _isFavorite = !next);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$error')));
+      }
+    }
   }
 
   /// Dialog/BottomSheet xem thông tin chi tiết Diễn viên
@@ -139,20 +197,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         size: 22,
                       ),
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _isFavorite = !_isFavorite;
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            _isFavorite
-                                ? 'Đã thêm "${movie.title}" vào Yêu thích'
-                                : 'Đã xóa khỏi Yêu thích',
-                          ),
-                        ),
-                      );
-                    },
+                    onPressed: _toggleFavorite,
                   ),
                   // Nút Chia Sẻ với Animation
                   IconButton(

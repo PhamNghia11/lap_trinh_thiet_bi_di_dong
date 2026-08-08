@@ -40,6 +40,7 @@ Không commit file `.env`.
 
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
+- `GET/PATCH /api/v1/me`
 - `GET /api/v1/movies/popular`
 - `GET /api/v1/movies/now-playing`
 - `GET /api/v1/movies/trending`
@@ -47,6 +48,6 @@ Không commit file `.env`.
 - `GET /api/v1/movies/:id`
 - `GET/POST /api/v1/movies/:movieId/reviews`
 - `GET/POST/DELETE /api/v1/me/favorites`
-- `GET/PUT /api/v1/me/history`
+- `GET/PUT/DELETE /api/v1/me/history`
 
 Các API `/me/*` yêu cầu Bearer JWT.

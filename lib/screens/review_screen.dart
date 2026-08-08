@@ -5,6 +5,9 @@ import '../theme/app_theme.dart';
 import '../models/movie_model.dart';
 import '../data/mock_data.dart';
 import '../widgets/flix_network_image.dart';
+import '../data/user_data_repository.dart';
+import '../core/app_session.dart';
+import '../routes/app_routes.dart';
 
 class ReviewScreen extends StatefulWidget {
   final Movie? movie;
@@ -85,8 +88,27 @@ class _ReviewScreenState extends State<ReviewScreen> {
   void _submitReview() async {
     if (_rating == 0) return;
 
+    if (!AppSession.instance.isAuthenticated) {
+      await Navigator.pushNamed(context, AppRoutes.login);
+      return;
+    }
+
     setState(() => _isSubmitting = true);
-    await Future.delayed(const Duration(milliseconds: 1200));
+    try {
+      final tags = _selectedQuickTags.isEmpty ? '' : '\n${_selectedQuickTags.join(', ')}';
+      await UserDataRepository().saveReview(
+        _targetMovie.id,
+        _rating,
+        '${_reviewController.text.trim()}$tags'.trim(),
+        _hasSpoiler,
+      );
+    } catch (error) {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$error')));
+      }
+      return;
+    }
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);

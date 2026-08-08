@@ -17,8 +17,14 @@ flutter pub get
 flutter run -d chrome
 
 # Chạy trên thiết bị Android/iOS
-flutter run
+flutter run --dart-define=FLIX_API_URL=http://10.0.2.2:3000/api/v1
 ```
+
+`10.0.2.2` dùng cho Android Emulator. Khi chạy trên điện thoại thật, thay bằng
+IP LAN của máy đang chạy NestJS, ví dụ `http://192.168.1.10:3000/api/v1`.
+
+Ứng dụng hiện kết nối API thật cho đăng ký/đăng nhập, khôi phục phiên, phim
+TMDB, tìm kiếm, chi tiết, trailer YouTube, yêu thích, lịch sử, đánh giá và hồ sơ.
 
 ## Cấu trúc Project
 
@@ -31,7 +37,8 @@ Supabase. Xem `backend/README.md` để cấu hình database, TMDB và chạy AP
 lib/
 ├── main.dart              # Entry point
 ├── models/                # Data models (Movie)
-├── data/                  # Mock data
+├── core/                  # API client và phiên đăng nhập
+├── data/                  # Repository API và dữ liệu fallback
 ├── theme/                 # App theme, colors, styles
 ├── widgets/               # Reusable widgets
 ├── routes/                # Route declarations

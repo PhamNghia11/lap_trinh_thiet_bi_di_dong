@@ -1,8 +1,8 @@
 // lib/screens/splash_screen.dart
 import 'package:flutter/material.dart';
-import 'dart:async';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
+import '../core/app_session.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,11 +15,19 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 3), () {
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
-      }
-    });
+    _prepareApp();
+  }
+
+  Future<void> _prepareApp() async {
+    await Future.wait([
+      AppSession.instance.restore(),
+      Future<void>.delayed(const Duration(milliseconds: 1200)),
+    ]);
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(
+      context,
+      AppSession.instance.isAuthenticated ? AppRoutes.home : AppRoutes.onboarding,
+    );
   }
 
   @override

@@ -57,6 +57,7 @@ class Movie {
   final String releaseDate;
   final List<CastMember> castList;
   final List<UserReview> reviews;
+  final String? trailerKey;
 
   const Movie({
     required this.id,
@@ -96,6 +97,7 @@ class Movie {
             'Diễn xuất của Timothée Chalamet và Zendaya vô cùng xuất sắc. Rất đáng tiền ra rạp xem!',
       ),
     ],
+    this.trailerKey,
   });
 
   /// Trả về chuỗi thể loại nối bằng dấu " • "
@@ -113,6 +115,32 @@ class Movie {
             .whereType<String>()
             .toList() ??
         const <String>[];
+    final credits = json['credits'] as Map<String, dynamic>?;
+    final cast = (credits?['cast'] as List<dynamic>? ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .take(12)
+        .map((person) => CastMember(
+              name: person['name'] as String? ?? 'Đang cập nhật',
+              role: person['character'] as String? ?? '',
+              avatarUrl: person['profile_path'] == null
+                  ? ''
+                  : 'https://image.tmdb.org/t/p/w185${person['profile_path']}',
+            ))
+        .toList();
+    final crew = (credits?['crew'] as List<dynamic>? ?? const [])
+        .whereType<Map<String, dynamic>>();
+    final director = crew
+        .where((person) => person['job'] == 'Director')
+        .map((person) => person['name'] as String? ?? '')
+        .where((name) => name.isNotEmpty)
+        .firstOrNull;
+    final videos =
+        (json['videos'] as Map<String, dynamic>?)?['results'] as List<dynamic>? ??
+            const [];
+    final trailer = videos
+        .whereType<Map<String, dynamic>>()
+        .where((video) => video['site'] == 'YouTube' && video['type'] == 'Trailer')
+        .firstOrNull;
     return Movie(
       id: '${json['id'] ?? ''}',
       title: (json['title'] as String?) ?? (json['name'] as String?) ?? 'Chưa có tên',
@@ -120,10 +148,19 @@ class Movie {
       year: int.tryParse(releaseDate.split('-').first) ?? 0,
       rating: (json['vote_average'] as num?)?.toDouble() ?? 0,
       ratingCount: (json['vote_count'] as num?)?.toInt() ?? 0,
-      duration: '${json['runtime'] ?? 0} phút',
+      duration: json['runtime'] == null ? 'Đang cập nhật' : '${json['runtime']} phút',
       description: (json['overview'] as String?) ?? 'Chưa có mô tả.',
       imageUrl: poster == null ? '' : 'https://image.tmdb.org/t/p/w500$poster',
       releaseDate: releaseDate,
+      director: director ?? 'Đang cập nhật',
+      country: (json['production_countries'] as List<dynamic>?)
+              ?.whereType<Map<String, dynamic>>()
+              .map((country) => country['name'] as String?)
+              .whereType<String>()
+              .firstOrNull ??
+          'Đang cập nhật',
+      castList: cast,
+      trailerKey: trailer?['key'] as String?,
     );
   }
 
@@ -181,6 +218,7 @@ class Movie {
     String? releaseDate,
     List<CastMember>? castList,
     List<UserReview>? reviews,
+    String? trailerKey,
   }) {
     return Movie(
       id: id ?? this.id,
@@ -203,6 +241,7 @@ class Movie {
       releaseDate: releaseDate ?? this.releaseDate,
       castList: castList ?? this.castList,
       reviews: reviews ?? this.reviews,
+      trailerKey: trailerKey ?? this.trailerKey,
     );
   }
 }

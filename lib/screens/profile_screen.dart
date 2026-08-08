@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../core/app_session.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,6 +14,13 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final _session = AppSession.instance;
+
+  Future<void> _logout() async {
+    await _session.logout();
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (route) => false);
+  }
   void _confirmLogout() {
     showDialog(
       context: context,
@@ -41,8 +49,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: AppTheme.primaryButtonStyle(),
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pushNamedAndRemoveUntil(
-                  context, AppRoutes.login, (route) => false);
+              _logout();
             },
             child: const Text('Đăng xuất',
                 style: TextStyle(
@@ -54,45 +61,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showEditProfileDialog() {
-    showDialog(
+    final controller = TextEditingController(
+      text: _session.user?['fullName'] as String? ?? '',
+    );
+    showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: AppTheme.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Chỉnh Sửa Hồ Sơ',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              style: const TextStyle(color: Colors.white),
-              decoration: AppTheme.inputDecoration(hintText: 'Họ và tên mới'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              style: const TextStyle(color: Colors.white),
-              decoration: AppTheme.inputDecoration(hintText: 'Số điện thoại'),
-            ),
-          ],
+        title: const Text('Chỉnh sửa hồ sơ', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white),
+          decoration: AppTheme.inputDecoration(hintText: 'Họ và tên'),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child:
-                const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Hủy')),
           ElevatedButton(
-            style: AppTheme.primaryButtonStyle(),
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Cập nhật thông tin hồ sơ thành công!')),
-              );
+            onPressed: () async {
+              try {
+                await _session.updateProfile(controller.text.trim());
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext);
+                if (!mounted) return;
+                setState(() {});
+              } catch (error) {
+                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$error')));
+              }
             },
-            child: const Text('Lưu thay đổi',
-                style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Lưu'),
           ),
         ],
       ),
@@ -177,15 +173,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Nguyễn Văn A',
-                    style: TextStyle(
+                  Text(
+                    _session.user?['fullName'] as String? ?? 'Khách FLIX',
+                    style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white),
                   ),
                   const SizedBox(height: 4),
-                  const Text('nguyenvana@gmail.com', style: AppTheme.mutedText),
+                  Text(
+                    _session.user?['email'] as String? ?? 'Chưa đăng nhập',
+                    style: AppTheme.mutedText,
+                  ),
                   const SizedBox(height: 8),
 
                   // Badge Hạng Thành Viên ("GOLD MEMBER • Thành viên từ 2023")

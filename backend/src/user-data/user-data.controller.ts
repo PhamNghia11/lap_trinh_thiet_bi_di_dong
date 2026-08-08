@@ -14,11 +14,43 @@ import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthUser } from '../auth/current-user.decorator';
 import { PrismaService } from '../prisma/prisma.service';
-import { HistoryDto, ReviewDto } from './user-data.dto';
+import { HistoryDto, ReviewDto, UpdateProfileDto } from './user-data.dto';
 
 @Controller()
 export class UserDataController {
   constructor(private readonly prisma: PrismaService) {}
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('me')
+  profile(@CurrentUser() user: AuthUser) {
+    return this.prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        avatarUrl: true,
+        createdAt: true,
+        _count: { select: { favorites: true, history: true, reviews: true } },
+      },
+    });
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('me')
+  updateProfile(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        ...(dto.fullName !== undefined && { fullName: dto.fullName.trim() }),
+        ...(dto.avatarUrl !== undefined && { avatarUrl: dto.avatarUrl.trim() }),
+      },
+      select: { id: true, email: true, fullName: true, avatarUrl: true },
+    });
+  }
 
   @Get('movies/:movieId/reviews')
   reviews(@Param('movieId', ParseIntPipe) movieId: number) {
@@ -84,6 +116,23 @@ export class UserDataController {
       where: { userId_tmdbMovieId: { userId: user.id, tmdbMovieId: movieId } },
       create: { userId: user.id, tmdbMovieId: movieId, ...dto },
       update: { ...dto, lastWatchedAt: new Date() },
+    });
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('me/history')
+  clearHistory(@CurrentUser() user: AuthUser) {
+    return this.prisma.watchHistory.deleteMany({ where: { userId: user.id } });
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('me/history/:movieId')
+  removeHistory(
+    @CurrentUser() user: AuthUser,
+    @Param('movieId', ParseIntPipe) movieId: number,
+  ) {
+    return this.prisma.watchHistory.deleteMany({
+      where: { userId: user.id, tmdbMovieId: movieId },
     });
   }
 
