@@ -1,11 +1,14 @@
 // lib/screens/profile_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../core/app_session.dart';
+import '../core/ui_state_store.dart';
 import '../widgets/flix_network_image.dart';
+import '../widgets/profile_media_editor.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,6 +19,19 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _session = AppSession.instance;
+  final _scrollController = PersistentScrollController('profile.scroll');
+
+  String get _memberSince {
+    final createdAt = _session.user?['createdAt'] as String?;
+    return DateTime.tryParse(createdAt ?? '')?.year.toString() ??
+        DateTime.now().year.toString();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   Future<void> _logout() async {
     await _session.logout();
@@ -104,6 +120,145 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<void> _editMedia({required bool isCover}) async {
+    try {
+      final dataUrl = await ProfileMediaEditor.pickAndEdit(
+        context,
+        isCover: isCover,
+      );
+      if (dataUrl == null) return;
+      await _session.updateProfile(
+        _session.user?['fullName'] as String? ?? '',
+        avatarUrl: isCover ? null : dataUrl,
+        coverUrl: isCover ? dataUrl : null,
+      );
+      if (!mounted) return;
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content:
+            Text(isCover ? 'Đã cập nhật ảnh bìa' : 'Đã cập nhật ảnh đại diện'),
+      ));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể cập nhật ảnh: $error')));
+    }
+  }
+
+  void _showVipDetails() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppTheme.cardBg,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('FLIX VIP Premium', style: AppTheme.headingMedium),
+              const SizedBox(height: 12),
+              const Text('Không quảng cáo • Chất lượng 4K • Xem không giới hạn',
+                  style: AppTheme.mutedText),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(sheetContext),
+                  icon: const Icon(Icons.notifications_active_outlined),
+                  label: const Text('Nhắc tôi khi thanh toán mở'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _copyInvite() async {
+    final id = _session.user?['id'] as String? ?? 'flix';
+    final code = id.length >= 8 ? id.substring(0, 8).toUpperCase() : id;
+    await Clipboard.setData(ClipboardData(
+      text: 'Tham gia FLIX cùng mình với mã $code',
+    ));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Đã sao chép lời mời và mã $code')),
+    );
+  }
+
+  Widget _buildProfileAvatar() {
+    final avatarUrl = _session.user?['avatarUrl'] as String? ?? '';
+    return Stack(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              colors: [
+                AppTheme.primaryRed,
+                AppTheme.accentGold,
+                AppTheme.primaryRed,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryRed.withValues(alpha: 0.4),
+                blurRadius: 12,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: avatarUrl.isEmpty
+                ? const ColoredBox(
+                    color: AppTheme.inputBg,
+                    child: SizedBox(
+                      width: 92,
+                      height: 92,
+                      child: Icon(Icons.person,
+                          color: AppTheme.textMuted, size: 46),
+                    ),
+                  )
+                : FlixNetworkImage(
+                    avatarUrl,
+                    width: 92,
+                    height: 92,
+                    fit: BoxFit.cover,
+                  ),
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          right: 0,
+          child: Material(
+            color: AppTheme.primaryRed,
+            shape: const CircleBorder(
+              side: BorderSide(color: AppTheme.scaffoldBg, width: 2),
+            ),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () => _editMedia(isCover: false),
+              child: const Tooltip(
+                message: 'Đổi ảnh đại diện',
+                child: Padding(
+                  padding: EdgeInsets.all(7),
+                  child:
+                      Icon(Icons.edit_rounded, color: Colors.white, size: 16),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,80 +277,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // ─── Header Avatar với Viền Gradient Glow & Edit Icon ─────
+            SizedBox(
+              height: 186,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.topCenter,
+                children: [
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 136,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                      child:
+                          (_session.user?['coverUrl'] as String? ?? '').isEmpty
+                              ? Container(
+                                  decoration: const BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xFF32070A),
+                                        Color(0xFF13090B),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                  ),
+                                )
+                              : Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    FlixNetworkImage(
+                                      _session.user!['coverUrl'] as String,
+                                      fit: BoxFit.cover,
+                                    ),
+                                    const DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.transparent,
+                                            Color(0xB3080607),
+                                          ],
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 10,
+                    top: 10,
+                    child: Material(
+                      color: Colors.black54,
+                      shape: const CircleBorder(),
+                      child: IconButton(
+                        tooltip: 'Đổi ảnh bìa',
+                        onPressed: () => _editMedia(isCover: true),
+                        icon: const Icon(Icons.wallpaper_rounded,
+                            color: Colors.white, size: 20),
+                      ),
+                    ),
+                  ),
+                  Positioned(bottom: 0, child: _buildProfileAvatar()),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
             Center(
               child: Column(
                 children: [
-                  Stack(
-                    children: [
-                      // Viền Ring Gradient Glow đỏ rực
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            colors: [
-                              AppTheme.primaryRed,
-                              AppTheme.accentGold,
-                              AppTheme.primaryRed,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.primaryRed.withValues(alpha: 0.4),
-                              blurRadius: 12,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: (_session.user?['avatarUrl'] as String? ?? '')
-                                  .isEmpty
-                              ? const ColoredBox(
-                                  color: AppTheme.inputBg,
-                                  child: SizedBox(
-                                    width: 92,
-                                    height: 92,
-                                    child: Icon(Icons.person,
-                                        color: AppTheme.textMuted, size: 46),
-                                  ),
-                                )
-                              : FlixNetworkImage(
-                                  _session.user!['avatarUrl'] as String,
-                                  width: 92,
-                                  height: 92,
-                                  fit: BoxFit.cover,
-                                ),
-                        ),
-                      ),
-
-                      // Icon Bút Chì Chỉnh Sửa ở Góc Phải Avatar
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: InkWell(
-                          onTap: _showEditProfileDialog,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryRed,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                  color: AppTheme.scaffoldBg, width: 2),
-                            ),
-                            child: const Icon(Icons.edit_rounded,
-                                color: Colors.white, size: 16),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
                   Text(
                     _session.user?['fullName'] as String? ?? 'Khách FLIX',
                     style: const TextStyle(
@@ -220,15 +377,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       border:
                           Border.all(color: AppTheme.accentGold, width: 0.8),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.military_tech_rounded,
+                        const Icon(Icons.military_tech_rounded,
                             color: AppTheme.accentGold, size: 16),
-                        SizedBox(width: 4),
+                        const SizedBox(width: 4),
                         Text(
-                          'GOLD MEMBER • Từ 2023',
-                          style: TextStyle(
+                          'GOLD MEMBER • Từ $_memberSince',
+                          style: const TextStyle(
                             color: AppTheme.accentGold,
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -285,7 +442,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           '${(_session.user?['_count'] as Map<String, dynamic>?)?['reviews'] ?? 0}',
                       label: 'Đánh giá',
                       onTap: () =>
-                          Navigator.pushNamed(context, AppRoutes.review),
+                          Navigator.pushNamed(context, AppRoutes.myReviews),
                     ),
                   ),
                 ],
@@ -358,13 +515,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8)),
                     ),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text(
-                                'Tính năng đăng ký VIP Premium đang mở rộng!')),
-                      );
-                    },
+                    onPressed: _showVipDetails,
                     child: const Text(
                       'Nâng cấp',
                       style: TextStyle(
@@ -407,7 +558,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     icon: Icons.rate_review_outlined,
                     iconColor: AppTheme.accentGold,
                     title: 'Đánh giá của tôi',
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.review),
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppRoutes.myReviews),
                   ),
                   const Divider(color: Colors.white10, height: 1),
                   _buildNavTile(
@@ -422,13 +574,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     iconColor: Colors.purpleAccent,
                     title: 'Mời bạn bè nhận quà',
                     badgeText: '+50 điểm',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text(
-                                'Tính năng mời bạn bè sẽ được kết nối khi hệ thống điểm hoạt động.')),
-                      );
-                    },
+                    onTap: _copyInvite,
                   ),
                   const Divider(color: Colors.white10, height: 1),
                   _buildNavTile(

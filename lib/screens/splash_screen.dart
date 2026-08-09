@@ -26,11 +26,13 @@ class _SplashScreenState extends State<SplashScreen> {
       Future<void>.delayed(const Duration(milliseconds: 1200)),
     ]);
     if (!mounted) return;
+    final restored = AppRoutes.restoredRoute(
+      authenticated: AppSession.instance.isAuthenticated,
+    );
     Navigator.pushReplacementNamed(
       context,
-      AppSession.instance.isAuthenticated
-          ? AppRoutes.home
-          : AppRoutes.onboarding,
+      restored.name!,
+      arguments: restored.arguments,
     );
   }
 

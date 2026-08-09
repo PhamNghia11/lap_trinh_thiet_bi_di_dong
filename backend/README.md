@@ -8,7 +8,7 @@ Backend NestJS cho ứng dụng tra cứu phim FLIX.
 - Prisma ORM
 - PostgreSQL trên Supabase
 - TMDB API
-- JWT authentication
+- JWT authentication và Google/Facebook OAuth
 - Swagger, validation, rate limiting và health check
 
 ## Cài đặt
@@ -33,6 +33,19 @@ Sao chép `.env.example` thành `.env`, sau đó điền:
 - `JWT_SECRET`: chuỗi bí mật dài và ngẫu nhiên.
 - `TMDB_API_KEY`: API key của TMDB.
 - `WEB_ORIGIN`: origin Flutter Web nếu sử dụng.
+- `PUBLIC_API_URL`: URL public của backend, không gồm `/api/v1`.
+- `OAUTH_RETURN_URL`: route Flutter Web nhận kết quả đăng nhập social.
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: OAuth Web credentials từ Google.
+- `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`: thông tin Facebook Login app.
+- `FACEBOOK_GRAPH_VERSION`: phiên bản Graph API đang bật cho Facebook app.
+
+Callback URL cần đăng ký với provider:
+
+- Google: `<PUBLIC_API_URL>/api/v1/auth/oauth/google/callback`
+- Facebook: `<PUBLIC_API_URL>/api/v1/auth/oauth/facebook/callback`. Meta tự
+  cho phép `http://localhost` khi app ở Development mode, nên không thêm URL
+  localhost vào `Valid OAuth Redirect URIs`; chỉ thêm callback HTTPS khi app
+  được triển khai lên domain thật.
 
 Không commit file `.env`.
 
@@ -40,7 +53,11 @@ Không commit file `.env`.
 
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
-- `GET/PATCH /api/v1/me`
+- `GET /api/v1/auth/oauth/providers`
+- `GET /api/v1/auth/oauth/:provider/url`
+- `GET /api/v1/auth/oauth/:provider/callback`
+- `GET/PATCH /api/v1/me` (họ tên, avatar và ảnh bìa)
+- `GET /api/v1/me/reviews`
 - `GET /api/v1/movies/popular`
 - `GET /api/v1/movies/now-playing`
 - `GET /api/v1/movies/trending`
@@ -51,3 +68,7 @@ Không commit file `.env`.
 - `GET/PUT/DELETE /api/v1/me/history`
 
 Các API `/me/*` yêu cầu Bearer JWT.
+
+Ảnh hồ sơ được Flutter crop và nén trước khi gửi. Backend chấp nhận JSON tối đa
+3 MB cho luồng này; không tăng giới hạn nếu chưa có kiểm tra kích thước tương
+ứng ở client và DTO.

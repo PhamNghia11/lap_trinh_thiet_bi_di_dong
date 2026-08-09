@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
@@ -18,11 +20,24 @@ class FlixNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (url.startsWith('data:image/')) {
+      try {
+        final bytes = base64Decode(url.substring(url.indexOf(',') + 1));
+        return Image.memory(bytes,
+            width: width,
+            height: height,
+            fit: fit,
+            errorBuilder: (context, error, stackTrace) => _error());
+      } catch (_) {
+        return _error();
+      }
+    }
     return Image.network(
       url,
       width: width,
       height: height,
       fit: fit,
+      webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
       frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
         if (wasSynchronouslyLoaded || frame != null) return child;
         return Container(
@@ -33,14 +48,16 @@ class FlixNetworkImage extends StatelessWidget {
           child: const CircularProgressIndicator(strokeWidth: 2),
         );
       },
-      errorBuilder: (context, error, stackTrace) => Container(
+      errorBuilder: (context, error, stackTrace) => _error(),
+    );
+  }
+
+  Widget _error() => Container(
         width: width,
         height: height,
         color: AppTheme.surfaceElevated,
         alignment: Alignment.center,
         child:
             const Icon(Icons.broken_image_outlined, color: AppTheme.textMuted),
-      ),
-    );
-  }
+      );
 }

@@ -1,18 +1,40 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import axios from 'axios';
 import { compare, hash } from 'bcrypt';
+import { OAuth2Client } from 'google-auth-library';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChangePasswordDto, LoginDto, RegisterDto } from './auth.dto';
 
+export type SocialProvider = 'google' | 'facebook';
+
+type OAuthState = {
+  purpose: 'social_login';
+  provider: SocialProvider;
+};
+
+type SocialProfile = {
+  provider: SocialProvider;
+  providerUserId: string;
+  email: string;
+  fullName?: string;
+  avatarUrl?: string;
+};
+
 @Injectable()
 export class AuthService {
+  private readonly google = new OAuth2Client();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly config: ConfigService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -28,22 +50,278 @@ export class AuthService {
       },
       select: { id: true, email: true, fullName: true, avatarUrl: true },
     });
-    return {
-      user,
-      accessToken: await this.jwt.signAsync({
-        sub: user.id,
-        email: user.email,
-      }),
-    };
+    return this.sessionFor(user);
   }
 
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email.trim().toLowerCase() },
     });
-    if (!user || !(await compare(dto.password, user.passwordHash))) {
+    if (
+      !user?.passwordHash ||
+      !(await compare(dto.password, user.passwordHash))
+    ) {
       throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
     }
+    return this.sessionFor(user);
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user?.passwordHash) {
+      throw new ConflictException(
+        'Tài khoản đăng nhập qua mạng xã hội chưa thiết lập mật khẩu',
+      );
+    }
+    if (!(await compare(dto.currentPassword, user.passwordHash))) {
+      throw new UnauthorizedException('Mật khẩu hiện tại không đúng');
+    }
+    if (dto.currentPassword === dto.newPassword) {
+      throw new ConflictException('Mật khẩu mới phải khác mật khẩu hiện tại');
+    }
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: await hash(dto.newPassword, 12) },
+    });
+    return { changed: true };
+  }
+
+  availableSocialProviders() {
+    return {
+      google: this.isProviderConfigured('google'),
+      facebook: this.isProviderConfigured('facebook'),
+    };
+  }
+
+  async socialAuthorizationUrl(providerValue: string) {
+    const provider = this.parseProvider(providerValue);
+    this.ensureProviderConfigured(provider);
+    const state = await this.jwt.signAsync<OAuthState>(
+      { purpose: 'social_login', provider },
+      { expiresIn: '10m' },
+    );
+    const redirectUri = this.callbackUrl(provider);
+
+    if (provider === 'google') {
+      const query = new URLSearchParams({
+        client_id: this.required('GOOGLE_CLIENT_ID'),
+        redirect_uri: redirectUri,
+        response_type: 'code',
+        scope: 'openid email profile',
+        prompt: 'select_account',
+        state,
+      });
+      return { url: `https://accounts.google.com/o/oauth2/v2/auth?${query}` };
+    }
+
+    const query = new URLSearchParams({
+      client_id: this.required('FACEBOOK_APP_ID'),
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: 'email,public_profile',
+      state,
+    });
+    return {
+      url: `https://www.facebook.com/${this.required('FACEBOOK_GRAPH_VERSION')}/dialog/oauth?${query}`,
+    };
+  }
+
+  async completeSocialLogin(
+    providerValue: string,
+    code?: string,
+    state?: string,
+  ) {
+    const provider = this.parseProvider(providerValue);
+    this.ensureProviderConfigured(provider);
+    if (!code || !state) {
+      throw new BadRequestException('Phản hồi đăng nhập không đầy đủ');
+    }
+
+    let payload: OAuthState;
+    try {
+      payload = await this.jwt.verifyAsync<OAuthState>(state);
+    } catch {
+      throw new UnauthorizedException('Phiên đăng nhập đã hết hạn');
+    }
+    if (payload.purpose !== 'social_login' || payload.provider !== provider) {
+      throw new UnauthorizedException('Phiên đăng nhập không hợp lệ');
+    }
+
+    const profile =
+      provider === 'google'
+        ? await this.googleProfile(code)
+        : await this.facebookProfile(code);
+    return this.upsertSocialUser(profile);
+  }
+
+  socialReturnUrl(result: { accessToken?: string; error?: string }) {
+    const base = this.config.get<string>(
+      'OAUTH_RETURN_URL',
+      'http://localhost:8765/#/auth/callback',
+    );
+    const separator = base.includes('?') ? '&' : '?';
+    if (result.accessToken) {
+      return `${base}${separator}token=${encodeURIComponent(result.accessToken)}`;
+    }
+    return `${base}${separator}error=${encodeURIComponent(result.error ?? 'Đăng nhập không thành công')}`;
+  }
+
+  private async googleProfile(code: string): Promise<SocialProfile> {
+    const clientId = this.required('GOOGLE_CLIENT_ID');
+    const response = await axios.post<{
+      id_token?: string;
+    }>(
+      'https://oauth2.googleapis.com/token',
+      new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: this.required('GOOGLE_CLIENT_SECRET'),
+        redirect_uri: this.callbackUrl('google'),
+        grant_type: 'authorization_code',
+      }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
+    );
+    if (!response.data.id_token) {
+      throw new UnauthorizedException('Google không trả về mã định danh');
+    }
+    const ticket = await this.google.verifyIdToken({
+      idToken: response.data.id_token,
+      audience: clientId,
+    });
+    const payload = ticket.getPayload();
+    if (!payload?.sub || !payload.email || payload.email_verified !== true) {
+      throw new UnauthorizedException('Tài khoản Google chưa xác minh email');
+    }
+    return {
+      provider: 'google',
+      providerUserId: payload.sub,
+      email: payload.email.toLowerCase(),
+      fullName: payload.name,
+      avatarUrl: payload.picture,
+    };
+  }
+
+  private async facebookProfile(code: string): Promise<SocialProfile> {
+    const appId = this.required('FACEBOOK_APP_ID');
+    const appSecret = this.required('FACEBOOK_APP_SECRET');
+    const graphVersion = this.required('FACEBOOK_GRAPH_VERSION');
+    const redirectUri = this.callbackUrl('facebook');
+    const tokenResponse = await axios.get<{ access_token?: string }>(
+      `https://graph.facebook.com/${graphVersion}/oauth/access_token`,
+      {
+        params: {
+          client_id: appId,
+          client_secret: appSecret,
+          redirect_uri: redirectUri,
+          code,
+        },
+      },
+    );
+    const accessToken = tokenResponse.data.access_token;
+    if (!accessToken) {
+      throw new UnauthorizedException('Facebook không trả về access token');
+    }
+
+    const debugResponse = await axios.get<{
+      data?: { is_valid?: boolean; app_id?: string; user_id?: string };
+    }>(`https://graph.facebook.com/${graphVersion}/debug_token`, {
+      params: {
+        input_token: accessToken,
+        access_token: `${appId}|${appSecret}`,
+      },
+    });
+    const debug = debugResponse.data.data;
+    if (!debug?.is_valid || debug.app_id !== appId || !debug.user_id) {
+      throw new UnauthorizedException('Access token Facebook không hợp lệ');
+    }
+
+    const profileResponse = await axios.get<{
+      id?: string;
+      name?: string;
+      email?: string;
+      picture?: { data?: { url?: string } };
+    }>(`https://graph.facebook.com/${graphVersion}/me`, {
+      params: {
+        fields: 'id,name,email,picture.type(large)',
+        access_token: accessToken,
+      },
+    });
+    const profile = profileResponse.data;
+    if (!profile.id || profile.id !== debug.user_id || !profile.email) {
+      throw new UnauthorizedException(
+        'Facebook chưa cấp quyền truy cập địa chỉ email',
+      );
+    }
+    return {
+      provider: 'facebook',
+      providerUserId: profile.id,
+      email: profile.email.toLowerCase(),
+      fullName: profile.name,
+      avatarUrl: profile.picture?.data?.url,
+    };
+  }
+
+  private async upsertSocialUser(profile: SocialProfile) {
+    const user = await this.prisma.$transaction(async (tx) => {
+      const existingAccount = await tx.socialAccount.findUnique({
+        where: {
+          provider_providerUserId: {
+            provider: profile.provider,
+            providerUserId: profile.providerUserId,
+          },
+        },
+        include: { user: true },
+      });
+      if (existingAccount) {
+        return tx.user.update({
+          where: { id: existingAccount.userId },
+          data: {
+            fullName: profile.fullName ?? existingAccount.user.fullName,
+            ...(!existingAccount.user.avatarCustomized && profile.avatarUrl
+              ? { avatarUrl: profile.avatarUrl }
+              : {}),
+          },
+        });
+      }
+
+      const existingUser = await tx.user.findUnique({
+        where: { email: profile.email },
+      });
+      const linkedUser = existingUser
+        ? await tx.user.update({
+            where: { id: existingUser.id },
+            data: {
+              fullName: existingUser.fullName ?? profile.fullName,
+              ...(!existingUser.avatarCustomized && profile.avatarUrl
+                ? { avatarUrl: profile.avatarUrl }
+                : {}),
+            },
+          })
+        : await tx.user.create({
+            data: {
+              email: profile.email,
+              fullName: profile.fullName,
+              avatarUrl: profile.avatarUrl,
+            },
+          });
+      await tx.socialAccount.create({
+        data: {
+          provider: profile.provider,
+          providerUserId: profile.providerUserId,
+          userId: linkedUser.id,
+        },
+      });
+      return linkedUser;
+    });
+    return this.sessionFor(user);
+  }
+
+  private async sessionFor(user: {
+    id: string;
+    email: string;
+    fullName: string | null;
+    avatarUrl: string | null;
+  }) {
     return {
       user: {
         id: user.id,
@@ -58,18 +336,39 @@ export class AuthService {
     };
   }
 
-  async changePassword(userId: string, dto: ChangePasswordDto) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user || !(await compare(dto.currentPassword, user.passwordHash))) {
-      throw new UnauthorizedException('Mật khẩu hiện tại không đúng');
+  private parseProvider(value: string): SocialProvider {
+    if (value !== 'google' && value !== 'facebook') {
+      throw new BadRequestException('Nhà cung cấp đăng nhập không hợp lệ');
     }
-    if (dto.currentPassword === dto.newPassword) {
-      throw new ConflictException('Mật khẩu mới phải khác mật khẩu hiện tại');
+    return value;
+  }
+
+  private isProviderConfigured(provider: SocialProvider) {
+    const keys =
+      provider === 'google'
+        ? ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET']
+        : ['FACEBOOK_APP_ID', 'FACEBOOK_APP_SECRET', 'FACEBOOK_GRAPH_VERSION'];
+    return keys.every((key) => Boolean(this.config.get<string>(key)?.trim()));
+  }
+
+  private ensureProviderConfigured(provider: SocialProvider) {
+    if (!this.isProviderConfigured(provider)) {
+      throw new BadRequestException(
+        `Đăng nhập ${provider === 'google' ? 'Google' : 'Facebook'} chưa được cấu hình trên máy chủ`,
+      );
     }
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { passwordHash: await hash(dto.newPassword, 12) },
-    });
-    return { changed: true };
+  }
+
+  private callbackUrl(provider: SocialProvider) {
+    const publicApiUrl = this.config
+      .get<string>('PUBLIC_API_URL', 'http://localhost:3000')
+      .replace(/\/$/, '');
+    return `${publicApiUrl}/api/v1/auth/oauth/${provider}/callback`;
+  }
+
+  private required(key: string) {
+    const value = this.config.get<string>(key)?.trim();
+    if (!value) throw new BadRequestException(`Thiếu cấu hình ${key}`);
+    return value;
   }
 }

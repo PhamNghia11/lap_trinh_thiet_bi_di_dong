@@ -73,11 +73,17 @@ class MovieCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              child: FlixNetworkImage(
-                movie.imageUrl,
-                height: 170,
-                width: 130,
-                fit: BoxFit.cover,
+              child: AspectRatio(
+                aspectRatio: 2 / 3,
+                child: ColoredBox(
+                  color: AppTheme.surfaceElevated,
+                  child: FlixNetworkImage(
+                    movie.imageUrl,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.contain,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 8),

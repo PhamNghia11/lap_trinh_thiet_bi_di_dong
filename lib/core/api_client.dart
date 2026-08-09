@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiException implements Exception {
   const ApiException(this.message, {this.statusCode});
@@ -16,6 +17,7 @@ class ApiClient {
   static final ApiClient instance = ApiClient._();
 
   static const _tokenKey = 'flix_access_token';
+  static const _cachePrefix = 'flix_cache.';
   static const _storage = FlutterSecureStorage();
   final http.Client _http = http.Client();
   final String baseUrl = const String.fromEnvironment(
@@ -27,7 +29,8 @@ class ApiClient {
   String? get token => _token;
   bool get isAuthenticated => _token != null && _token!.isNotEmpty;
 
-  Future<void> restoreToken() async => _token = await _storage.read(key: _tokenKey);
+  Future<void> restoreToken() async =>
+      _token = await _storage.read(key: _tokenKey);
 
   Future<void> saveToken(String token) async {
     _token = token;
@@ -41,11 +44,71 @@ class ApiClient {
 
   Future<dynamic> get(String path, {bool authenticated = false}) =>
       _request('GET', path, authenticated: authenticated);
-  Future<dynamic> post(String path, {Object? body, bool authenticated = false}) =>
+
+  /// Persistent cache for public read-only endpoints. Expired data is only
+  /// returned when the network is unavailable.
+  Future<dynamic> getCached(
+    String path, {
+    Duration ttl = const Duration(minutes: 10),
+  }) async {
+    final preferences = await SharedPreferences.getInstance();
+    final key =
+        '$_cachePrefix${base64Url.encode(utf8.encode('$baseUrl$path'))}';
+    final stored = preferences.getString(key);
+    Map<String, dynamic>? cached;
+    if (stored != null) {
+      try {
+        cached = Map<String, dynamic>.from(jsonDecode(stored) as Map);
+        final savedAt = DateTime.tryParse(cached['savedAt'] as String? ?? '');
+        if (savedAt != null && DateTime.now().difference(savedAt) <= ttl) {
+          return cached['data'];
+        }
+      } catch (_) {
+        await preferences.remove(key);
+        cached = null;
+      }
+    }
+
+    try {
+      final data = await get(path);
+      await preferences.setString(
+        key,
+        jsonEncode({'savedAt': DateTime.now().toIso8601String(), 'data': data}),
+      );
+      return data;
+    } catch (_) {
+      if (cached != null && cached.containsKey('data')) return cached['data'];
+      rethrow;
+    }
+  }
+
+  Future<int> cacheSizeBytes() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences
+        .getKeys()
+        .where((key) => key.startsWith(_cachePrefix))
+        .fold<int>(
+            0,
+            (sum, key) =>
+                sum + utf8.encode(preferences.getString(key) ?? '').length);
+  }
+
+  Future<void> clearCache() async {
+    final preferences = await SharedPreferences.getInstance();
+    await Future.wait(preferences
+        .getKeys()
+        .where((key) => key.startsWith(_cachePrefix))
+        .map(preferences.remove));
+  }
+
+  Future<dynamic> post(String path,
+          {Object? body, bool authenticated = false}) =>
       _request('POST', path, body: body, authenticated: authenticated);
-  Future<dynamic> put(String path, {Object? body, bool authenticated = false}) =>
+  Future<dynamic> put(String path,
+          {Object? body, bool authenticated = false}) =>
       _request('PUT', path, body: body, authenticated: authenticated);
-  Future<dynamic> patch(String path, {Object? body, bool authenticated = false}) =>
+  Future<dynamic> patch(String path,
+          {Object? body, bool authenticated = false}) =>
       _request('PATCH', path, body: body, authenticated: authenticated);
   Future<dynamic> delete(String path, {bool authenticated = false}) =>
       _request('DELETE', path, authenticated: authenticated);
@@ -58,21 +121,27 @@ class ApiClient {
   }) async {
     final headers = <String, String>{'Content-Type': 'application/json'};
     if (authenticated) {
-      if (!isAuthenticated) throw const ApiException('Vui lòng đăng nhập để tiếp tục', statusCode: 401);
+      if (!isAuthenticated) {
+        throw const ApiException('Vui lòng đăng nhập để tiếp tục',
+            statusCode: 401);
+      }
       headers['Authorization'] = 'Bearer $_token';
     }
-    final request = http.Request(method, Uri.parse('$baseUrl$path'))..headers.addAll(headers);
+    final request = http.Request(method, Uri.parse('$baseUrl$path'))
+      ..headers.addAll(headers);
     if (body != null) request.body = jsonEncode(body);
-    final streamed = await _http.send(request).timeout(const Duration(seconds: 15));
+    final streamed =
+        await _http.send(request).timeout(const Duration(seconds: 15));
     final response = await http.Response.fromStream(streamed);
     final decoded = response.body.isEmpty ? null : jsonDecode(response.body);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       if (response.statusCode == 401) await clearToken();
-      final message = decoded is Map<String, dynamic>
-          ? decoded['message']
-          : null;
+      final message =
+          decoded is Map<String, dynamic> ? decoded['message'] : null;
       throw ApiException(
-        message is List ? message.join(', ') : (message?.toString() ?? 'Yêu cầu không thành công'),
+        message is List
+            ? message.join(', ')
+            : (message?.toString() ?? 'Yêu cầu không thành công'),
         statusCode: response.statusCode,
       );
     }

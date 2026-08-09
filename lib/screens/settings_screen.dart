@@ -7,6 +7,9 @@ import '../core/app_preferences.dart';
 import '../core/app_session.dart';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
+import '../core/api_client.dart';
+import '../core/ui_state_store.dart';
+import '../widgets/flix_network_image.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -18,23 +21,38 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _preferences = AppPreferences.instance;
   final _session = AppSession.instance;
+  final _scrollController = PersistentScrollController('settings.scroll');
   bool _notifications = true;
-  final bool _darkMode = true;
   bool _autoPlay = false;
   bool _wifiOnlyDownload = true;
+  bool get _darkMode => _preferences.cinematicNoir;
 
-  String _cacheSize = '1.2 GB';
+  String _cacheSize = 'Đang tính...';
 
   @override
   void initState() {
     super.initState();
     _preferences.addListener(_syncPreferences);
     _syncPreferences();
+    _loadCacheSize();
+  }
+
+  Future<void> _loadCacheSize() async {
+    final bytes = await ApiClient.instance.cacheSizeBytes();
+    if (!mounted) return;
+    setState(() => _cacheSize = _formatBytes(bytes));
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
   @override
   void dispose() {
     _preferences.removeListener(_syncPreferences);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -52,7 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     PaintingBinding.instance.imageCache.clearLiveImages();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: AppTheme.cardBg,
         title:
             const Text('Xóa bộ nhớ đệm', style: TextStyle(color: Colors.white)),
@@ -62,14 +80,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child:
                 const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
           ),
           ElevatedButton(
             style: AppTheme.primaryButtonStyle(),
-            onPressed: () {
-              Navigator.pop(context);
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await ApiClient.instance.clearCache();
+              if (!mounted) return;
               setState(() => _cacheSize = '0 MB');
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Đã xóa bộ nhớ đệm thành công!')),
@@ -190,10 +210,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _rateApp() async {
+    var selected = _preferences.appRating == 0 ? 5 : _preferences.appRating;
+    final rating = await showDialog<int>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppTheme.cardBg,
+          title: const Text('Đánh giá ứng dụng',
+              style: TextStyle(color: Colors.white)),
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (index) {
+              final value = index + 1;
+              return IconButton(
+                onPressed: () => setDialogState(() => selected = value),
+                icon: Icon(value <= selected ? Icons.star : Icons.star_border,
+                    color: AppTheme.accentGold),
+              );
+            }),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Hủy')),
+            ElevatedButton(
+                onPressed: () => Navigator.pop(dialogContext, selected),
+                child: const Text('Gửi đánh giá')),
+          ],
+        ),
+      ),
+    );
+    if (rating == null) return;
+    await _preferences.setAppRating(rating);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Đã lưu đánh giá $rating sao. Cảm ơn bạn!')),
+    );
+  }
+
+  Future<void> _contactSupport() async {
+    final launched = await launchUrl(
+      Uri.parse('mailto:support@flix.local?subject=Hỗ trợ FLIX'),
+    );
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Không tìm thấy ứng dụng email trên thiết bị'),
+      ));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.scaffoldBg,
+      backgroundColor:
+          _darkMode ? AppTheme.scaffoldBg : const Color(0xFF18141A),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -205,6 +276,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
       body: ListView(
+        controller: _scrollController,
         padding: const EdgeInsets.all(20),
         children: [
           // ─── User Profile Header Card ─────────────────────────────
@@ -221,10 +293,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             child: Row(
               children: [
-                const CircleAvatar(
-                  radius: 28,
-                  backgroundImage:
-                      NetworkImage('https://picsum.photos/id/1005/200/200'),
+                ClipOval(
+                  child: (_session.user?['avatarUrl'] as String? ?? '').isEmpty
+                      ? const ColoredBox(
+                          color: AppTheme.inputBg,
+                          child: SizedBox(
+                            width: 56,
+                            height: 56,
+                            child: Icon(Icons.person,
+                                color: AppTheme.textMuted, size: 30),
+                          ),
+                        )
+                      : FlixNetworkImage(
+                          _session.user!['avatarUrl'] as String,
+                          width: 56,
+                          height: 56,
+                        ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -365,7 +449,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('Giao diện tối (Cinematic Noir)',
                 style: TextStyle(color: Colors.white)),
             value: _darkMode,
-            onChanged: null,
+            onChanged: _preferences.setCinematicNoir,
           ),
           ListTile(
             leading:
@@ -403,12 +487,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(color: Colors.white)),
             trailing: const Icon(Icons.chevron_right_rounded,
                 color: AppTheme.textMuted),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Cảm ơn bạn đã đánh giá 5 sao cho FLIX!')),
-              );
-            },
+            onTap: _rateApp,
           ),
           ListTile(
             leading: const Icon(Icons.share_rounded, color: AppTheme.textMuted),
@@ -433,8 +512,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(color: Colors.white)),
             trailing: const Icon(Icons.chevron_right_rounded,
                 color: AppTheme.textMuted),
-            onTap: () => launchUrl(
-                Uri.parse('mailto:support@flix.local?subject=Hỗ trợ FLIX')),
+            onTap: _contactSupport,
           ),
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined,
@@ -445,13 +523,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: AppTheme.textMuted),
             onTap: _showLegal,
           ),
-          const ListTile(
-            leading:
-                Icon(Icons.info_outline_rounded, color: AppTheme.textMuted),
-            title: Text('Phiên bản ứng dụng',
+          ListTile(
+            leading: const Icon(Icons.info_outline_rounded,
+                color: AppTheme.textMuted),
+            title: const Text('Phiên bản ứng dụng',
                 style: TextStyle(color: Colors.white)),
             subtitle:
-                Text('FLIX v1.2.0 (Build 2026)', style: AppTheme.mutedText),
+                const Text('FLIX v1.0.0 (Build 1)', style: AppTheme.mutedText),
+            onTap: () => showAboutDialog(
+              context: context,
+              applicationName: 'FLIX',
+              applicationVersion: '1.0.0+1',
+              applicationLegalese: '© 2026 FLIX Movie App',
+            ),
           ),
           const SizedBox(height: 28),
 

@@ -9,6 +9,8 @@ class AppPreferences extends ChangeNotifier {
   bool autoPlayTrailer = false;
   bool wifiOnly = true;
   String videoQuality = 'Tự động';
+  bool cinematicNoir = true;
+  int appRating = 0;
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -16,6 +18,8 @@ class AppPreferences extends ChangeNotifier {
     autoPlayTrailer = prefs.getBool('autoPlayTrailer') ?? false;
     wifiOnly = prefs.getBool('wifiOnly') ?? true;
     videoQuality = prefs.getString('videoQuality') ?? 'Tự động';
+    cinematicNoir = prefs.getBool('cinematicNoir') ?? true;
+    appRating = prefs.getInt('appRating') ?? 0;
     notifyListeners();
   }
 
@@ -43,6 +47,19 @@ class AppPreferences extends ChangeNotifier {
     videoQuality = value;
     await (await SharedPreferences.getInstance())
         .setString('videoQuality', value);
+    notifyListeners();
+  }
+
+  Future<void> setCinematicNoir(bool value) async {
+    cinematicNoir = value;
+    await (await SharedPreferences.getInstance())
+        .setBool('cinematicNoir', value);
+    notifyListeners();
+  }
+
+  Future<void> setAppRating(int value) async {
+    appRating = value;
+    await (await SharedPreferences.getInstance()).setInt('appRating', value);
     notifyListeners();
   }
 }

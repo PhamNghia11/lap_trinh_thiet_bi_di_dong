@@ -8,16 +8,33 @@ datasource db {
 }
 
 model User {
-  id           String          @id @default(uuid()) @db.Uuid
-  email        String          @unique
-  passwordHash String
-  fullName     String?
-  avatarUrl    String?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  favorites    Favorite[]
-  history      WatchHistory[]
-  reviews      Review[]
+  id               String          @id @default(uuid()) @db.Uuid
+  email            String          @unique
+  passwordHash     String?
+  fullName         String?
+  avatarUrl        String?
+  coverUrl         String?
+  avatarCustomized Boolean         @default(false)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  socialAccounts   SocialAccount[]
+  favorites        Favorite[]
+  history          WatchHistory[]
+  reviews          Review[]
+}
+
+model SocialAccount {
+  id             String   @id @default(uuid()) @db.Uuid
+  provider       String
+  providerUserId String
+  userId         String   @db.Uuid
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@unique([userId, provider])
+  @@index([userId])
 }
 
 model MovieCache {

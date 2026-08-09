@@ -59,7 +59,24 @@ export class TmdbService {
       'vote_count.gte': 50,
     });
   }
-  detail(id: number) {
-    return this.get(`/movie/${id}`, { append_to_response: 'credits,videos' });
+  async detail(id: number) {
+    const data = await this.get<Record<string, unknown>>(`/movie/${id}`, {
+      append_to_response:
+        'credits,videos,keywords,release_dates,watch/providers',
+    });
+    const currentVideos = (data.videos as { results?: unknown[] } | undefined)
+      ?.results;
+    if (currentVideos?.length) return data;
+
+    const apiKey = process.env.TMDB_API_KEY;
+    if (!apiKey) return data;
+    try {
+      const response = await this.client.get(`/movie/${id}/videos`, {
+        params: { api_key: apiKey, language: 'en-US' },
+      });
+      return { ...data, videos: response.data };
+    } catch {
+      return data;
+    }
   }
 }

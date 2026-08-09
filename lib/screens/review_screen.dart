@@ -8,6 +8,7 @@ import '../widgets/flix_network_image.dart';
 import '../data/user_data_repository.dart';
 import '../core/app_session.dart';
 import '../routes/app_routes.dart';
+import '../core/ui_state_store.dart';
 
 class ReviewScreen extends StatefulWidget {
   final Movie? movie;
@@ -30,6 +31,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
   final TextEditingController _reviewController = TextEditingController();
   final Set<String> _selectedQuickTags = {};
+  late final String _draftKey;
+  late final PersistentScrollController _scrollController;
 
   final List<String> _quickTags = [
     'Kịch bản hay',
@@ -44,15 +47,40 @@ class _ReviewScreenState extends State<ReviewScreen> {
   void initState() {
     super.initState();
     _targetMovie = widget.movie ?? mockMovies.first;
+    _draftKey = 'review.${_targetMovie.id}';
+    _scrollController = PersistentScrollController('$_draftKey.scroll');
+    final draft = UiStateStore.instance.json(_draftKey);
+    if (draft != null) {
+      _rating = (draft['rating'] as num?)?.toInt() ?? 0;
+      _hasSpoiler = draft['hasSpoiler'] as bool? ?? false;
+      _hasAttachedImage = draft['hasAttachedImage'] as bool? ?? false;
+      _selectedQuickTags.addAll(
+        (draft['quickTags'] as List<dynamic>? ?? const [])
+            .map((item) => '$item'),
+      );
+      _reviewController.text = draft['comment'] as String? ?? '';
+    }
     _reviewController.addListener(() {
       setState(() {});
+      _saveDraft();
     });
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _reviewController.dispose();
     super.dispose();
+  }
+
+  void _saveDraft() {
+    UiStateStore.instance.setJson(_draftKey, {
+      'rating': _rating,
+      'hasSpoiler': _hasSpoiler,
+      'hasAttachedImage': _hasAttachedImage,
+      'quickTags': _selectedQuickTags.toList(),
+      'comment': _reviewController.text,
+    });
   }
 
   /// Trả về mô tả cảm xúc tương ứng với số sao đã chọn
@@ -82,6 +110,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
         _selectedQuickTags.add(tag);
       }
     });
+    _saveDraft();
   }
 
   /// Xử lý gửi đánh giá với loading animation & Success Dialog
@@ -162,6 +191,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
       },
     );
 
+    await UiStateStore.instance.remove(_draftKey);
     if (mounted) Navigator.pop(context);
   }
 
@@ -185,6 +215,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,6 +306,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           setState(() {
                             _rating = starIndex;
                           });
+                          _saveDraft();
                         },
                         child: AnimatedScale(
                           duration: const Duration(milliseconds: 200),
@@ -412,6 +444,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     setState(() {
                       _hasAttachedImage = !_hasAttachedImage;
                     });
+                    _saveDraft();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(_hasAttachedImage
@@ -448,6 +481,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         setState(() {
                           _hasSpoiler = val ?? false;
                         });
+                        _saveDraft();
                       },
                     ),
                     const Text('Tiết lộ nội dung (Spoiler)',

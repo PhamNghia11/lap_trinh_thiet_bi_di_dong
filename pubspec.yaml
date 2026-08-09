@@ -16,7 +16,10 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   url_launcher: ^6.3.1
   shared_preferences: ^2.3.5
-
+  image_picker: 1.2.3
+  crop_your_image: 2.0.0
+  image: 4.9.1
+  web: ^1.1.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

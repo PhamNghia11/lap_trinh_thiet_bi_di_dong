@@ -1,0 +1,3 @@
+ALTER TABLE "User"
+ADD COLUMN "coverUrl" TEXT,
+ADD COLUMN "avatarCustomized" BOOLEAN NOT NULL DEFAULT false;

@@ -15,7 +15,29 @@ class MovieFilter {
   final String sortLabel;
   final double minRating;
 
-  bool get isActive => genreId != null || year != null || minRating > 0 || sortBy != 'popularity.desc';
+  bool get isActive =>
+      genreId != null ||
+      year != null ||
+      minRating > 0 ||
+      sortBy != 'popularity.desc';
+
+  Map<String, dynamic> toJson() => {
+        'genreId': genreId,
+        'genreLabel': genreLabel,
+        'year': year,
+        'sortBy': sortBy,
+        'sortLabel': sortLabel,
+        'minRating': minRating,
+      };
+
+  factory MovieFilter.fromJson(Map<String, dynamic> json) => MovieFilter(
+        genreId: (json['genreId'] as num?)?.toInt(),
+        genreLabel: json['genreLabel'] as String? ?? 'Táº¥t cáº£',
+        year: (json['year'] as num?)?.toInt(),
+        sortBy: json['sortBy'] as String? ?? 'popularity.desc',
+        sortLabel: json['sortLabel'] as String? ?? 'Phá»• biáº¿n nháº¥t',
+        minRating: (json['minRating'] as num?)?.toDouble() ?? 0,
+      );
 }
 
 const movieGenreOptions = <String, int?>{

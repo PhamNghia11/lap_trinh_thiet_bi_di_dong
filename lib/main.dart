@@ -2,8 +2,17 @@
 import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
 import 'routes/app_routes.dart';
+import 'core/ui_state_store.dart';
+import 'core/app_session.dart';
+import 'core/app_preferences.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Future.wait([
+    UiStateStore.instance.initialize(),
+    AppSession.instance.restore(),
+    AppPreferences.instance.load(),
+  ]);
   runApp(const FlixApp());
 }
 
@@ -19,6 +28,7 @@ class FlixApp extends StatelessWidget {
       initialRoute: AppRoutes.splash,
       routes: AppRoutes.routes,
       onGenerateRoute: AppRoutes.onGenerateRoute,
+      navigatorObservers: [AppRoutes.navigationObserver],
     );
   }
 }

@@ -41,19 +41,33 @@ class AppSession extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> completeSocialLogin(String accessToken) async {
+    await ApiClient.instance.saveToken(accessToken);
+    try {
+      user = Map<String, dynamic>.from(
+          await ApiClient.instance.get('/me', authenticated: true));
+      notifyListeners();
+    } catch (_) {
+      await ApiClient.instance.clearToken();
+      rethrow;
+    }
+  }
+
   Future<void> refreshProfile() async {
     user = Map<String, dynamic>.from(
         await ApiClient.instance.get('/me', authenticated: true));
     notifyListeners();
   }
 
-  Future<void> updateProfile(String fullName, {String? avatarUrl}) async {
+  Future<void> updateProfile(String fullName,
+      {String? avatarUrl, String? coverUrl}) async {
     user = Map<String, dynamic>.from(await ApiClient.instance.patch(
       '/me',
       authenticated: true,
       body: {
         'fullName': fullName,
-        if (avatarUrl != null) 'avatarUrl': avatarUrl
+        if (avatarUrl != null) 'avatarUrl': avatarUrl,
+        if (coverUrl != null) 'coverUrl': coverUrl,
       },
     ));
     notifyListeners();

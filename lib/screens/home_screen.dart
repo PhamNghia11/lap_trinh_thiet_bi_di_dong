@@ -11,6 +11,7 @@ import '../widgets/bottom_nav_bar.dart';
 import '../data/tmdb_repository.dart';
 import '../models/movie_filter.dart';
 import '../widgets/flix_drawer.dart';
+import '../core/ui_state_store.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,7 +21,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _bannerIndex = 0;
+  int _bannerIndex = UiStateStore.instance.integer('home.banner') ?? 0;
+  final _scrollController = PersistentScrollController('home.scroll');
   final TmdbRepository _repository = TmdbRepository();
   List<Movie> _movies = mockMovies;
   final Map<String, List<Movie>> _genreMovies = {};
@@ -29,6 +31,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadMovies();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadMovies() async {
@@ -40,7 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
       };
       final collections = await Future.wait(genreList.map((genre) async {
         try {
-          final result = await _repository.discover(genreId: movieGenreOptions[genre]);
+          final result =
+              await _repository.discover(genreId: movieGenreOptions[genre]);
           return MapEntry(genre, result);
         } catch (_) {
           return MapEntry(genre, const <Movie>[]);
@@ -71,10 +80,11 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: AppTheme.appBarBg,
         elevation: 0,
-        leading: Builder(builder: (context) => IconButton(
-          icon: const Icon(Icons.menu, color: AppTheme.textMuted),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        )),
+        leading: Builder(
+            builder: (context) => IconButton(
+                  icon: const Icon(Icons.menu, color: AppTheme.textMuted),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                )),
         title: const Text('FLIX', style: AppTheme.logoStyle),
         actions: [
           IconButton(
@@ -88,6 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -96,6 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 CarouselSlider(
                   options: CarouselOptions(
+                    initialPage: _bannerIndex,
                     height: 380,
                     viewportFraction: 1.0,
                     autoPlay: true,
@@ -106,11 +118,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       setState(() {
                         _bannerIndex = index;
                       });
+                      UiStateStore.instance.setInt('home.banner', index);
                     },
                   ),
                   items: featuredMovies.map((movie) {
                     return Builder(
                       builder: (BuildContext context) {
+                        final hasBackdrop = movie.backdropUrl.isNotEmpty;
+                        final bannerUrl =
+                            hasBackdrop ? movie.backdropUrl : movie.imageUrl;
                         return GestureDetector(
                           onTap: () => Navigator.pushNamed(
                               context, AppRoutes.movieDetail,
@@ -121,9 +137,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 height: 380,
                                 width: double.infinity,
                                 decoration: BoxDecoration(
+                                  color: AppTheme.appBarBg,
                                   image: DecorationImage(
-                                    image: NetworkImage(movie.imageUrl),
+                                    image: NetworkImage(bannerUrl),
                                     fit: BoxFit.cover,
+                                    alignment: Alignment.center,
                                   ),
                                 ),
                               ),

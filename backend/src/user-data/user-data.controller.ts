@@ -30,6 +30,7 @@ export class UserDataController {
         email: true,
         fullName: true,
         avatarUrl: true,
+        coverUrl: true,
         createdAt: true,
         _count: { select: { favorites: true, history: true, reviews: true } },
       },
@@ -38,17 +39,24 @@ export class UserDataController {
 
   @UseGuards(AuthGuard('jwt'))
   @Patch('me')
-  updateProfile(
-    @CurrentUser() user: AuthUser,
-    @Body() dto: UpdateProfileDto,
-  ) {
+  updateProfile(@CurrentUser() user: AuthUser, @Body() dto: UpdateProfileDto) {
     return this.prisma.user.update({
       where: { id: user.id },
       data: {
         ...(dto.fullName !== undefined && { fullName: dto.fullName.trim() }),
         ...(dto.avatarUrl !== undefined && { avatarUrl: dto.avatarUrl.trim() }),
+        ...(dto.avatarUrl !== undefined && { avatarCustomized: true }),
+        ...(dto.coverUrl !== undefined && { coverUrl: dto.coverUrl.trim() }),
       },
-      select: { id: true, email: true, fullName: true, avatarUrl: true },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        avatarUrl: true,
+        coverUrl: true,
+        createdAt: true,
+        _count: { select: { favorites: true, history: true, reviews: true } },
+      },
     });
   }
 
@@ -102,6 +110,15 @@ export class UserDataController {
     return this.prisma.watchHistory.findMany({
       where: { userId: user.id },
       orderBy: { lastWatchedAt: 'desc' },
+    });
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('me/reviews')
+  myReviews(@CurrentUser() user: AuthUser) {
+    return this.prisma.review.findMany({
+      where: { userId: user.id },
+      orderBy: { updatedAt: 'desc' },
     });
   }
 

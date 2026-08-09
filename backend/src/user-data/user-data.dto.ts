@@ -11,7 +11,8 @@ import {
 
 export class UpdateProfileDto {
   @IsOptional() @IsString() @MaxLength(100) fullName?: string;
-  @IsOptional() @IsString() @MaxLength(500) avatarUrl?: string;
+  @IsOptional() @IsString() @MaxLength(1_500_000) avatarUrl?: string;
+  @IsOptional() @IsString() @MaxLength(2_000_000) coverUrl?: string;
 }
 
 export class HistoryDto {
