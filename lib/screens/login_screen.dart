@@ -74,6 +74,15 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       return;
     }
+
+    // Clear the active text field before the OAuth navigation. In a mobile
+    // viewport, keeping it focused makes Flutter Web preserve the old screen
+    // size for the virtual keyboard; Chrome resizing during the redirect can
+    // then produce a negative view inset and abort the navigation.
+    FocusManager.instance.primaryFocus?.unfocus();
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
     setState(() => _socialLoading = provider);
     try {
       final data = Map<String, dynamic>.from(
