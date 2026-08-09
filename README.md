@@ -38,18 +38,18 @@ npm run start:dev
 Terminal 2 - chạy Flutter Web ở debug mode và trỏ tới API local:
 
 ```powershell
-flutter run -d web-server --web-port=8765 --web-server-debug-injected-client-protocol=sse --dart-define=FLIX_API_URL=http://localhost:3000/api/v1
+flutter run -d web-server --web-port=8765 --web-server-debug-protocol=sse --web-server-debug-backend-protocol=sse --web-server-debug-injected-client-protocol=sse --dart-define=FLIX_API_URL=http://localhost:3000/api/v1
 ```
 
 Sau đó tự mở Chrome bình thường và truy cập `http://localhost:8765`. Cách này vừa
 cho phép đăng nhập Google bằng profile Chrome thật, vừa hỗ trợ nhấn `r` trong
-terminal để hot reload hoặc `R` để hot restart. Không cần dừng và chạy lại Flutter
-sau mỗi lần sửa UI.
+terminal để hot reload. Không cần dừng và chạy lại Flutter sau mỗi lần sửa UI.
 
-Tham số `--web-server-debug-injected-client-protocol=sse` tránh lỗi DWDS
-`_JsonMap is not a subtype of List<Object?>` có thể làm bản debug chỉ hiện trang
-trắng sau khi reload hoặc mở trailer. Dòng `DDC is about to load...` chỉ là log
-đang biên dịch; lần chạy debug đầu tiên có thể mất thêm thời gian.
+Ba tham số debug `=sse` tránh lỗi DWDS/WebSocketProxyService như `_JsonMap is not
+a subtype of List<Object?>` hoặc hot restart chỉ nhận `1/2 responses`. Khi sửa UI,
+nhấn `r` thường để hot reload. Tránh `R` hoa khi đang ở màn có iframe trailer vì
+đó là hot restart toàn ứng dụng. Dòng `DDC is about to load...` chỉ là log đang
+biên dịch; lần chạy debug đầu tiên có thể mất thêm thời gian.
 
 Có thể kiểm tra backend tại `http://localhost:3000/api/v1/health`. Nếu quên
 `--dart-define` khi chạy Chrome, ứng dụng sẽ dùng địa chỉ mặc định dành cho
@@ -61,7 +61,7 @@ Nếu vừa thêm hoặc cập nhật Flutter plugin như `image_picker`, hot re
 ```powershell
 flutter clean
 flutter pub get
-flutter run -d web-server --web-port=8765 --web-server-debug-injected-client-protocol=sse --dart-define=FLIX_API_URL=http://localhost:3000/api/v1
+flutter run -d web-server --web-port=8765 --web-server-debug-protocol=sse --web-server-debug-backend-protocol=sse --web-server-debug-injected-client-protocol=sse --dart-define=FLIX_API_URL=http://localhost:3000/api/v1
 ```
 
 Chỉ dùng release mode để kiểm tra bản cuối trước khi deploy. Release mode không có
@@ -120,7 +120,7 @@ callback.
 Khi test đăng nhập Google, chạy Flutter dưới dạng web server:
 
 ```powershell
-flutter run -d web-server --web-port=8765 --web-server-debug-injected-client-protocol=sse --dart-define=FLIX_API_URL=http://localhost:3000/api/v1
+flutter run -d web-server --web-port=8765 --web-server-debug-protocol=sse --web-server-debug-backend-protocol=sse --web-server-debug-injected-client-protocol=sse --dart-define=FLIX_API_URL=http://localhost:3000/api/v1
 ```
 
 Sau đó tự mở Chrome bình thường bằng profile cá nhân và truy cập:

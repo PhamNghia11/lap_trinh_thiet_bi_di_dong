@@ -40,6 +40,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         context, AppRoutes.login, (route) => false);
   }
 
+  void _openLogin() => Navigator.pushNamed(context, AppRoutes.login);
+
+  void _openRegister() => Navigator.pushNamed(context, AppRoutes.register);
+
   void _confirmLogout() {
     showDialog(
       context: context,
@@ -233,34 +237,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
           ),
         ),
-        Positioned(
-          bottom: 0,
-          right: 0,
-          child: Material(
-            color: AppTheme.primaryRed,
-            shape: const CircleBorder(
-              side: BorderSide(color: AppTheme.scaffoldBg, width: 2),
-            ),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: () => _editMedia(isCover: false),
-              child: const Tooltip(
-                message: 'Đổi ảnh đại diện',
-                child: Padding(
-                  padding: EdgeInsets.all(7),
-                  child:
-                      Icon(Icons.edit_rounded, color: Colors.white, size: 16),
+        if (_session.isAuthenticated)
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Material(
+              color: AppTheme.primaryRed,
+              shape: const CircleBorder(
+                side: BorderSide(color: AppTheme.scaffoldBg, width: 2),
+              ),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => _editMedia(isCover: false),
+                child: const Tooltip(
+                  message: 'Đổi ảnh đại diện',
+                  child: Padding(
+                    padding: EdgeInsets.all(7),
+                    child:
+                        Icon(Icons.edit_rounded, color: Colors.white, size: 16),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final isAuthenticated = _session.isAuthenticated;
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
@@ -331,20 +337,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                     ),
                   ),
-                  Positioned(
-                    right: 10,
-                    top: 10,
-                    child: Material(
-                      color: Colors.black54,
-                      shape: const CircleBorder(),
-                      child: IconButton(
-                        tooltip: 'Đổi ảnh bìa',
-                        onPressed: () => _editMedia(isCover: true),
-                        icon: const Icon(Icons.wallpaper_rounded,
-                            color: Colors.white, size: 20),
+                  if (isAuthenticated)
+                    Positioned(
+                      right: 10,
+                      top: 10,
+                      child: Material(
+                        color: Colors.black54,
+                        shape: const CircleBorder(),
+                        child: IconButton(
+                          tooltip: 'Đổi ảnh bìa',
+                          onPressed: () => _editMedia(isCover: true),
+                          icon: const Icon(Icons.wallpaper_rounded,
+                              color: Colors.white, size: 20),
+                        ),
                       ),
                     ),
-                  ),
                   Positioned(bottom: 0, child: _buildProfileAvatar()),
                 ],
               ),
@@ -365,36 +372,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _session.user?['email'] as String? ?? 'Chưa đăng nhập',
                     style: AppTheme.mutedText,
                   ),
-                  const SizedBox(height: 8),
+                  if (isAuthenticated) ...[
+                    const SizedBox(height: 8),
 
-                  // Badge Hạng Thành Viên ("GOLD MEMBER • Thành viên từ 2023")
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.accentGold.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20),
-                      border:
-                          Border.all(color: AppTheme.accentGold, width: 0.8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.military_tech_rounded,
-                            color: AppTheme.accentGold, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          'GOLD MEMBER • Từ $_memberSince',
-                          style: const TextStyle(
-                            color: AppTheme.accentGold,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
+                    // Badge Hạng Thành Viên
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentGold.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border:
+                            Border.all(color: AppTheme.accentGold, width: 0.8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.military_tech_rounded,
+                              color: AppTheme.accentGold, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            'GOLD MEMBER • Từ $_memberSince',
+                            style: const TextStyle(
+                              color: AppTheme.accentGold,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -563,19 +572,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const Divider(color: Colors.white10, height: 1),
                   _buildNavTile(
-                    icon: Icons.badge_outlined,
+                    icon: isAuthenticated
+                        ? Icons.badge_outlined
+                        : Icons.login_rounded,
                     iconColor: Colors.lightBlueAccent,
-                    title: 'Thông tin tài khoản',
-                    onTap: _showEditProfileDialog,
+                    title: isAuthenticated
+                        ? 'Thông tin tài khoản'
+                        : 'Đăng nhập tài khoản',
+                    onTap:
+                        isAuthenticated ? _showEditProfileDialog : _openLogin,
                   ),
-                  const Divider(color: Colors.white10, height: 1),
-                  _buildNavTile(
-                    icon: Icons.card_giftcard_rounded,
-                    iconColor: Colors.purpleAccent,
-                    title: 'Mời bạn bè nhận quà',
-                    badgeText: '+50 điểm',
-                    onTap: _copyInvite,
-                  ),
+                  if (isAuthenticated) ...[
+                    const Divider(color: Colors.white10, height: 1),
+                    _buildNavTile(
+                      icon: Icons.card_giftcard_rounded,
+                      iconColor: Colors.purpleAccent,
+                      title: 'Mời bạn bè nhận quà',
+                      badgeText: '+50 điểm',
+                      onTap: _copyInvite,
+                    ),
+                  ],
                   const Divider(color: Colors.white10, height: 1),
                   _buildNavTile(
                     icon: Icons.settings_outlined,
@@ -587,79 +603,101 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 28),
+            if (isAuthenticated) ...[
+              const SizedBox(height: 28),
 
-            // ─── Phần Hoạt Động Gần Đây (Timeline) ──────────────────
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'HOẠT ĐỘNG GẦN ĐÂY',
-                style: TextStyle(
-                  color: AppTheme.textMuted,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
+              // ─── Phần Hoạt Động Gần Đây (Timeline) ────────────────
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'HOẠT ĐỘNG GẦN ĐÂY',
+                  style: TextStyle(
+                    color: AppTheme.textMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.cardBg.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                border: Border.all(color: Colors.white10),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardBg.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Column(
+                  children: [
+                    _buildTimelineItem(
+                      icon: Icons.play_circle_fill_rounded,
+                      iconColor: AppTheme.primaryRed,
+                      text: 'Lịch sử xem phim sẽ hiển thị tại đây',
+                      time: 'Đồng bộ từ máy chủ',
+                    ),
+                    const Divider(color: Colors.white10, height: 16),
+                    _buildTimelineItem(
+                      icon: Icons.star_rounded,
+                      iconColor: AppTheme.accentGold,
+                      text: 'Đánh giá của bạn được lưu trong tài khoản',
+                      time: 'Đồng bộ từ máy chủ',
+                    ),
+                    const Divider(color: Colors.white10, height: 16),
+                    _buildTimelineItem(
+                      icon: Icons.favorite_rounded,
+                      iconColor: AppTheme.primaryRed,
+                      text: 'Phim yêu thích được đồng bộ tự động',
+                      time: 'Đồng bộ từ máy chủ',
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
+            ],
+            const SizedBox(height: 32),
+
+            if (isAuthenticated)
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(
+                        color: AppTheme.primaryRed, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: _confirmLogout,
+                  icon: const Icon(Icons.logout_rounded,
+                      color: AppTheme.primaryRed),
+                  label: const Text(
+                    'Đăng Xuất Tài Khoản',
+                    style: TextStyle(
+                        color: AppTheme.primaryRed,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15),
+                  ),
+                ),
+              )
+            else
+              Column(
                 children: [
-                  _buildTimelineItem(
-                    icon: Icons.play_circle_fill_rounded,
-                    iconColor: AppTheme.primaryRed,
-                    text: 'Lịch sử xem phim sẽ hiển thị tại đây',
-                    time: 'Đồng bộ từ máy chủ',
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      style: AppTheme.primaryButtonStyle(),
+                      onPressed: _openLogin,
+                      icon: const Icon(Icons.login_rounded),
+                      label: const Text('Đăng Nhập Tài Khoản'),
+                    ),
                   ),
-                  const Divider(color: Colors.white10, height: 16),
-                  _buildTimelineItem(
-                    icon: Icons.star_rounded,
-                    iconColor: AppTheme.accentGold,
-                    text: 'Đánh giá của bạn được lưu trong tài khoản',
-                    time: 'Đồng bộ từ máy chủ',
-                  ),
-                  const Divider(color: Colors.white10, height: 16),
-                  _buildTimelineItem(
-                    icon: Icons.favorite_rounded,
-                    iconColor: AppTheme.primaryRed,
-                    text: 'Phim yêu thích được đồng bộ tự động',
-                    time: 'Đồng bộ từ máy chủ',
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: _openRegister,
+                    child: const Text('Chưa có tài khoản? Đăng ký ngay'),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 32),
-
-            // ─── Nút Đăng Xuất Đỏ Viền (Outline) Tách Biệt ─────────────
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  side:
-                      const BorderSide(color: AppTheme.primaryRed, width: 1.5),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                onPressed: _confirmLogout,
-                icon: const Icon(Icons.logout_rounded,
-                    color: AppTheme.primaryRed),
-                label: const Text(
-                  'Đăng Xuất Tài Khoản',
-                  style: TextStyle(
-                      color: AppTheme.primaryRed,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15),
-                ),
-              ),
-            ),
             const SizedBox(height: 30),
           ],
         ),

@@ -6,6 +6,7 @@ import '../data/mock_data.dart';
 import '../data/tmdb_repository.dart';
 import '../data/user_data_repository.dart';
 import '../models/movie_model.dart';
+import '../routes/app_routes.dart';
 import '../theme/app_theme.dart';
 import '../widgets/flix_network_image.dart';
 import '../widgets/embedded_youtube_player.dart';
@@ -79,6 +80,15 @@ class _TrailerScreenState extends State<TrailerScreen> {
     }
   }
 
+  void _goBack() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    navigator.pushNamedAndRemoveUntil(AppRoutes.home, (_) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final trailerKey = _movie.trailerKey;
@@ -89,6 +99,12 @@ class _TrailerScreenState extends State<TrailerScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          tooltip: 'Quay lại',
+          onPressed: _goBack,
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: Text('Trailer ${_movie.title}'),
       ),
       body: Center(
