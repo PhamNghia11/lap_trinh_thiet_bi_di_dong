@@ -21,7 +21,7 @@ class TrailerScreen extends StatefulWidget {
 
 class _TrailerScreenState extends State<TrailerScreen> {
   late Movie _movie;
-  bool _loading = true;
+  bool _loading = false;
   bool _historySaved = false;
   String? _error;
 
@@ -29,8 +29,13 @@ class _TrailerScreenState extends State<TrailerScreen> {
   void initState() {
     super.initState();
     _movie = widget.movie ?? mockMovies.first;
+    final hasTrailer = _hasTrailer(_movie);
+    _loading = !hasTrailer;
+    if (hasTrailer) _saveHistoryOnce();
     _load();
   }
+
+  bool _hasTrailer(Movie movie) => movie.trailerKey?.isNotEmpty ?? false;
 
   Future<void> _load() async {
     try {
@@ -44,7 +49,7 @@ class _TrailerScreenState extends State<TrailerScreen> {
         _saveHistoryOnce();
       }
     } catch (error) {
-      _error = '$error';
+      if (!_hasTrailer(_movie)) _error = '$error';
     } finally {
       if (mounted) setState(() => _loading = false);
     }
