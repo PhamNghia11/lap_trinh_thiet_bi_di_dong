@@ -68,11 +68,14 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
             itemBuilder: (context, index) {
               final review = reviews[index];
               final rating = review['rating'] as int? ?? 0;
+              final movie = review['movie'] as Map?;
+              final movieTitle = movie?['title'] as String? ??
+                  'Phim #${review['tmdbMovieId']}';
               return Material(
                 color: AppTheme.cardBg,
                 borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                 child: ListTile(
-                  title: Text('Phim #${review['tmdbMovieId']}',
+                  title: Text(movieTitle,
                       style: const TextStyle(
                           color: Colors.white, fontWeight: FontWeight.bold)),
                   subtitle: Column(

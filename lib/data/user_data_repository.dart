@@ -1,21 +1,22 @@
 import '../core/api_client.dart';
 import '../models/movie_model.dart';
-import 'tmdb_repository.dart';
 
 class UserDataRepository {
-  UserDataRepository({ApiClient? client, TmdbRepository? movies})
-      : _client = client ?? ApiClient.instance,
-        _movies = movies ?? TmdbRepository();
+  UserDataRepository({ApiClient? client})
+      : _client = client ?? ApiClient.instance;
 
   final ApiClient _client;
-  final TmdbRepository _movies;
 
   Future<List<Movie>> favorites() async {
-    final rows = await _client.get('/me/favorites', authenticated: true) as List;
-    return Future.wait(rows.map((row) async {
-      final movieId = (row as Map)['tmdbMovieId'];
-      return (await _movies.detail('$movieId')).copyWith(isFavorite: true);
-    }));
+    final rows =
+        await _client.get('/me/favorites', authenticated: true) as List;
+    return rows
+        .map((row) => Map<String, dynamic>.from(row as Map))
+        .where((row) => row['movie'] is Map)
+        .map((row) => Movie.fromTmdbJson(
+              Map<String, dynamic>.from(row['movie'] as Map),
+            ).copyWith(isFavorite: true))
+        .toList();
   }
 
   Future<void> addFavorite(String movieId) async {
@@ -24,6 +25,14 @@ class UserDataRepository {
 
   Future<void> removeFavorite(String movieId) async {
     await _client.delete('/me/favorites/$movieId', authenticated: true);
+  }
+
+  Future<bool> isFavorite(String movieId) async {
+    final data = await _client.get(
+      '/me/favorites/$movieId/status',
+      authenticated: true,
+    );
+    return data is Map && data['isFavorite'] == true;
   }
 
   Future<List<Map<String, dynamic>>> history() async {
@@ -58,15 +67,13 @@ class UserDataRepository {
   }
 
   Future<void> saveReview(
-    String movieId,
-    int rating,
-    String comment,
-    bool hasSpoiler,
-  ) async {
+      String movieId, int rating, String comment, bool hasSpoiler,
+      {String? imageUrl}) async {
     await _client.post('/movies/$movieId/reviews', authenticated: true, body: {
       'rating': rating,
       'comment': comment,
       'hasSpoiler': hasSpoiler,
+      if (imageUrl != null) 'imageUrl': imageUrl,
     });
   }
 }

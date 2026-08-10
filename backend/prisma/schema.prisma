@@ -75,6 +75,7 @@ model Review {
   tmdbMovieId Int
   rating      Int
   comment     String
+  imageUrl    String?
   hasSpoiler  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

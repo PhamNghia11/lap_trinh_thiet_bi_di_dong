@@ -24,5 +24,6 @@ export class HistoryDto {
 export class ReviewDto {
   @IsInt() @Min(1) @Max(5) rating!: number;
   @IsString() @MaxLength(1000) comment!: string;
+  @IsOptional() @IsString() @MaxLength(1_500_000) imageUrl?: string;
   @IsOptional() @IsBoolean() hasSpoiler?: boolean;
 }

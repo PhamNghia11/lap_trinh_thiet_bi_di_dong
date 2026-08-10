@@ -14,11 +14,15 @@ import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthUser } from '../auth/current-user.decorator';
 import { PrismaService } from '../prisma/prisma.service';
+import { TmdbService } from '../tmdb/tmdb.service';
 import { HistoryDto, ReviewDto, UpdateProfileDto } from './user-data.dto';
 
 @Controller()
 export class UserDataController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tmdb: TmdbService,
+  ) {}
 
   @UseGuards(AuthGuard('jwt'))
   @Get('me')
@@ -73,11 +77,30 @@ export class UserDataController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('me/favorites')
-  favorites(@CurrentUser() user: AuthUser) {
-    return this.prisma.favorite.findMany({
+  async favorites(@CurrentUser() user: AuthUser) {
+    const favorites = await this.prisma.favorite.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
     });
+    return Promise.all(
+      favorites.map(async (favorite) => ({
+        ...favorite,
+        movie: await this.tmdb.detail(favorite.tmdbMovieId),
+      })),
+    );
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('me/favorites/:movieId/status')
+  async favoriteStatus(
+    @CurrentUser() user: AuthUser,
+    @Param('movieId', ParseIntPipe) movieId: number,
+  ) {
+    const favorite = await this.prisma.favorite.findUnique({
+      where: { userId_tmdbMovieId: { userId: user.id, tmdbMovieId: movieId } },
+      select: { userId: true },
+    });
+    return { isFavorite: favorite !== null };
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -115,11 +138,17 @@ export class UserDataController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('me/reviews')
-  myReviews(@CurrentUser() user: AuthUser) {
-    return this.prisma.review.findMany({
+  async myReviews(@CurrentUser() user: AuthUser) {
+    const reviews = await this.prisma.review.findMany({
       where: { userId: user.id },
       orderBy: { updatedAt: 'desc' },
     });
+    return Promise.all(
+      reviews.map(async (review) => ({
+        ...review,
+        movie: await this.tmdb.detail(review.tmdbMovieId),
+      })),
+    );
   }
 
   @UseGuards(AuthGuard('jwt'))

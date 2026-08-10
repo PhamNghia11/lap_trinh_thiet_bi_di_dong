@@ -12,7 +12,9 @@ class ProfileMediaEditor {
   static Future<String?> pickAndEdit(
     BuildContext context, {
     required bool isCover,
+    String? mediaLabel,
   }) async {
+    final label = mediaLabel ?? (isCover ? 'ảnh bìa' : 'ảnh đại diện');
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked == null || !context.mounted) return null;
     final bytes = await picked.readAsBytes();
@@ -20,7 +22,8 @@ class ProfileMediaEditor {
     final cropped = await Navigator.of(context).push<Uint8List>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => _CropScreen(image: bytes, isCover: isCover),
+        builder: (_) =>
+            _CropScreen(image: bytes, isCover: isCover, mediaLabel: label),
       ),
     );
     if (cropped == null || !context.mounted) return null;
@@ -36,7 +39,7 @@ class ProfileMediaEditor {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppTheme.cardBg,
-        title: Text(isCover ? 'Xác nhận ảnh bìa' : 'Xác nhận ảnh đại diện',
+        title: Text('Xác nhận $label',
             style: const TextStyle(color: Colors.white)),
         content: ClipRRect(
           borderRadius: BorderRadius.circular(isCover ? 14 : 200),
@@ -65,9 +68,14 @@ class ProfileMediaEditor {
 }
 
 class _CropScreen extends StatefulWidget {
-  const _CropScreen({required this.image, required this.isCover});
+  const _CropScreen({
+    required this.image,
+    required this.isCover,
+    required this.mediaLabel,
+  });
   final Uint8List image;
   final bool isCover;
+  final String mediaLabel;
 
   @override
   State<_CropScreen> createState() => _CropScreenState();
@@ -83,7 +91,7 @@ class _CropScreenState extends State<_CropScreen> {
       backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
         backgroundColor: AppTheme.scaffoldBg,
-        title: Text(widget.isCover ? 'Chỉnh ảnh bìa' : 'Chỉnh ảnh đại diện'),
+        title: Text('Chỉnh ${widget.mediaLabel}'),
         actions: [
           TextButton.icon(
             onPressed: _processing

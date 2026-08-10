@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../models/movie_model.dart';
 import '../data/mock_data.dart';
 import '../widgets/flix_network_image.dart';
+import '../widgets/profile_media_editor.dart';
 import '../data/user_data_repository.dart';
 import '../core/app_session.dart';
 import '../routes/app_routes.dart';
@@ -26,7 +27,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
   late Movie _targetMovie;
   int _rating = 0; // 0: chưa chọn, 1-5: số sao đã chọn
   bool _hasSpoiler = false;
-  bool _hasAttachedImage = false;
+  String? _attachedImageUrl;
   bool _isSubmitting = false;
 
   final TextEditingController _reviewController = TextEditingController();
@@ -53,7 +54,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     if (draft != null) {
       _rating = (draft['rating'] as num?)?.toInt() ?? 0;
       _hasSpoiler = draft['hasSpoiler'] as bool? ?? false;
-      _hasAttachedImage = draft['hasAttachedImage'] as bool? ?? false;
+      _attachedImageUrl = draft['imageUrl'] as String?;
       _selectedQuickTags.addAll(
         (draft['quickTags'] as List<dynamic>? ?? const [])
             .map((item) => '$item'),
@@ -77,7 +78,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     UiStateStore.instance.setJson(_draftKey, {
       'rating': _rating,
       'hasSpoiler': _hasSpoiler,
-      'hasAttachedImage': _hasAttachedImage,
+      'imageUrl': _attachedImageUrl,
       'quickTags': _selectedQuickTags.toList(),
       'comment': _reviewController.text,
     });
@@ -132,6 +133,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
         _rating,
         '${_reviewController.text.trim()}$tags'.trim(),
         _hasSpoiler,
+        imageUrl: _attachedImageUrl,
       );
     } catch (error) {
       if (mounted) {
@@ -440,32 +442,34 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   style: AppTheme.outlinedButtonStyle(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8)),
-                  onPressed: () {
-                    setState(() {
-                      _hasAttachedImage = !_hasAttachedImage;
-                    });
-                    _saveDraft();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(_hasAttachedImage
-                            ? 'Đã đính kèm ảnh minh họa'
-                            : 'Đã hủy đính kèm ảnh'),
-                      ),
+                  onPressed: () async {
+                    if (_attachedImageUrl != null) {
+                      setState(() => _attachedImageUrl = null);
+                      _saveDraft();
+                      return;
+                    }
+                    final imageUrl = await ProfileMediaEditor.pickAndEdit(
+                      context,
+                      isCover: true,
+                      mediaLabel: 'ảnh đánh giá',
                     );
+                    if (!mounted || imageUrl == null) return;
+                    setState(() => _attachedImageUrl = imageUrl);
+                    _saveDraft();
                   },
                   icon: Icon(
-                    _hasAttachedImage
+                    _attachedImageUrl != null
                         ? Icons.image_rounded
                         : Icons.add_a_photo_outlined,
-                    color: _hasAttachedImage
+                    color: _attachedImageUrl != null
                         ? AppTheme.accentGold
                         : AppTheme.textMuted,
                     size: 18,
                   ),
                   label: Text(
-                    _hasAttachedImage ? 'Đã chọn ảnh' : 'Đính kèm ảnh',
+                    _attachedImageUrl != null ? 'Đã chọn ảnh' : 'Đính kèm ảnh',
                     style: TextStyle(
-                        color: _hasAttachedImage
+                        color: _attachedImageUrl != null
                             ? AppTheme.accentGold
                             : AppTheme.textMuted,
                         fontSize: 12),
@@ -491,6 +495,17 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 ),
               ],
             ),
+            if (_attachedImageUrl != null) ...[
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                child: FlixNetworkImage(
+                  _attachedImageUrl!,
+                  width: double.infinity,
+                  height: 160,
+                ),
+              ),
+            ],
             const SizedBox(height: 28),
 
             // ─── Nút Gửi Đánh Giá với Trạng thái Disabled & Loading ─────
