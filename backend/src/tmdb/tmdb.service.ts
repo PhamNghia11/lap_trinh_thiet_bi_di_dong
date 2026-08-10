@@ -1,8 +1,10 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { Optional } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import axios, { AxiosInstance } from 'axios';
+
+const REVIEW_FALLBACK_CACHE_VERSION = 1;
+const REVIEW_FALLBACK_CACHE_KEY = '_flixReviewFallbackVersion';
 
 @Injectable()
 export class TmdbService {
@@ -71,10 +73,18 @@ export class TmdbService {
           where: { tmdbId: id },
         });
         const payload = cached?.payload as Record<string, unknown> | undefined;
-        const hasReviews =
-          payload?.reviews && typeof payload.reviews === 'object';
-        if (cached && cached.expiresAt > new Date() && hasReviews)
-          return payload;
+        const hasCurrentReviewFallback =
+          payload?.[REVIEW_FALLBACK_CACHE_KEY] ===
+          REVIEW_FALLBACK_CACHE_VERSION;
+        if (
+          cached &&
+          cached.expiresAt > new Date() &&
+          hasCurrentReviewFallback
+        ) {
+          const publicPayload = { ...payload };
+          delete publicPayload[REVIEW_FALLBACK_CACHE_KEY];
+          return publicPayload;
+        }
       } catch {
         // Cache is an optimization; TMDB remains the source of truth.
       }
@@ -85,20 +95,25 @@ export class TmdbService {
     });
     const currentVideos = (data.videos as { results?: unknown[] } | undefined)
       ?.results;
-    const result = currentVideos?.length
+    const dataWithVideos = currentVideos?.length
       ? data
       : await this.withEnglishVideos(id, data);
+    const result = await this.withDefaultReviews(id, dataWithVideos);
     if (this.prisma) {
       try {
+        const cachePayload = {
+          ...result,
+          [REVIEW_FALLBACK_CACHE_KEY]: REVIEW_FALLBACK_CACHE_VERSION,
+        };
         await this.prisma.movieCache.upsert({
           where: { tmdbId: id },
           create: {
             tmdbId: id,
-            payload: result as Prisma.InputJsonValue,
+            payload: cachePayload,
             expiresAt: new Date(Date.now() + 30 * 60_000),
           },
           update: {
-            payload: result as Prisma.InputJsonValue,
+            payload: cachePayload,
             cachedAt: new Date(),
             expiresAt: new Date(Date.now() + 30 * 60_000),
           },
@@ -119,6 +134,24 @@ export class TmdbService {
         { params: { api_key: apiKey, language: 'en-US' } },
       );
       return { ...data, videos: response.data };
+    } catch {
+      return data;
+    }
+  }
+
+  private async withDefaultReviews(id: number, data: Record<string, unknown>) {
+    const currentReviews = (data.reviews as { results?: unknown[] } | undefined)
+      ?.results;
+    if (currentReviews?.length) return data;
+
+    const apiKey = process.env.TMDB_API_KEY;
+    if (!apiKey) return data;
+    try {
+      const response = await this.client.get<{ results?: unknown[] }>(
+        `/movie/${id}/reviews`,
+        { params: { api_key: apiKey } },
+      );
+      return { ...data, reviews: response.data };
     } catch {
       return data;
     }

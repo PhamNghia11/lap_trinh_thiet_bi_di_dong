@@ -18,7 +18,13 @@ describe('TmdbService', () => {
     ).client;
     client.get = jest
       .fn()
-      .mockResolvedValueOnce({ data: { id: 1, videos: { results: [] } } })
+      .mockResolvedValueOnce({
+        data: {
+          id: 1,
+          videos: { results: [] },
+          reviews: { results: [{ id: 'vi-review' }] },
+        },
+      })
       .mockResolvedValueOnce({
         data: {
           results: [{ site: 'YouTube', type: 'Trailer', key: 'trailer-key' }],
@@ -50,6 +56,7 @@ describe('TmdbService', () => {
         videos: {
           results: [{ site: 'YouTube', type: 'Trailer', key: 'vi-key' }],
         },
+        reviews: { results: [{ id: 'vi-review' }] },
       },
     });
 
@@ -67,5 +74,42 @@ describe('TmdbService', () => {
     expect(
       (result.videos as { results: Array<{ key: string }> }).results[0].key,
     ).toBe('vi-key');
+  });
+
+  it('dùng review mặc định của TMDB khi bản tiếng Việt không có bình luận', async () => {
+    process.env.TMDB_API_KEY = 'test-key';
+    const service = new TmdbService();
+    const client = (
+      service as unknown as {
+        client: { get: jest.Mock };
+      }
+    ).client;
+    client.get = jest
+      .fn()
+      .mockResolvedValueOnce({
+        data: {
+          id: 1,
+          videos: { results: [{ key: 'vi-key' }] },
+          reviews: { page: 1, results: [], total_results: 0 },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          page: 1,
+          results: [{ author: 'TMDB user', content: 'Real review' }],
+          total_results: 1,
+        },
+      });
+
+    const result = await service.detail(1);
+
+    expect(client.get).toHaveBeenCalledTimes(2);
+    expect(client.get).toHaveBeenLastCalledWith('/movie/1/reviews', {
+      params: { api_key: 'test-key' },
+    });
+    expect(
+      (result.reviews as { results: Array<{ author: string }> }).results[0]
+        .author,
+    ).toBe('TMDB user');
   });
 });
