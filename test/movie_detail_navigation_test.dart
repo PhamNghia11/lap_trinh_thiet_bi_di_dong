@@ -1,5 +1,6 @@
 import 'package:flix_app/models/movie_model.dart';
 import 'package:flix_app/routes/app_routes.dart';
+import 'package:flix_app/screens/home_screen.dart';
 import 'package:flix_app/screens/movie_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,6 +8,13 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   testWidgets('nút quay lại về Home khi chi tiết phim là route gốc',
       (tester) async {
+    final previousErrorHandler = FlutterError.onError;
+    FlutterError.onError = (details) {
+      if (details.exception is NetworkImageLoadException) return;
+      previousErrorHandler?.call(details);
+    };
+    addTearDown(() => FlutterError.onError = previousErrorHandler);
+
     const movie = Movie(
       id: 'local-test',
       title: 'Phim kiểm thử',
@@ -31,6 +39,6 @@ void main() {
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
 
-    expect(find.text('HOME_SCREEN'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 }

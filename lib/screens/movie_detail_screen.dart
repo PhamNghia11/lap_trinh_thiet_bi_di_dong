@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
+import 'home_screen.dart';
 import '../models/movie_model.dart';
 import '../data/mock_data.dart';
 import '../widgets/movie_card.dart';
@@ -126,8 +127,11 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   }
 
   void _goBack() {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      AppRoutes.home,
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(
+        settings: const RouteSettings(name: AppRoutes.home),
+        builder: (_) => const HomeScreen(),
+      ),
       (_) => false,
     );
   }
