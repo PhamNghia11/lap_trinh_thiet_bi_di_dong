@@ -388,7 +388,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // ─── Nhóm 2: Phát Video & Tải Xuống ────────────────────────
           _buildSectionHeader('PHÁT VIDEO & TẢI XUỐNG'),
           SwitchListTile(
-            activeThumbColor: AppTheme.primaryRed,
             secondary: const Icon(Icons.play_circle_outline_rounded,
                 color: AppTheme.textMuted),
             title: const Text('Tự động phát Trailer',
@@ -397,7 +396,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: (val) => _preferences.setAutoPlayTrailer(val),
           ),
           SwitchListTile(
-            activeThumbColor: AppTheme.primaryRed,
             secondary:
                 const Icon(Icons.wifi_rounded, color: AppTheme.textMuted),
             title: const Text('Chỉ tải xuống qua Wi-Fi',
@@ -443,7 +441,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // ─── Nhóm 3: Giao diện & Ngôn ngữ ─────────────────────────
           _buildSectionHeader('GIAO DIỆN & NGÔN NGỮ'),
           SwitchListTile(
-            activeThumbColor: AppTheme.primaryRed,
             secondary:
                 const Icon(Icons.dark_mode_outlined, color: AppTheme.textMuted),
             title: const Text('Giao diện tối (Cinematic Noir)',
@@ -468,7 +465,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // ─── Nhóm 4: Thông báo ────────────────────────────────────
           _buildSectionHeader('THÔNG BÁO'),
           SwitchListTile(
-            activeThumbColor: AppTheme.primaryRed,
             secondary: const Icon(Icons.notifications_none_rounded,
                 color: AppTheme.textMuted),
             title: const Text('Thông báo phim mới & cập nhật',
