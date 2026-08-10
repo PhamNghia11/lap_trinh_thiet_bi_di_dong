@@ -15,7 +15,9 @@ export class TmdbController {
   private page(value?: string) {
     const page = Number(value ?? 1);
     if (!Number.isInteger(page) || page < 1 || page > 500) {
-      throw new BadRequestException('Số trang phải nằm trong khoảng từ 1 đến 500');
+      throw new BadRequestException(
+        'Số trang phải nằm trong khoảng từ 1 đến 500',
+      );
     }
     return page;
   }
@@ -39,7 +41,10 @@ export class TmdbController {
       throw new BadRequestException('Từ khóa tìm kiếm không được để trống');
     }
     const parsedYear = year ? Number(year) : undefined;
-    if (parsedYear !== undefined && (!Number.isInteger(parsedYear) || parsedYear < 1900 || parsedYear > 2100)) {
+    if (
+      parsedYear !== undefined &&
+      (!Number.isInteger(parsedYear) || parsedYear < 1900 || parsedYear > 2100)
+    ) {
       throw new BadRequestException('Năm phát hành không hợp lệ');
     }
     return this.tmdb.search(normalizedQuery, this.page(page), parsedYear);
@@ -62,10 +67,16 @@ export class TmdbController {
     const parsedGenre = genreId ? Number(genreId) : undefined;
     const parsedYear = year ? Number(year) : undefined;
     const parsedRating = minRating ? Number(minRating) : undefined;
-    if (parsedGenre !== undefined && (!Number.isInteger(parsedGenre) || parsedGenre < 1)) {
+    if (
+      parsedGenre !== undefined &&
+      (!Number.isInteger(parsedGenre) || parsedGenre < 1)
+    ) {
       throw new BadRequestException('Thể loại không hợp lệ');
     }
-    if (parsedYear !== undefined && (!Number.isInteger(parsedYear) || parsedYear < 1900 || parsedYear > 2100)) {
+    if (
+      parsedYear !== undefined &&
+      (!Number.isInteger(parsedYear) || parsedYear < 1900 || parsedYear > 2100)
+    ) {
       throw new BadRequestException('Năm phát hành không hợp lệ');
     }
     if (parsedRating !== undefined && (parsedRating < 0 || parsedRating > 10)) {

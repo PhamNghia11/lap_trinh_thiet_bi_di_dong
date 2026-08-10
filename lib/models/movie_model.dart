@@ -33,6 +33,7 @@ class UserReview {
   final double rating;
   final String date;
   final String comment;
+  final String? imageUrl;
 
   const UserReview({
     required this.userName,
@@ -40,6 +41,7 @@ class UserReview {
     required this.rating,
     required this.date,
     required this.comment,
+    this.imageUrl,
   });
 
   Map<String, dynamic> toJson() => {
@@ -48,6 +50,7 @@ class UserReview {
         'rating': rating,
         'date': date,
         'comment': comment,
+        'imageUrl': imageUrl,
       };
 
   factory UserReview.fromJson(Map<String, dynamic> json) => UserReview(
@@ -56,7 +59,15 @@ class UserReview {
         rating: (json['rating'] as num?)?.toDouble() ?? 0,
         date: json['date'] as String? ?? '',
         comment: json['comment'] as String? ?? '',
+        imageUrl: json['imageUrl'] as String?,
       );
+}
+
+double reviewRatingRatio(Iterable<UserReview> reviews, int stars) {
+  final items = reviews.toList(growable: false);
+  if (items.isEmpty) return 0;
+  final count = items.where((review) => review.rating.round() == stars).length;
+  return count / items.length;
 }
 
 /// Model class đại diện cho một bộ phim trong ứng dụng FLIX.

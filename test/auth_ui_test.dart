@@ -1,5 +1,7 @@
 import 'package:flix_app/routes/app_routes.dart';
+import 'package:flix_app/data/tmdb_repository.dart';
 import 'package:flix_app/main.dart';
+import 'package:flix_app/models/movie_model.dart';
 import 'package:flix_app/screens/favorites_screen.dart';
 import 'package:flix_app/screens/history_screen.dart';
 import 'package:flix_app/screens/login_screen.dart';
@@ -19,6 +21,27 @@ Widget _app(Widget child) => MaterialApp(
         AppRoutes.home: (_) => const SizedBox(),
       },
     );
+
+class _MovieListRepository extends TmdbRepository {
+  final nowPlayingPages = <int>[];
+
+  @override
+  Future<List<Movie>> popular({int page = 1}) async => const [];
+
+  @override
+  Future<List<Movie>> nowPlaying({int page = 1}) async {
+    nowPlayingPages.add(page);
+    if (page > 1) return const [];
+    return List.generate(
+      8,
+      (index) => Movie.fromTmdbJson({
+        'id': index + 1,
+        'title': 'Movie $index',
+        'poster_path': '/poster.jpg',
+      }),
+    );
+  }
+}
 
 void main() {
   testWidgets('login restores legacy controls and social buttons react',
@@ -105,5 +128,22 @@ void main() {
 
     expect(find.text('Danh Sách Phim Nổi Bật'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('now-playing list uses the existing movie-list UI',
+      (tester) async {
+    final repository = _MovieListRepository();
+    await tester.pumpWidget(_app(MovieListScreen(
+      collection: MovieCollection.nowPlaying,
+      repository: repository,
+    )));
+    await tester.pump();
+
+    expect(find.text('Phim Đang Chiếu'), findsOneWidget);
+    expect(repository.nowPlayingPages, [1]);
+
+    await tester.drag(find.byType(ListView), const Offset(0, -1000));
+    await tester.pumpAndSettle();
+    expect(repository.nowPlayingPages, contains(2));
   });
 }

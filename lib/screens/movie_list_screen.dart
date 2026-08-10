@@ -7,27 +7,85 @@ import '../theme/app_theme.dart';
 import '../widgets/flix_network_image.dart';
 import '../core/ui_state_store.dart';
 
+enum MovieCollection { popular, nowPlaying }
+
 class MovieListScreen extends StatefulWidget {
-  const MovieListScreen({super.key});
+  const MovieListScreen({
+    super.key,
+    this.collection = MovieCollection.popular,
+    this.repository,
+  });
+
+  final MovieCollection collection;
+  final TmdbRepository? repository;
 
   @override
   State<MovieListScreen> createState() => _MovieListScreenState();
 }
 
 class _MovieListScreenState extends State<MovieListScreen> {
-  late Future<List<Movie>> _future;
-  final _scrollController = PersistentScrollController('movieList.scroll');
+  late final PersistentScrollController _scrollController;
+  late final TmdbRepository _repository;
+  final List<Movie> _movies = [];
+  bool _loading = false;
+  bool _hasMore = true;
+  String? _error;
+  int _page = 1;
+
+  String get _title => widget.collection == MovieCollection.nowPlaying
+      ? 'Phim Đang Chiếu'
+      : 'Danh Sách Phim Nổi Bật';
+
+  Future<List<Movie>> _fetch(int page) =>
+      widget.collection == MovieCollection.nowPlaying
+          ? _repository.nowPlaying(page: page)
+          : _repository.popular(page: page);
 
   @override
   void initState() {
     super.initState();
-    _future = TmdbRepository().popular();
+    _repository = widget.repository ?? TmdbRepository();
+    _scrollController = PersistentScrollController(
+      'movieList.${widget.collection.name}.scroll',
+    );
+    _scrollController.addListener(_onScroll);
+    _load();
   }
 
-  void _reload() {
-    setState(() {
-      _future = TmdbRepository().popular();
-    });
+  void _onScroll() {
+    if (_scrollController.hasClients &&
+        _scrollController.position.extentAfter < 320 &&
+        !_loading) {
+      _load();
+    }
+  }
+
+  Future<void> _load({bool reset = false}) async {
+    if (_loading || (!_hasMore && !reset)) return;
+    if (reset) {
+      _page = 1;
+      _hasMore = true;
+      _error = null;
+      _movies.clear();
+    }
+    setState(() => _loading = true);
+    try {
+      final result = await _fetch(_page);
+      final existing = _movies.map((movie) => movie.id).toSet();
+      final unique =
+          result.where((movie) => !existing.contains(movie.id)).toList();
+      if (!mounted) return;
+      setState(() {
+        _movies.addAll(unique);
+        _hasMore = result.isNotEmpty;
+        _page++;
+        _error = null;
+      });
+    } catch (error) {
+      if (mounted) setState(() => _error = '$error');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -46,56 +104,65 @@ class _MovieListScreenState extends State<MovieListScreen> {
           icon: const Icon(Icons.arrow_back, color: AppTheme.primaryRed),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Danh Sách Phim Nổi Bật',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          _title,
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
             tooltip: 'Tải lại',
-            onPressed: _reload,
+            onPressed: () => _load(reset: true),
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],
       ),
-      body: FutureBuilder<List<Movie>>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppTheme.primaryRed),
-            );
-          }
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.cloud_off_rounded,
-                        size: 56, color: AppTheme.textMuted),
-                    const SizedBox(height: 12),
-                    Text('${snapshot.error}', textAlign: TextAlign.center),
-                    TextButton(
-                        onPressed: _reload, child: const Text('Thử lại')),
-                  ],
-                ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_movies.isEmpty && _loading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppTheme.primaryRed),
+      );
+    }
+    if (_movies.isEmpty && _error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off_rounded,
+                  size: 56, color: AppTheme.textMuted),
+              const SizedBox(height: 12),
+              Text(_error!, textAlign: TextAlign.center),
+              TextButton(
+                onPressed: () => _load(reset: true),
+                child: const Text('Thử lại'),
               ),
-            );
-          }
-          final movies = snapshot.data ?? const [];
-          return RefreshIndicator(
-            onRefresh: () async => _reload(),
+            ],
+          ),
+        ),
+      );
+    }
+    return Column(
+      children: [
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () => _load(reset: true),
             child: ListView.builder(
               controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
-              itemCount: movies.length,
-              itemBuilder: (context, index) => _movieTile(movies[index]),
+              itemCount: _movies.length,
+              itemBuilder: (context, index) => _movieTile(_movies[index]),
             ),
-          );
-        },
-      ),
+          ),
+        ),
+        if (_loading) const LinearProgressIndicator(color: AppTheme.primaryRed),
+      ],
     );
   }
 

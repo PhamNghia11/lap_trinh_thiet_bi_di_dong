@@ -104,4 +104,34 @@ void main() {
     });
     expect(movie.genres, containsAll(['Hành Động', 'Viễn Tưởng']));
   });
+
+  test('phân bố đánh giá dùng dữ liệu người xem thật', () {
+    const reviews = [
+      UserReview(
+        userName: 'A',
+        userAvatar: '',
+        rating: 5,
+        date: '',
+        comment: '',
+      ),
+      UserReview(
+        userName: 'B',
+        userAvatar: '',
+        rating: 4,
+        date: '',
+        comment: '',
+      ),
+      UserReview(
+        userName: 'C',
+        userAvatar: '',
+        rating: 5,
+        date: '',
+        comment: '',
+      ),
+    ];
+
+    expect(reviewRatingRatio(reviews, 5), closeTo(2 / 3, 0.0001));
+    expect(reviewRatingRatio(reviews, 4), closeTo(1 / 3, 0.0001));
+    expect(reviewRatingRatio(const [], 3), 0);
+  });
 }

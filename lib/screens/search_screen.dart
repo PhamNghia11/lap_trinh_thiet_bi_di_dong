@@ -13,7 +13,9 @@ import 'search_filter_screen.dart';
 import '../core/ui_state_store.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({super.key, this.repository});
+
+  final TmdbRepository? repository;
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
@@ -23,21 +25,35 @@ class _SearchScreenState extends State<SearchScreen> {
     text: UiStateStore.instance.string('search.query') ?? '',
   );
   final _scrollController = PersistentScrollController('search.scroll');
-  final _repository = TmdbRepository();
+  late final TmdbRepository _repository;
   Timer? _debounce;
   List<Movie> _results = [];
   late MovieFilter _filter;
   bool _loading = false;
+  bool _hasMore = true;
   String? _error;
+  int _requestVersion = 0;
+  int _page = 1;
 
   @override
   void initState() {
     super.initState();
+    _repository = widget.repository ?? TmdbRepository();
     final savedFilter = UiStateStore.instance.json('search.filter');
     _filter = savedFilter == null
         ? const MovieFilter()
         : MovieFilter.fromJson(savedFilter);
+    _scrollController.addListener(_onScroll);
     _runSearch();
+  }
+
+  void _onScroll() {
+    if (_scrollController.hasClients &&
+        _scrollController.position.extentAfter < 320 &&
+        !_loading &&
+        _hasMore) {
+      _runSearch(reset: false);
+    }
   }
 
   @override
@@ -51,6 +67,7 @@ class _SearchScreenState extends State<SearchScreen> {
   void _onChanged(String value) {
     setState(() {});
     UiStateStore.instance.setString('search.query', value);
+    if (_scrollController.hasClients) _scrollController.jumpTo(0);
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 450), _runSearch);
   }
@@ -66,41 +83,62 @@ class _SearchScreenState extends State<SearchScreen> {
     _runSearch();
   }
 
-  Future<void> _runSearch() async {
+  Future<void> _runSearch({bool reset = true}) async {
+    if (!reset && (_loading || !_hasMore)) return;
+    final requestVersion = reset ? ++_requestVersion : _requestVersion;
+    final page = reset ? 1 : _page;
+    final query = _controller.text.trim();
+    final filter = _filter;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final query = _controller.text.trim();
       final results = query.isEmpty
           ? await _repository.discover(
-              genreId: _filter.genreId,
-              year: _filter.year,
-              sortBy: _filter.sortBy,
-              minRating: _filter.minRating == 0 ? null : _filter.minRating,
+              page: page,
+              genreId: filter.genreId,
+              year: filter.year,
+              sortBy: filter.sortBy,
+              minRating: filter.minRating == 0 ? null : filter.minRating,
             )
-          : await _repository.search(query, year: _filter.year);
-      var filtered = _filter.genreId == null
+          : await _repository.search(query, page: page, year: filter.year);
+      if (!mounted || requestVersion != _requestVersion) return;
+      var filtered = filter.genreId == null
           ? List<Movie>.from(results)
           : results
-              .where((movie) => movie.genres.contains(_filter.genreLabel))
+              .where((movie) => movie.genres.contains(filter.genreLabel))
               .toList();
-      if (_filter.minRating > 0) {
+      if (filter.minRating > 0) {
         filtered = filtered
-            .where((movie) => movie.rating >= _filter.minRating)
+            .where((movie) => movie.rating >= filter.minRating)
             .toList();
       }
-      if (_filter.sortBy == 'vote_average.desc') {
+      if (filter.sortBy == 'vote_average.desc') {
         filtered.sort((a, b) => b.rating.compareTo(a.rating));
-      } else if (_filter.sortBy == 'primary_release_date.desc') {
+      } else if (filter.sortBy == 'primary_release_date.desc') {
         filtered.sort((a, b) => b.year.compareTo(a.year));
       }
-      if (mounted) setState(() => _results = filtered);
+      setState(() {
+        if (reset) {
+          _results = filtered;
+        } else {
+          final existing = _results.map((movie) => movie.id).toSet();
+          _results.addAll(
+            filtered.where((movie) => !existing.contains(movie.id)),
+          );
+        }
+        _page = page + 1;
+        _hasMore = results.isNotEmpty;
+      });
     } catch (error) {
-      if (mounted) setState(() => _error = '$error');
+      if (mounted && requestVersion == _requestVersion) {
+        setState(() => _error = '$error');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && requestVersion == _requestVersion) {
+        setState(() => _loading = false);
+      }
     }
   }
 

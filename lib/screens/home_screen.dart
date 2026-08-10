@@ -25,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _scrollController = PersistentScrollController('home.scroll');
   final TmdbRepository _repository = TmdbRepository();
   List<Movie> _movies = mockMovies;
+  List<Movie> _nowPlaying = const [];
   final Map<String, List<Movie>> _genreMovies = {};
 
   @override
@@ -41,8 +42,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadMovies() async {
     try {
-      final movies = await _repository.trending();
-      final popular = await _repository.popular();
+      final catalog = await Future.wait([
+        _repository.trending(),
+        _repository.popular(),
+        _repository.nowPlaying(),
+      ]);
+      final movies = catalog[0];
+      final popular = catalog[1];
+      final nowPlaying = catalog[2];
       final unique = <String, Movie>{
         for (final movie in [...movies, ...popular]) movie.id: movie,
       };
@@ -55,9 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
           return MapEntry(genre, const <Movie>[]);
         }
       }));
-      if (!mounted || movies.isEmpty) return;
+      if (!mounted) return;
       setState(() {
-        _movies = unique.values.toList();
+        if (unique.isNotEmpty) _movies = unique.values.toList();
+        if (nowPlaying.isNotEmpty) _nowPlaying = nowPlaying;
         for (final entry in collections) {
           if (entry.value.isNotEmpty) _genreMovies[entry.key] = entry.value;
         }
@@ -271,6 +279,43 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
+
+            if (_nowPlaying.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Phim đang chiếu',
+                        style: AppTheme.headingMedium),
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.pushNamed(context, AppRoutes.nowPlaying),
+                      child: const Text('Xem tất cả',
+                          style: TextStyle(color: AppTheme.primaryRed)),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 220,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _nowPlaying.length,
+                  itemBuilder: (context, index) {
+                    final movie = _nowPlaying[index];
+                    return MovieCard.poster(
+                      movie: movie,
+                      onTap: () => Navigator.pushNamed(
+                          context, AppRoutes.movieDetail,
+                          arguments: movie),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // Các hàng phim theo từng thể loại
             ...genreList.map((genre) {

@@ -7,6 +7,8 @@ class TmdbRepository {
 
   Future<List<Movie>> popular({int page = 1}) =>
       _movies('/movies/popular?page=$page');
+  Future<List<Movie>> nowPlaying({int page = 1}) =>
+      _movies('/movies/now-playing?page=$page');
   Future<List<Movie>> trending() => _movies('/movies/trending');
   Future<
       List<

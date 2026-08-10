@@ -35,6 +35,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   bool _isFavorite = false;
   bool _isRatingExpanded = false;
   bool _isDescriptionExpanded = false;
+  bool _favoriteTouched = false;
   final _movies = TmdbRepository();
   final _userData = UserDataRepository();
   late final PersistentScrollController _scrollController;
@@ -66,6 +67,14 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
     try {
       final detail = await _movies.detail(_currentMovie.id);
       final rows = await _userData.reviews(_currentMovie.id);
+      var favorite = _isFavorite;
+      if (AppSession.instance.isAuthenticated) {
+        try {
+          favorite = await _userData.isFavorite(_currentMovie.id);
+        } catch (_) {
+          // Chi tiết phim vẫn tải được nếu trạng thái yêu thích tạm thời lỗi.
+        }
+      }
       final reviews = rows.map((row) {
         final user = row['user'] as Map<String, dynamic>? ?? const {};
         return UserReview(
@@ -76,6 +85,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
           comment: row['hasSpoiler'] == true
               ? '[Có tiết lộ nội dung] ${row['comment'] ?? ''}'
               : row['comment'] as String? ?? '',
+          imageUrl: row['imageUrl'] as String?,
         );
       }).toList();
       final genreId =
@@ -87,11 +97,14 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
               .take(8)
               .toList();
       if (mounted) {
-        setState(() => _currentMovie = detail.copyWith(
-              isFavorite: _isFavorite,
-              reviews: reviews,
-            ));
-        setState(() => _relatedMovies = related);
+        setState(() {
+          if (!_favoriteTouched) _isFavorite = favorite;
+          _currentMovie = detail.copyWith(
+            isFavorite: _isFavorite,
+            reviews: reviews,
+          );
+          _relatedMovies = related;
+        });
         if (!_autoPlayHandled &&
             AppPreferences.instance.autoPlayTrailer &&
             detail.trailerKey != null) {
@@ -154,6 +167,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       return;
     }
     final next = !_isFavorite;
+    _favoriteTouched = true;
     setState(() => _isFavorite = next);
     try {
       next
@@ -515,11 +529,16 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13)),
                               const SizedBox(height: 8),
-                              _buildRatingBar(5, 0.85),
-                              _buildRatingBar(4, 0.10),
-                              _buildRatingBar(3, 0.03),
-                              _buildRatingBar(2, 0.01),
-                              _buildRatingBar(1, 0.01),
+                              _buildRatingBar(
+                                  5, reviewRatingRatio(movie.reviews, 5)),
+                              _buildRatingBar(
+                                  4, reviewRatingRatio(movie.reviews, 4)),
+                              _buildRatingBar(
+                                  3, reviewRatingRatio(movie.reviews, 3)),
+                              _buildRatingBar(
+                                  2, reviewRatingRatio(movie.reviews, 2)),
+                              _buildRatingBar(
+                                  1, reviewRatingRatio(movie.reviews, 1)),
                             ],
                           ),
                         ),
@@ -938,6 +957,18 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(rev.comment, style: AppTheme.bodyText),
+                                  if (rev.imageUrl?.isNotEmpty == true) ...[
+                                    const SizedBox(height: 10),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(
+                                          AppTheme.radiusMd),
+                                      child: FlixNetworkImage(
+                                        rev.imageUrl!,
+                                        width: double.infinity,
+                                        height: 180,
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             );

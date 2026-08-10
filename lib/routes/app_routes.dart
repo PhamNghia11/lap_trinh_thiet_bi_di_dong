@@ -39,6 +39,7 @@ class AppRoutes {
   static const String searchFilter = '/search_filter';
   static const String genreDetail = '/genre_detail';
   static const String movieList = '/movie_list';
+  static const String nowPlaying = '/now_playing';
   static const String movieDetail = '/movie_detail';
   static const String trailer = '/trailer';
   static const String review = '/review';
@@ -68,6 +69,7 @@ class AppRoutes {
     search,
     genreDetail,
     movieList,
+    nowPlaying,
     movieDetail,
     trailer,
     review,
@@ -155,6 +157,8 @@ class AppRoutes {
         search: (context) => const SearchScreen(),
         searchFilter: (context) => const SearchFilterScreen(),
         movieList: (context) => const MovieListScreen(),
+        nowPlaying: (context) =>
+            const MovieListScreen(collection: MovieCollection.nowPlaying),
         favorites: (context) => const FavoritesScreen(),
         history: (context) => const HistoryScreen(),
         profile: (context) => const ProfileScreen(),
