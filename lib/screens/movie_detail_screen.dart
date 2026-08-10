@@ -12,6 +12,7 @@ import '../data/mock_data.dart';
 import '../widgets/movie_card.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/flix_network_image.dart';
+import '../widgets/user_review_card.dart';
 import '../data/tmdb_repository.dart';
 import '../data/user_data_repository.dart';
 import '../core/app_session.dart';
@@ -905,87 +906,26 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         )
                       else
                         Column(
-                          children: movie.reviews.map((rev) {
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: AppTheme.cardBg,
-                                borderRadius:
-                                    BorderRadius.circular(AppTheme.radiusLg),
-                                border: Border.all(color: Colors.white10),
+                          children: [
+                            ...movie.reviews
+                                .take(3)
+                                .map((rev) => UserReviewCard(review: rev)),
+                            if (movie.reviews.length > 3)
+                              TextButton.icon(
+                                onPressed: () => Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.movieReviews,
+                                  arguments: movie,
+                                ),
+                                icon: const Icon(Icons.forum_outlined,
+                                    color: AppTheme.primaryRed),
+                                label: Text(
+                                  'Xem tất cả ${movie.reviews.length} đánh giá',
+                                  style: const TextStyle(
+                                      color: AppTheme.primaryRed),
+                                ),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 18,
-                                        backgroundColor: AppTheme.inputBg,
-                                        backgroundImage: rev.userAvatar.isEmpty
-                                            ? null
-                                            : NetworkImage(rev.userAvatar),
-                                        child: rev.userAvatar.isEmpty
-                                            ? const Icon(Icons.person,
-                                                color: AppTheme.textMuted,
-                                                size: 18)
-                                            : null,
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              rev.userName,
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 14),
-                                            ),
-                                            Text(rev.date,
-                                                style: AppTheme.smallText),
-                                          ],
-                                        ),
-                                      ),
-                                      if (rev.rating > 0)
-                                        Row(
-                                          children: [
-                                            const Icon(Icons.star_rounded,
-                                                color: AppTheme.accentGold,
-                                                size: 16),
-                                            const SizedBox(width: 2),
-                                            Text(
-                                              '${rev.rating}',
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 13),
-                                            ),
-                                          ],
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(rev.comment, style: AppTheme.bodyText),
-                                  if (rev.imageUrl?.isNotEmpty == true) ...[
-                                    const SizedBox(height: 10),
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(
-                                          AppTheme.radiusMd),
-                                      child: FlixNetworkImage(
-                                        rev.imageUrl!,
-                                        width: double.infinity,
-                                        height: 180,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            );
-                          }).toList(),
+                          ],
                         ),
                       const SizedBox(height: 24),
 

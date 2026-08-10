@@ -16,6 +16,7 @@ import '../screens/movie_list_screen.dart';
 import '../screens/movie_detail_screen.dart';
 import '../screens/trailer_screen.dart';
 import '../screens/review_screen.dart';
+import '../screens/movie_reviews_screen.dart';
 import '../screens/favorites_screen.dart';
 import '../screens/history_screen.dart';
 import '../screens/profile_screen.dart';
@@ -43,6 +44,7 @@ class AppRoutes {
   static const String movieDetail = '/movie_detail';
   static const String trailer = '/trailer';
   static const String review = '/review';
+  static const String movieReviews = '/movie_reviews';
   static const String myReviews = '/my_reviews';
   static const String favorites = '/favorites';
   static const String history = '/history';
@@ -73,6 +75,7 @@ class AppRoutes {
     movieDetail,
     trailer,
     review,
+    movieReviews,
     favorites,
     history,
     profile,
@@ -105,7 +108,8 @@ class AppRoutes {
         arguments = json['value'] as String?;
       }
     }
-    if ({movieDetail, trailer, review}.contains(name) && arguments is! Movie) {
+    if ({movieDetail, trailer, review, movieReviews}.contains(name) &&
+        arguments is! Movie) {
       return const RouteSettings(name: home);
     }
     return RouteSettings(name: name, arguments: arguments);
@@ -194,6 +198,12 @@ class AppRoutes {
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => ReviewScreen(movie: settings.arguments as Movie?),
+        );
+      case movieReviews:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) =>
+              MovieReviewsScreen(movie: settings.arguments as Movie?),
         );
       case genreDetail:
         return MaterialPageRoute(
