@@ -125,6 +125,15 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
     }
   }
 
+  void _goBack() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    navigator.pushReplacementNamed(AppRoutes.home);
+  }
+
   void _showAllCast() {
     showModalBottomSheet<void>(
       context: context,
@@ -309,7 +318,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
     final movie = _currentMovie;
     final relatedMovies = _relatedMovies;
 
-    return Scaffold(
+    final page = Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
       body: Stack(
         children: [
@@ -331,7 +340,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                     child: const Icon(Icons.arrow_back,
                         color: Colors.white, size: 20),
                   ),
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: _goBack,
                 ),
                 actions: [
                   // Nút Tim Yêu Thích với Animation
@@ -1061,6 +1070,15 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
           ),
         ],
       ),
+    );
+    return PopScope(
+      canPop: Navigator.of(context).canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && mounted) {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        }
+      },
+      child: page,
     );
   }
 
