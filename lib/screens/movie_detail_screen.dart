@@ -126,12 +126,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   }
 
   void _goBack() {
-    final navigator = Navigator.of(context);
-    if (navigator.canPop()) {
-      navigator.pop();
-      return;
-    }
-    navigator.pushReplacementNamed(AppRoutes.home);
+    Navigator.of(context).pushReplacementNamed(AppRoutes.home);
   }
 
   void _showAllCast() {
@@ -1072,7 +1067,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       ),
     );
     return PopScope(
-      canPop: Navigator.of(context).canPop(),
+      canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && mounted) {
           Navigator.of(context).pushReplacementNamed(AppRoutes.home);
