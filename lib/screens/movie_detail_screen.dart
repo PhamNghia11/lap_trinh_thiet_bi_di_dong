@@ -75,7 +75,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
           // Chi tiết phim vẫn tải được nếu trạng thái yêu thích tạm thời lỗi.
         }
       }
-      final reviews = rows.map((row) {
+      final flixReviews = rows.map((row) {
         final user = row['user'] as Map<String, dynamic>? ?? const {};
         return UserReview(
           userName: user['fullName'] as String? ?? 'Người dùng FLIX',
@@ -88,6 +88,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
           imageUrl: row['imageUrl'] as String?,
         );
       }).toList();
+      final reviews = [...flixReviews, ...detail.reviews];
       final genreId =
           detail.genres.isEmpty ? null : movieGenreOptions[detail.genres.first];
       final related = genreId == null
@@ -938,21 +939,22 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                                           ],
                                         ),
                                       ),
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.star_rounded,
-                                              color: AppTheme.accentGold,
-                                              size: 16),
-                                          const SizedBox(width: 2),
-                                          Text(
-                                            '${rev.rating}',
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 13),
-                                          ),
-                                        ],
-                                      ),
+                                      if (rev.rating > 0)
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.star_rounded,
+                                                color: AppTheme.accentGold,
+                                                size: 16),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              '${rev.rating}',
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13),
+                                            ),
+                                          ],
+                                        ),
                                     ],
                                   ),
                                   const SizedBox(height: 8),

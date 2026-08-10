@@ -78,6 +78,16 @@ void main() {
           {'site': 'YouTube', 'type': 'Trailer', 'key': 'abc123'},
         ],
       },
+      'reviews': {
+        'results': [
+          {
+            'author': 'Alice',
+            'author_details': {'rating': 8, 'avatar_path': null},
+            'content': 'A real TMDB review',
+            'created_at': '2024-03-01T10:00:00.000Z',
+          },
+        ],
+      },
     });
 
     expect(movie.id, '693134');
@@ -86,6 +96,9 @@ void main() {
     expect(movie.director, 'Denis Villeneuve');
     expect(movie.castList.single.role, 'Paul');
     expect(movie.trailerKey, 'abc123');
+    expect(movie.reviews.single.userName, 'Alice (TMDB)');
+    expect(movie.reviews.single.rating, 4);
+    expect(movie.reviews.single.comment, 'A real TMDB review');
     expect(movie.backdropUrl, 'https://image.tmdb.org/t/p/w1280/backdrop.jpg');
     expect(movie.ageRating, 'PG-13');
     expect(movie.writers, contains('Jon Spaihts'));

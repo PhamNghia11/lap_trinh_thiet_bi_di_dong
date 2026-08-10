@@ -56,6 +56,14 @@ describe('TmdbService', () => {
     const result = await service.detail(1);
 
     expect(client.get).toHaveBeenCalledTimes(1);
+    expect(client.get).toHaveBeenCalledWith('/movie/1', {
+      params: {
+        append_to_response:
+          'credits,videos,keywords,reviews,release_dates,watch/providers',
+        api_key: 'test-key',
+        language: 'vi-VN',
+      },
+    });
     expect(
       (result.videos as { results: Array<{ key: string }> }).results[0].key,
     ).toBe('vi-key');

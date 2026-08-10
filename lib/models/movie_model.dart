@@ -233,6 +233,7 @@ class Movie {
         .where(
             (video) => video['site'] == 'YouTube' && video['type'] == 'Trailer')
         .firstOrNull;
+    final tmdbReviews = _tmdbReviews(json['reviews']);
     return Movie(
       id: '${json['id'] ?? ''}',
       title: (json['title'] as String?) ??
@@ -278,8 +279,36 @@ class Movie {
               .firstOrNull ??
           'Đang cập nhật',
       castList: cast,
+      reviews: tmdbReviews,
       trailerKey: trailer?['key'] as String?,
     );
+  }
+
+  static List<UserReview> _tmdbReviews(dynamic value) {
+    final results =
+        (value as Map<String, dynamic>?)?['results'] as List<dynamic>?;
+    return (results ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map((review) {
+          final details =
+              review['author_details'] as Map<String, dynamic>? ?? const {};
+          final avatar = details['avatar_path'] as String?;
+          final avatarUrl = avatar == null
+              ? ''
+              : avatar.startsWith('/https')
+                  ? avatar.substring(1)
+                  : 'https://image.tmdb.org/t/p/w185$avatar';
+          final author = review['author'] as String? ?? 'Người dùng TMDB';
+          return UserReview(
+            userName: '$author (TMDB)',
+            userAvatar: avatarUrl,
+            rating: ((details['rating'] as num?)?.toDouble() ?? 0) / 2,
+            date: (review['created_at'] as String? ?? '').split('T').first,
+            comment: review['content'] as String? ?? '',
+          );
+        })
+        .where((review) => review.comment.trim().isNotEmpty)
+        .toList();
   }
 
   Map<String, dynamic> toJson() => {

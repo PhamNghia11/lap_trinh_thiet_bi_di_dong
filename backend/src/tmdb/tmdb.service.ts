@@ -70,15 +70,18 @@ export class TmdbService {
         const cached = await this.prisma.movieCache.findUnique({
           where: { tmdbId: id },
         });
-        if (cached && cached.expiresAt > new Date())
-          return cached.payload as Record<string, unknown>;
+        const payload = cached?.payload as Record<string, unknown> | undefined;
+        const hasReviews =
+          payload?.reviews && typeof payload.reviews === 'object';
+        if (cached && cached.expiresAt > new Date() && hasReviews)
+          return payload;
       } catch {
         // Cache is an optimization; TMDB remains the source of truth.
       }
     }
     const data = await this.get<Record<string, unknown>>(`/movie/${id}`, {
       append_to_response:
-        'credits,videos,keywords,release_dates,watch/providers',
+        'credits,videos,keywords,reviews,release_dates,watch/providers',
     });
     const currentVideos = (data.videos as { results?: unknown[] } | undefined)
       ?.results;
