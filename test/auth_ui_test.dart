@@ -1,4 +1,5 @@
 import 'package:flix_app/routes/app_routes.dart';
+import 'package:flix_app/main.dart';
 import 'package:flix_app/screens/favorites_screen.dart';
 import 'package:flix_app/screens/history_screen.dart';
 import 'package:flix_app/screens/login_screen.dart';
@@ -46,6 +47,44 @@ void main() {
     expect(find.text('Không thể đăng nhập'), findsOneWidget);
     expect(find.text('Người dùng đã hủy'), findsOneWidget);
     expect(find.text('Quay lại đăng nhập'), findsOneWidget);
+  });
+
+  testWidgets('OAuth callback is handled before the splash screen',
+      (tester) async {
+    const callbackRoute = '/auth/callback?error=Google%20callback%20failed';
+    await tester.pumpWidget(
+      const FlixApp(initialRouteName: callbackRoute),
+    );
+    await tester.pump();
+
+    expect(find.byType(SocialAuthCallbackScreen), findsOneWidget);
+    expect(find.byType(LoginScreen), findsNothing);
+    expect(find.text('Google callback failed'), findsOneWidget);
+  });
+
+  test('OAuth callback is recovered from the browser URL fragment', () {
+    final route = AppRoutes.resolveInitialRouteName(
+      baseUri: Uri.parse(
+        'http://localhost:8765/#/auth/callback?token=google-token',
+      ),
+      platformRouteName: '/',
+    );
+
+    expect(route, '/auth/callback?token=google-token');
+  });
+
+  testWidgets('login controls remain responsive on a narrow viewport',
+      (tester) async {
+    tester.view.physicalSize = const Size(260, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(_app(const LoginScreen()));
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Google'), findsOneWidget);
   });
 
   testWidgets('favorites and history keep useful signed-out states',

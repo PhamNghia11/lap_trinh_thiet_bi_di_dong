@@ -8,11 +8,18 @@ import 'core/app_preferences.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const _FlixBootstrap());
+  final initialRouteName = AppRoutes.resolveInitialRouteName(
+    baseUri: Uri.base,
+    platformRouteName:
+        WidgetsBinding.instance.platformDispatcher.defaultRouteName,
+  );
+  runApp(_FlixBootstrap(initialRouteName: initialRouteName));
 }
 
 class _FlixBootstrap extends StatefulWidget {
-  const _FlixBootstrap();
+  const _FlixBootstrap({required this.initialRouteName});
+
+  final String initialRouteName;
 
   @override
   State<_FlixBootstrap> createState() => _FlixBootstrapState();
@@ -52,7 +59,7 @@ class _FlixBootstrapState extends State<_FlixBootstrap> {
       future: _initialization,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          return const FlixApp();
+          return FlixApp(initialRouteName: widget.initialRouteName);
         }
         return MaterialApp(
           debugShowCheckedModeBanner: false,
@@ -96,7 +103,12 @@ class _StartupScreen extends StatelessWidget {
 }
 
 class FlixApp extends StatelessWidget {
-  const FlixApp({super.key});
+  const FlixApp({
+    super.key,
+    this.initialRouteName = AppRoutes.splash,
+  });
+
+  final String initialRouteName;
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +116,8 @@ class FlixApp extends StatelessWidget {
       title: 'FLIX',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme(),
-      initialRoute: AppRoutes.splash,
+      initialRoute: initialRouteName,
+      onGenerateInitialRoutes: AppRoutes.onGenerateInitialRoutes,
       routes: AppRoutes.routes,
       onGenerateRoute: AppRoutes.onGenerateRoute,
       navigatorObservers: [AppRoutes.navigationObserver],

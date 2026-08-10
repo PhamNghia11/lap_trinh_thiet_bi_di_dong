@@ -75,14 +75,6 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // Clear the active text field before the OAuth navigation. In a mobile
-    // viewport, keeping it focused makes Flutter Web preserve the old screen
-    // size for the virtual keyboard; Chrome resizing during the redirect can
-    // then produce a negative view inset and abort the navigation.
-    FocusManager.instance.primaryFocus?.unfocus();
-    await WidgetsBinding.instance.endOfFrame;
-    if (!mounted) return;
-
     setState(() => _socialLoading = provider);
     try {
       final data = Map<String, dynamic>.from(
@@ -105,6 +97,11 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Flutter Web can report a transient negative viewInset while Chrome
+      // moves focus away from a text field during an OAuth redirect. The form
+      // already scrolls, so resizing the whole scaffold is unnecessary and
+      // can abort the Google navigation in debug mode.
+      resizeToAvoidBottomInset: !kIsWeb,
       backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -195,10 +192,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     onFieldSubmitted: (_) => _submit(),
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    runSpacing: 4,
                     children: [
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Checkbox(
                             value: _rememberMe,
@@ -247,67 +247,84 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: _loading ? null : _submit,
                   ),
                   const SizedBox(height: 24),
-                  const Row(
-                    children: [
-                      Expanded(child: Divider(color: Colors.white12)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          'Hoặc đăng nhập bằng',
-                          style: TextStyle(
-                            color: AppTheme.textMuted,
-                            fontSize: 12,
-                          ),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      const label = Text(
+                        'Hoặc đăng nhập bằng',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppTheme.textMuted,
+                          fontSize: 12,
                         ),
-                      ),
-                      Expanded(child: Divider(color: Colors.white12)),
-                    ],
+                      );
+                      if (constraints.maxWidth < 220) return label;
+                      return const Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.white12)),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: label,
+                          ),
+                          Expanded(child: Divider(color: Colors.white12)),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          style: AppTheme.outlinedButtonStyle(),
-                          onPressed: _loading || _socialLoading != null
-                              ? null
-                              : () => _startSocialLogin('google'),
-                          icon: const Icon(
-                            Icons.g_mobiledata,
-                            color: Colors.redAccent,
-                            size: 24,
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final buttonWidth = constraints.maxWidth < 240
+                          ? constraints.maxWidth
+                          : (constraints.maxWidth - 12) / 2;
+                      return Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          SizedBox(
+                            width: buttonWidth,
+                            child: OutlinedButton.icon(
+                              style: AppTheme.outlinedButtonStyle(),
+                              onPressed: _loading || _socialLoading != null
+                                  ? null
+                                  : () => _startSocialLogin('google'),
+                              icon: const Icon(
+                                Icons.g_mobiledata,
+                                color: Colors.redAccent,
+                                size: 24,
+                              ),
+                              label: Text(
+                                _socialLoading == 'google'
+                                    ? 'Đang mở...'
+                                    : 'Google',
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 13),
+                              ),
+                            ),
                           ),
-                          label: Text(
-                            _socialLoading == 'google'
-                                ? 'Đang mở...'
-                                : 'Google',
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 13),
+                          SizedBox(
+                            width: buttonWidth,
+                            child: OutlinedButton.icon(
+                              style: AppTheme.outlinedButtonStyle(),
+                              onPressed: _loading || _socialLoading != null
+                                  ? null
+                                  : () => _startSocialLogin('facebook'),
+                              icon: const Icon(
+                                Icons.facebook,
+                                color: Colors.blueAccent,
+                                size: 20,
+                              ),
+                              label: Text(
+                                _socialLoading == 'facebook'
+                                    ? 'Đang mở...'
+                                    : 'Facebook',
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 13),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          style: AppTheme.outlinedButtonStyle(),
-                          onPressed: _loading || _socialLoading != null
-                              ? null
-                              : () => _startSocialLogin('facebook'),
-                          icon: const Icon(
-                            Icons.facebook,
-                            color: Colors.blueAccent,
-                            size: 20,
-                          ),
-                          label: Text(
-                            _socialLoading == 'facebook'
-                                ? 'Đang mở...'
-                                : 'Facebook',
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 13),
-                          ),
-                        ),
-                      ),
-                    ],
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 28),
                   Wrap(

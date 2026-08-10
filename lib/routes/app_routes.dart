@@ -117,7 +117,34 @@ class AppRoutes {
     return null;
   }
 
+  static String resolveInitialRouteName({
+    required Uri baseUri,
+    required String platformRouteName,
+  }) {
+    final fragmentRoute = baseUri.fragment;
+    if (fragmentRoute.startsWith(socialAuthCallback)) {
+      return fragmentRoute;
+    }
+    return platformRouteName;
+  }
+
   // ─── Route Map ────────────────────────────────────────────────────
+  static List<Route<dynamic>> onGenerateInitialRoutes(String initialRouteName) {
+    if (initialRouteName.startsWith(socialAuthCallback)) {
+      final callbackRoute = onGenerateRoute(
+        RouteSettings(name: initialRouteName),
+      );
+      if (callbackRoute != null) return [callbackRoute];
+    }
+
+    return [
+      MaterialPageRoute(
+        settings: const RouteSettings(name: splash),
+        builder: (_) => const SplashScreen(),
+      ),
+    ];
+  }
+
   static Map<String, WidgetBuilder> get routes => {
         splash: (context) => const SplashScreen(),
         onboarding: (context) => const OnboardingScreen(),
