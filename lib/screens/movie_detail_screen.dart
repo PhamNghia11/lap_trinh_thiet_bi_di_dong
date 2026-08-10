@@ -126,7 +126,10 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   }
 
   void _goBack() {
-    Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      AppRoutes.home,
+      (_) => false,
+    );
   }
 
   void _showAllCast() {
@@ -1070,7 +1073,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && mounted) {
-          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+          _goBack();
         }
       },
       child: page,
