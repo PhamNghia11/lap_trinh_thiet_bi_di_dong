@@ -1,4 +1,5 @@
 import 'package:flix_app/models/movie_model.dart';
+import 'package:flix_app/routes/app_routes.dart';
 import 'package:flix_app/screens/movie_detail_screen.dart';
 import 'package:flix_app/screens/movie_reviews_screen.dart';
 import 'package:flix_app/widgets/user_review_card.dart';
@@ -46,16 +47,23 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(home: MovieDetailScreen(movie: movie)),
+      MaterialApp(
+        onGenerateRoute: AppRoutes.onGenerateRoute,
+        home: MovieDetailScreen(movie: movie),
+      ),
     );
-    await tester.scrollUntilVisible(
-      find.text('Xem tất cả 4 đánh giá'),
-      600,
-      scrollable: find.byType(Scrollable).first,
+    await tester.drag(
+      find.byType(CustomScrollView),
+      const Offset(0, -1700),
     );
+    await tester.pumpAndSettle();
 
     expect(find.byType(UserReviewCard), findsNWidgets(3));
     expect(find.text('Xem tất cả 4 đánh giá'), findsOneWidget);
+
+    await tester.tap(find.text('Xem tất cả 4 đánh giá'));
+    await tester.pumpAndSettle();
+    expect(find.byType(MovieReviewsScreen), findsOneWidget);
   });
 
   testWidgets('trang tất cả đánh giá lọc được nguồn TMDB', (tester) async {
