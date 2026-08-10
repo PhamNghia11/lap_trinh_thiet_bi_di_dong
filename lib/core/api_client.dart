@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,10 +21,25 @@ class ApiClient {
   static const _cachePrefix = 'flix_cache.';
   static const _storage = FlutterSecureStorage();
   final http.Client _http = http.Client();
-  final String baseUrl = const String.fromEnvironment(
-    'FLIX_API_URL',
-    defaultValue: 'http://10.0.2.2:3000/api/v1',
-  );
+  static const _configuredBaseUrl = String.fromEnvironment('FLIX_API_URL');
+  static const _webBaseUrl =
+      'https://lap-trinh-thiet-bi-di-dong.onrender.com/api/v1';
+  static const _androidBaseUrl = 'http://10.0.2.2:3000/api/v1';
+
+  @visibleForTesting
+  static String resolveBaseUrl({
+    required bool isWeb,
+    String configuredBaseUrl = _configuredBaseUrl,
+  }) {
+    final selected = configuredBaseUrl.isNotEmpty
+        ? configuredBaseUrl
+        : (isWeb ? _webBaseUrl : _androidBaseUrl);
+    return selected.endsWith('/')
+        ? selected.substring(0, selected.length - 1)
+        : selected;
+  }
+
+  final String baseUrl = resolveBaseUrl(isWeb: kIsWeb);
 
   String? _token;
   String? get token => _token;
