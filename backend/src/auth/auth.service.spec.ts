@@ -13,6 +13,7 @@ describe('AuthService social authentication', () => {
     FACEBOOK_GRAPH_VERSION: 'v-test',
     PUBLIC_API_URL: 'http://localhost:3000',
     OAUTH_RETURN_URL: 'http://localhost:8765/#/auth/callback',
+    JWT_SECRET: 'test-secret',
   };
 
   const prisma = {
@@ -79,5 +80,29 @@ describe('AuthService social authentication', () => {
         newPassword: 'new-password',
       }),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('does not reveal whether a reset email exists', async () => {
+    (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce(null);
+
+    await expect(
+      service.requestPasswordReset({ email: 'missing@example.com' }),
+    ).resolves.toEqual({ requested: true });
+  });
+
+  it('rejects an expired password reset code', async () => {
+    (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
+      id: 'user-id',
+      passwordResetCodeHash: 'invalid',
+      passwordResetExpiresAt: new Date(Date.now() - 1000),
+    });
+
+    await expect(
+      service.resetPassword({
+        email: 'user@example.com',
+        code: '123456',
+        newPassword: 'new-password',
+      }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 });

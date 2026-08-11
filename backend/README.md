@@ -38,6 +38,8 @@ Sao chép `.env.example` thành `.env`, sau đó điền:
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: OAuth Web credentials từ Google.
 - `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`: thông tin Facebook Login app.
 - `FACEBOOK_GRAPH_VERSION`: phiên bản Graph API đang bật cho Facebook app.
+- `RESEND_API_KEY`: API key gửi email khôi phục mật khẩu qua Resend.
+- `RESET_EMAIL_FROM`: địa chỉ người gửi đã xác minh trên Resend.
 
 Callback URL cần đăng ký với provider:
 
@@ -53,6 +55,8 @@ Không commit file `.env`.
 
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
+- `POST /api/v1/auth/password/forgot`
+- `POST /api/v1/auth/password/reset`
 - `GET /api/v1/auth/oauth/providers`
 - `GET /api/v1/auth/oauth/:provider/url`
 - `GET /api/v1/auth/oauth/:provider/callback`

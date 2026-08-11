@@ -10,7 +10,9 @@ datasource db {
 model User {
   id               String          @id @default(uuid()) @db.Uuid
   email            String          @unique
-  passwordHash     String?
+  passwordHash           String?
+  passwordResetCodeHash  String?
+  passwordResetExpiresAt DateTime?
   fullName         String?
   avatarUrl        String?
   coverUrl         String?

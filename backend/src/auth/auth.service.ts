@@ -8,9 +8,16 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import { compare, hash } from 'bcrypt';
+import { createHash, randomInt, timingSafeEqual } from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { PrismaService } from '../prisma/prisma.service';
-import { ChangePasswordDto, LoginDto, RegisterDto } from './auth.dto';
+import {
+  ChangePasswordDto,
+  LoginDto,
+  RegisterDto,
+  RequestPasswordResetDto,
+  ResetPasswordDto,
+} from './auth.dto';
 
 export type SocialProvider = 'google' | 'facebook';
 
@@ -82,6 +89,64 @@ export class AuthService {
     await this.prisma.user.update({
       where: { id: userId },
       data: { passwordHash: await hash(dto.newPassword, 12) },
+    });
+    return { changed: true };
+  }
+
+  async requestPasswordReset(dto: RequestPasswordResetDto) {
+    const email = dto.email.trim().toLowerCase();
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, fullName: true },
+    });
+    if (!user) return { requested: true };
+
+    const code = randomInt(0, 1_000_000).toString().padStart(6, '0');
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetCodeHash: this.passwordResetCodeHash(user.id, code),
+        passwordResetExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      },
+    });
+    try {
+      await this.sendPasswordResetEmail(user.email, user.fullName, code);
+    } catch (error) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          passwordResetCodeHash: null,
+          passwordResetExpiresAt: null,
+        },
+      });
+      console.error('Không thể gửi email khôi phục mật khẩu', error);
+    }
+    return { requested: true };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const email = dto.email.trim().toLowerCase();
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    const expected = user?.passwordResetCodeHash;
+    const actual = user
+      ? this.passwordResetCodeHash(user.id, dto.code.trim())
+      : '';
+    if (
+      !user ||
+      !expected ||
+      !user.passwordResetExpiresAt ||
+      user.passwordResetExpiresAt.getTime() <= Date.now() ||
+      !this.safeEqual(expected, actual)
+    ) {
+      throw new UnauthorizedException('Mã xác nhận không đúng hoặc đã hết hạn');
+    }
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash: await hash(dto.newPassword, 12),
+        passwordResetCodeHash: null,
+        passwordResetExpiresAt: null,
+      },
     });
     return { changed: true };
   }
@@ -364,6 +429,43 @@ export class AuthService {
       .get<string>('PUBLIC_API_URL', 'http://localhost:3000')
       .replace(/\/$/, '');
     return `${publicApiUrl}/api/v1/auth/oauth/${provider}/callback`;
+  }
+
+  private passwordResetCodeHash(userId: string, code: string) {
+    return createHash('sha256')
+      .update(`${userId}:${code}:${this.required('JWT_SECRET')}`)
+      .digest('hex');
+  }
+
+  private safeEqual(left: string, right: string) {
+    const leftBuffer = Buffer.from(left);
+    const rightBuffer = Buffer.from(right);
+    return (
+      leftBuffer.length === rightBuffer.length &&
+      timingSafeEqual(leftBuffer, rightBuffer)
+    );
+  }
+
+  private async sendPasswordResetEmail(
+    email: string,
+    fullName: string | null,
+    code: string,
+  ) {
+    await axios.post(
+      'https://api.resend.com/emails',
+      {
+        from: this.required('RESET_EMAIL_FROM'),
+        to: [email],
+        subject: 'Mã khôi phục mật khẩu FLIX',
+        text: `Xin chào ${fullName?.trim() || 'bạn'},\n\nMã khôi phục mật khẩu FLIX của bạn là: ${code}\nMã có hiệu lực trong 15 phút. Nếu bạn không yêu cầu, hãy bỏ qua email này.`,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${this.required('RESEND_API_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
   }
 
   private required(key: string) {
