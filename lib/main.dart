@@ -102,7 +102,7 @@ class _StartupScreen extends StatelessWidget {
   }
 }
 
-class FlixApp extends StatelessWidget {
+class FlixApp extends StatefulWidget {
   const FlixApp({
     super.key,
     this.initialRouteName = AppRoutes.splash,
@@ -111,12 +111,53 @@ class FlixApp extends StatelessWidget {
   final String initialRouteName;
 
   @override
+  State<FlixApp> createState() => _FlixAppState();
+}
+
+class _FlixAppState extends State<FlixApp> {
+  final _navigatorKey = GlobalKey<NavigatorState>();
+  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
+
+  @override
+  void initState() {
+    super.initState();
+    AppSession.instance.addListener(_handleSessionChange);
+    _handleSessionChange();
+  }
+
+  @override
+  void dispose() {
+    AppSession.instance.removeListener(_handleSessionChange);
+    super.dispose();
+  }
+
+  void _handleSessionChange() {
+    if (!AppSession.instance.consumeSessionExpired()) return;
+    if (_showExpiredSession()) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showExpiredSession();
+    });
+  }
+
+  bool _showExpiredSession() {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null || !mounted) return false;
+    navigator.pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
+    _messengerKey.currentState?.showSnackBar(
+      const SnackBar(content: Text('Phiên đăng nhập đã hết hạn.')),
+    );
+    return true;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FLIX',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme(),
-      initialRoute: initialRouteName,
+      navigatorKey: _navigatorKey,
+      scaffoldMessengerKey: _messengerKey,
+      initialRoute: widget.initialRouteName,
       onGenerateInitialRoutes: AppRoutes.onGenerateInitialRoutes,
       routes: AppRoutes.routes,
       onGenerateRoute: AppRoutes.onGenerateRoute,

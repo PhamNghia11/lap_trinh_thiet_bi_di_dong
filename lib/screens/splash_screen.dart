@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
 import '../core/app_session.dart';
-import '../core/app_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -20,11 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _prepareApp() async {
-    await Future.wait([
-      AppSession.instance.restore(),
-      AppPreferences.instance.load(),
-      Future<void>.delayed(const Duration(milliseconds: 1200)),
-    ]);
+    await Future<void>.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
     final restored = AppRoutes.restoredRoute(
       authenticated: AppSession.instance.isAuthenticated,

@@ -131,6 +131,10 @@ class AppRoutes {
     if (fragmentRoute.startsWith(socialAuthCallback)) {
       return fragmentRoute;
     }
+    final sharedMovieId = baseUri.queryParameters['movie'];
+    if (sharedMovieId != null && int.tryParse(sharedMovieId) != null) {
+      return '$movieDetail?movie=${Uri.encodeQueryComponent(sharedMovieId)}';
+    }
     return platformRouteName;
   }
 
@@ -141,6 +145,28 @@ class AppRoutes {
         RouteSettings(name: initialRouteName),
       );
       if (callbackRoute != null) return [callbackRoute];
+    }
+    final uri = Uri.tryParse(initialRouteName);
+    final sharedMovieId =
+        uri?.path == movieDetail ? uri?.queryParameters['movie'] : null;
+    if (sharedMovieId != null && int.tryParse(sharedMovieId) != null) {
+      final movie = Movie(
+        id: sharedMovieId,
+        title: 'Đang tải...',
+        genres: const [],
+        year: 0,
+        rating: 0,
+        duration: '',
+        description: '',
+        imageUrl: '',
+        reviews: const [],
+      );
+      return [
+        MaterialPageRoute(
+          settings: RouteSettings(name: movieDetail, arguments: movie),
+          builder: (_) => MovieDetailScreen(movie: movie),
+        ),
+      ];
     }
 
     return [

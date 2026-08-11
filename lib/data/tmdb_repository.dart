@@ -10,6 +10,12 @@ class TmdbRepository {
   Future<List<Movie>> nowPlaying({int page = 1}) =>
       _movies('/movies/now-playing?page=$page');
   Future<List<Movie>> trending() => _movies('/movies/trending');
+  Future<List<Movie>> refreshPopular() =>
+      _movies('/movies/popular?page=1', forceRefresh: true);
+  Future<List<Movie>> refreshNowPlaying() =>
+      _movies('/movies/now-playing?page=1', forceRefresh: true);
+  Future<List<Movie>> refreshTrending() =>
+      _movies('/movies/trending', forceRefresh: true);
   Future<
       List<
           Movie>> search(String query, {int page = 1, int? year}) => _movies(
@@ -32,6 +38,18 @@ class TmdbRepository {
     return _movies('/movies/discover?${Uri(queryParameters: query).query}');
   }
 
+  Future<List<Movie>> refreshDiscover({int? genreId}) {
+    final query = <String, String>{
+      'page': '1',
+      'sortBy': 'popularity.desc',
+      if (genreId != null) 'genreId': '$genreId',
+    };
+    return _movies(
+      '/movies/discover?${Uri(queryParameters: query).query}',
+      forceRefresh: true,
+    );
+  }
+
   Future<Movie> detail(String id) async {
     final data = Map<String, dynamic>.from(await _client.getCached(
       '/movies/$id',
@@ -40,8 +58,10 @@ class TmdbRepository {
     return Movie.fromTmdbJson(data);
   }
 
-  Future<List<Movie>> _movies(String path) async {
-    final data = Map<String, dynamic>.from(await _client.getCached(path));
+  Future<List<Movie>> _movies(String path, {bool forceRefresh = false}) async {
+    final data = Map<String, dynamic>.from(
+      await _client.getCached(path, forceRefresh: forceRefresh),
+    );
     final results = data['results'] as List<dynamic>? ?? const [];
     return results
         .whereType<Map<String, dynamic>>()

@@ -2,7 +2,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
@@ -128,6 +128,10 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   }
 
   void _goBack() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+      return;
+    }
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(
         settings: const RouteSettings(name: AppRoutes.home),
@@ -334,6 +338,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                 pinned: true,
                 backgroundColor: AppTheme.scaffoldBg,
                 leading: IconButton(
+                  tooltip: 'Quay lại',
                   icon: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: const BoxDecoration(
@@ -348,6 +353,9 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                 actions: [
                   // Nút Tim Yêu Thích với Animation
                   IconButton(
+                    tooltip: _isFavorite
+                        ? 'Xóa khỏi yêu thích'
+                        : 'Thêm vào yêu thích',
                     icon: AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       padding: const EdgeInsets.all(6),
@@ -365,6 +373,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                   ),
                   // Nút Chia Sẻ với Animation
                   IconButton(
+                    tooltip: 'Chia sẻ phim',
                     icon: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: const BoxDecoration(
@@ -375,14 +384,19 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                           color: Colors.white, size: 20),
                     ),
                     onPressed: () async {
-                      await Clipboard.setData(ClipboardData(
-                        text: 'https://www.themoviedb.org/movie/${movie.id}',
-                      ));
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Đã sao chép liên kết phim')),
-                      );
+                      try {
+                        await SharePlus.instance.share(
+                          ShareParams(
+                            text:
+                                'Xem ${movie.title} trên FLIX: https://flix-da-movie-m-app.web.app/?movie=${movie.id}',
+                          ),
+                        );
+                      } catch (error) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('$error')),
+                        );
+                      }
                     },
                   ),
                   const SizedBox(width: 8),

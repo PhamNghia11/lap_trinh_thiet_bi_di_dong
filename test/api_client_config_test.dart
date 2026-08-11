@@ -25,4 +25,22 @@ void main() {
       'https://api.example.com/api/v1',
     );
   });
+
+  test('phản hồi máy chủ không hợp lệ được đổi thành lỗi dễ hiểu', () {
+    expect(
+      () => ApiClient.decodeResponseBody(
+        '<html>Bad gateway</html>',
+        statusCode: 502,
+      ),
+      throwsA(
+        isA<ApiException>()
+            .having((error) => error.statusCode, 'statusCode', 502)
+            .having(
+              (error) => error.message,
+              'message',
+              'Máy chủ đang tạm thời không ổn định. Vui lòng thử lại.',
+            ),
+      ),
+    );
+  });
 }

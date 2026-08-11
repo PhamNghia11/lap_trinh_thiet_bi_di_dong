@@ -3,11 +3,26 @@ import 'package:flutter/foundation.dart';
 import 'api_client.dart';
 
 class AppSession extends ChangeNotifier {
-  AppSession._();
+  AppSession._() {
+    ApiClient.instance.onUnauthorized = _handleUnauthorized;
+  }
   static final AppSession instance = AppSession._();
 
   Map<String, dynamic>? user;
+  bool _sessionExpired = false;
   bool get isAuthenticated => ApiClient.instance.isAuthenticated;
+
+  bool consumeSessionExpired() {
+    if (!_sessionExpired) return false;
+    _sessionExpired = false;
+    return true;
+  }
+
+  Future<void> _handleUnauthorized() async {
+    user = null;
+    _sessionExpired = true;
+    notifyListeners();
+  }
 
   Future<void> restore() async {
     await ApiClient.instance.restoreToken();
@@ -15,8 +30,10 @@ class AppSession extends ChangeNotifier {
     try {
       user = Map<String, dynamic>.from(
           await ApiClient.instance.get('/me', authenticated: true));
-    } catch (_) {
-      await ApiClient.instance.clearToken();
+    } catch (error) {
+      if (error is ApiException && error.statusCode == 401) {
+        await ApiClient.instance.clearToken();
+      }
     }
     notifyListeners();
   }
@@ -85,6 +102,25 @@ class AppSession extends ChangeNotifier {
       '/auth/password',
       authenticated: true,
       body: {'currentPassword': currentPassword, 'newPassword': newPassword},
+    );
+  }
+
+  Future<void> requestPasswordReset(String email) async {
+    await ApiClient.instance.post(
+      '/auth/password/forgot',
+      body: {'email': email.trim()},
+    );
+  }
+
+  Future<void> resetPassword(
+      String email, String code, String newPassword) async {
+    await ApiClient.instance.post(
+      '/auth/password/reset',
+      body: {
+        'email': email.trim(),
+        'code': code.trim(),
+        'newPassword': newPassword,
+      },
     );
   }
 }

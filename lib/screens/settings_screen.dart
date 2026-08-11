@@ -1,7 +1,7 @@
 // lib/screens/settings_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/app_preferences.dart';
 import '../core/app_session.dart';
@@ -251,12 +251,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _contactSupport() async {
     final launched = await launchUrl(
-      Uri.parse('mailto:support@flix.local?subject=Hỗ trợ FLIX'),
+      Uri.parse(
+          'https://github.com/PhamNghia11/lap_trinh_thiet_bi_di_dong/issues/new'),
     );
     if (!launched && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Không tìm thấy ứng dụng email trên thiết bị'),
       ));
+    }
+  }
+
+  Future<void> _shareApp() async {
+    try {
+      await SharePlus.instance.share(
+        ShareParams(
+          text: 'Khám phá phim cùng FLIX: https://flix-da-movie-m-app.web.app',
+        ),
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$error')));
+      }
     }
   }
 
@@ -491,15 +507,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(color: Colors.white)),
             trailing: const Icon(Icons.chevron_right_rounded,
                 color: AppTheme.textMuted),
-            onTap: () async {
-              await Clipboard.setData(const ClipboardData(
-                  text:
-                      'https://github.com/PhamNghia11/lap_trinh_thiet_bi_di_dong'));
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã sao chép liên kết FLIX')));
-              }
-            },
+            onTap: _shareApp,
           ),
           ListTile(
             leading: const Icon(Icons.headset_mic_outlined,

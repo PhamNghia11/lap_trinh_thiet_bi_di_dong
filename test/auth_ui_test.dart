@@ -3,6 +3,7 @@ import 'package:flix_app/data/tmdb_repository.dart';
 import 'package:flix_app/main.dart';
 import 'package:flix_app/models/movie_model.dart';
 import 'package:flix_app/screens/favorites_screen.dart';
+import 'package:flix_app/screens/forgot_password_screen.dart';
 import 'package:flix_app/screens/history_screen.dart';
 import 'package:flix_app/screens/login_screen.dart';
 import 'package:flix_app/screens/movie_list_screen.dart';
@@ -96,6 +97,23 @@ void main() {
     expect(route, '/auth/callback?token=google-token');
   });
 
+  test('shared movie URL opens the matching movie detail route', () {
+    final route = AppRoutes.resolveInitialRouteName(
+      baseUri: Uri.parse(
+        'https://flix-da-movie-m-app.web.app/?movie=550',
+      ),
+      platformRouteName: '/',
+    );
+    final initialRoutes = AppRoutes.onGenerateInitialRoutes(route);
+
+    expect(route, '/movie_detail?movie=550');
+    expect(initialRoutes.single.settings.name, AppRoutes.movieDetail);
+    expect(
+      (initialRoutes.single.settings.arguments as Movie).id,
+      '550',
+    );
+  });
+
   testWidgets('login controls remain responsive on a narrow viewport',
       (tester) async {
     tester.view.physicalSize = const Size(260, 844);
@@ -119,6 +137,17 @@ void main() {
     await tester.pumpWidget(_app(const HistoryScreen()));
     await tester.pump();
     expect(find.text('Đăng nhập để xem lịch sử'), findsOneWidget);
+  });
+
+  testWidgets('forgot password keeps the existing card and validates email',
+      (tester) async {
+    await tester.pumpWidget(_app(const ForgotPasswordScreen()));
+
+    expect(find.text('Khôi phục mật khẩu'), findsOneWidget);
+    expect(find.text('Email tài khoản'), findsOneWidget);
+    await tester.tap(find.text('Gửi mã xác nhận'));
+    await tester.pump();
+    expect(find.text('Vui lòng nhập email hợp lệ'), findsOneWidget);
   });
 
   testWidgets('movie list can initialize without a setState assertion',

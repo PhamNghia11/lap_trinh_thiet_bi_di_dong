@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -45,6 +46,9 @@ class ApiClient {
   String? get token => _token;
   bool get isAuthenticated => _token != null && _token!.isNotEmpty;
 
+  /// Called once when an authenticated request proves the token is invalid.
+  Future<void> Function()? onUnauthorized;
+
   Future<void> restoreToken() async =>
       _token = await _storage.read(key: _tokenKey);
 
@@ -66,6 +70,7 @@ class ApiClient {
   Future<dynamic> getCached(
     String path, {
     Duration ttl = const Duration(minutes: 10),
+    bool forceRefresh = false,
   }) async {
     final preferences = await SharedPreferences.getInstance();
     final key =
@@ -76,7 +81,9 @@ class ApiClient {
       try {
         cached = Map<String, dynamic>.from(jsonDecode(stored) as Map);
         final savedAt = DateTime.tryParse(cached['savedAt'] as String? ?? '');
-        if (savedAt != null && DateTime.now().difference(savedAt) <= ttl) {
+        if (!forceRefresh &&
+            savedAt != null &&
+            DateTime.now().difference(savedAt) <= ttl) {
           return cached['data'];
         }
       } catch (_) {
@@ -136,22 +143,42 @@ class ApiClient {
     bool authenticated = false,
   }) async {
     final headers = <String, String>{'Content-Type': 'application/json'};
+    final requestToken = authenticated ? _token : null;
     if (authenticated) {
       if (!isAuthenticated) {
         throw const ApiException('Vui lòng đăng nhập để tiếp tục',
             statusCode: 401);
       }
-      headers['Authorization'] = 'Bearer $_token';
+      headers['Authorization'] = 'Bearer $requestToken';
     }
     final request = http.Request(method, Uri.parse('$baseUrl$path'))
       ..headers.addAll(headers);
     if (body != null) request.body = jsonEncode(body);
-    final streamed =
-        await _http.send(request).timeout(const Duration(seconds: 15));
-    final response = await http.Response.fromStream(streamed);
-    final decoded = response.body.isEmpty ? null : jsonDecode(response.body);
+    late final http.Response response;
+    try {
+      final streamed =
+          await _http.send(request).timeout(const Duration(seconds: 15));
+      response = await http.Response.fromStream(streamed);
+    } on TimeoutException {
+      throw const ApiException(
+        'Máy chủ phản hồi quá chậm. Vui lòng thử lại.',
+      );
+    } on http.ClientException {
+      throw const ApiException(
+        'Không thể kết nối máy chủ. Vui lòng kiểm tra mạng.',
+      );
+    }
+    final decoded = decodeResponseBody(
+      response.body,
+      statusCode: response.statusCode,
+    );
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      if (response.statusCode == 401) await clearToken();
+      if (response.statusCode == 401 &&
+          requestToken != null &&
+          requestToken == _token) {
+        await clearToken();
+        await onUnauthorized?.call();
+      }
       final message =
           decoded is Map<String, dynamic> ? decoded['message'] : null;
       throw ApiException(
@@ -164,5 +191,23 @@ class ApiClient {
     return decoded is Map<String, dynamic> && decoded.containsKey('data')
         ? decoded['data']
         : decoded;
+  }
+
+  @visibleForTesting
+  static dynamic decodeResponseBody(
+    String body, {
+    required int statusCode,
+  }) {
+    if (body.isEmpty) return null;
+    try {
+      return jsonDecode(body);
+    } on FormatException {
+      throw ApiException(
+        statusCode >= 500
+            ? 'Máy chủ đang tạm thời không ổn định. Vui lòng thử lại.'
+            : 'Máy chủ trả về dữ liệu không hợp lệ.',
+        statusCode: statusCode,
+      );
+    }
   }
 }
