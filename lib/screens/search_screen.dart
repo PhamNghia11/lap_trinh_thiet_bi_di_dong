@@ -158,6 +158,7 @@ class _SearchScreenState extends State<SearchScreen> {
               suffixIcon: _controller.text.isEmpty
                   ? null
                   : IconButton(
+                      tooltip: 'Xóa từ khóa tìm kiếm',
                       onPressed: () {
                         _controller.clear();
                         _onChanged('');

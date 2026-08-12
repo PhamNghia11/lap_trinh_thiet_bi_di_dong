@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../core/media_url.dart';
 import '../theme/app_theme.dart';
 
 class FlixNetworkImage extends StatelessWidget {
@@ -33,7 +34,7 @@ class FlixNetworkImage extends StatelessWidget {
       }
     }
     return Image.network(
-      url,
+      resolveImageUrl(url),
       width: width,
       height: height,
       fit: fit,

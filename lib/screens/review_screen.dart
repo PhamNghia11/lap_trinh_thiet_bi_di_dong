@@ -10,6 +10,7 @@ import '../data/user_data_repository.dart';
 import '../core/app_session.dart';
 import '../routes/app_routes.dart';
 import '../core/ui_state_store.dart';
+import '../core/media_url.dart';
 
 class ReviewScreen extends StatefulWidget {
   final Movie? movie;
@@ -303,26 +304,32 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       final starIndex = index + 1;
                       final isSelected = starIndex <= _rating;
 
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _rating = starIndex;
-                          });
-                          _saveDraft();
-                        },
-                        child: AnimatedScale(
-                          duration: const Duration(milliseconds: 200),
-                          scale: isSelected ? 1.2 : 1.0,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: Icon(
-                              isSelected
-                                  ? Icons.star_rounded
-                                  : Icons.star_border_rounded,
-                              color: isSelected
-                                  ? AppTheme.accentGold
-                                  : AppTheme.textMuted,
-                              size: 40,
+                      return Semantics(
+                        label: '$starIndex sao',
+                        button: true,
+                        selected: isSelected,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _rating = starIndex;
+                            });
+                            _saveDraft();
+                          },
+                          child: AnimatedScale(
+                            duration: const Duration(milliseconds: 200),
+                            scale: isSelected ? 1.2 : 1.0,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 4),
+                              child: Icon(
+                                isSelected
+                                    ? Icons.star_rounded
+                                    : Icons.star_border_rounded,
+                                color: isSelected
+                                    ? AppTheme.accentGold
+                                    : AppTheme.textMuted,
+                                size: 40,
+                              ),
                             ),
                           ),
                         ),
@@ -565,7 +572,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         children: [
                           CircleAvatar(
                             radius: 16,
-                            backgroundImage: NetworkImage(rev.userAvatar),
+                            backgroundImage:
+                                NetworkImage(resolveImageUrl(rev.userAvatar)),
                           ),
                           const SizedBox(width: 10),
                           Expanded(

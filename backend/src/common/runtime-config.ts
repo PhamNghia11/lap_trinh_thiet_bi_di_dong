@@ -24,3 +24,7 @@ export function corsOrigin(env = process.env): true | string[] {
     .map((origin) => origin.trim())
     .filter(Boolean);
 }
+
+export function swaggerEnabled(env = process.env) {
+  return env.ENABLE_SWAGGER === 'true' || env.NODE_ENV !== 'production';
+}

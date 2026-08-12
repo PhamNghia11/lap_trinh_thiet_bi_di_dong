@@ -19,6 +19,7 @@ import '../core/app_session.dart';
 import '../core/app_preferences.dart';
 import '../models/movie_filter.dart';
 import '../core/ui_state_store.dart';
+import '../core/media_url.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   final Movie? movie;
@@ -162,7 +163,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                 backgroundColor: AppTheme.inputBg,
                 backgroundImage: actor.avatarUrl.isEmpty
                     ? null
-                    : NetworkImage(actor.avatarUrl),
+                    : NetworkImage(resolveImageUrl(actor.avatarUrl)),
                 child: actor.avatarUrl.isEmpty
                     ? const Icon(Icons.person, color: AppTheme.textMuted)
                     : null,
@@ -274,7 +275,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                 backgroundColor: AppTheme.inputBg,
                 backgroundImage: actor.avatarUrl.isEmpty
                     ? null
-                    : NetworkImage(actor.avatarUrl),
+                    : NetworkImage(resolveImageUrl(actor.avatarUrl)),
                 child: actor.avatarUrl.isEmpty
                     ? const Icon(Icons.person,
                         color: AppTheme.textMuted, size: 36)
@@ -862,7 +863,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                                       backgroundColor: AppTheme.inputBg,
                                       backgroundImage: actor.avatarUrl.isEmpty
                                           ? null
-                                          : NetworkImage(actor.avatarUrl),
+                                          : NetworkImage(
+                                              resolveImageUrl(actor.avatarUrl)),
                                       child: actor.avatarUrl.isEmpty
                                           ? const Icon(Icons.person,
                                               color: AppTheme.textMuted,

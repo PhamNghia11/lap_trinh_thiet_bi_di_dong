@@ -6,6 +6,9 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
+import type { Response } from 'express';
+import { Res } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { TmdbService } from './tmdb.service';
 
 @Controller('movies')
@@ -20,6 +23,35 @@ export class TmdbController {
       );
     }
     return page;
+  }
+
+  @Get('media/tmdb/:size/:file')
+  @SkipThrottle()
+  async image(
+    @Param('size') size: string,
+    @Param('file') file: string,
+    @Res() response: Response,
+  ) {
+    if (!/^w(?:45|92|154|185|300|342|500|780|1280)$/.test(size)) {
+      response.status(400).json({ message: 'Kích thước ảnh không hợp lệ' });
+      return;
+    }
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]*\.(?:jpg|jpeg|png|webp)$/.test(file)) {
+      response.status(400).json({ message: 'Tên ảnh không hợp lệ' });
+      return;
+    }
+    try {
+      const image = await this.tmdb.image(size, file);
+      response
+        .setHeader('Content-Type', image.contentType)
+        .setHeader(
+          'Cache-Control',
+          'public, max-age=86400, stale-while-revalidate=604800',
+        )
+        .send(image.data);
+    } catch {
+      response.status(502).json({ message: 'Không thể tải ảnh phim' });
+    }
   }
 
   @Get('popular') popular(@Query('page') page?: string) {

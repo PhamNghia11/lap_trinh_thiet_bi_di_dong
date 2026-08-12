@@ -6,7 +6,7 @@ import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/response.interceptor';
 import { HttpExceptionResponseFilter } from './common/http-exception.filter';
-import { corsOrigin } from './common/runtime-config';
+import { corsOrigin, swaggerEnabled } from './common/runtime-config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -28,17 +28,19 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new HttpExceptionResponseFilter());
 
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('FLIX API')
-    .setDescription('Backend tra cứu phim và quản lý dữ liệu người dùng')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  SwaggerModule.setup(
-    'api/docs',
-    app,
-    SwaggerModule.createDocument(app, swaggerConfig),
-  );
+  if (swaggerEnabled()) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('FLIX API')
+      .setDescription('Backend tra cứu phim và quản lý dữ liệu người dùng')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    SwaggerModule.setup(
+      'api/docs',
+      app,
+      SwaggerModule.createDocument(app, swaggerConfig),
+    );
+  }
   await app.listen(process.env.PORT ?? 3000);
 }
 void bootstrap();

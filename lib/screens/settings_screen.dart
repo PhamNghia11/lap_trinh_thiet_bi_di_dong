@@ -224,6 +224,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: List.generate(5, (index) {
               final value = index + 1;
               return IconButton(
+                tooltip: 'Đánh giá $value sao',
                 onPressed: () => setDialogState(() => selected = value),
                 icon: Icon(value <= selected ? Icons.star : Icons.star_border,
                     color: AppTheme.accentGold),

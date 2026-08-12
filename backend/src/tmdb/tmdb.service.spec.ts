@@ -1,4 +1,5 @@
 import { TmdbService } from './tmdb.service';
+import axios from 'axios';
 
 describe('TmdbService', () => {
   const originalApiKey = process.env.TMDB_API_KEY;
@@ -6,6 +7,29 @@ describe('TmdbService', () => {
   afterEach(() => {
     process.env.TMDB_API_KEY = originalApiKey;
     jest.restoreAllMocks();
+  });
+
+  it('chỉ trả dữ liệu ảnh khi TMDB phản hồi đúng content type', async () => {
+    jest.spyOn(axios, 'get').mockResolvedValue({
+      data: Buffer.from('image'),
+      headers: { 'content-type': 'image/jpeg' },
+    });
+    await expect(
+      new TmdbService().image('w500', 'poster.jpg'),
+    ).resolves.toEqual({
+      data: Buffer.from('image'),
+      contentType: 'image/jpeg',
+    });
+  });
+
+  it('từ chối phản hồi không phải ảnh từ TMDB', async () => {
+    jest.spyOn(axios, 'get').mockResolvedValue({
+      data: Buffer.from('<html>error</html>'),
+      headers: { 'content-type': 'text/html' },
+    });
+    await expect(new TmdbService().image('w500', 'poster.jpg')).rejects.toThrow(
+      'dữ liệu ảnh hợp lệ',
+    );
   });
 
   it('dùng video tiếng Anh khi bản chi tiết tiếng Việt không có trailer', async () => {

@@ -15,6 +15,7 @@ import '../data/tmdb_repository.dart';
 import '../models/movie_filter.dart';
 import '../widgets/flix_drawer.dart';
 import '../core/ui_state_store.dart';
+import '../core/media_url.dart';
 
 Map<String, List<Movie>> diversifyGenreMovies(
   Iterable<MapEntry<String, List<Movie>>> collections, {
@@ -223,7 +224,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     decoration: BoxDecoration(
                                       color: AppTheme.appBarBg,
                                       image: DecorationImage(
-                                        image: NetworkImage(bannerUrl),
+                                        image: NetworkImage(
+                                            resolveImageUrl(bannerUrl)),
                                         fit: BoxFit.cover,
                                         alignment: Alignment.center,
                                       ),

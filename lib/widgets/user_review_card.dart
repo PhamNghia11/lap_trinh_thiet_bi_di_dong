@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/movie_model.dart';
 import '../theme/app_theme.dart';
+import '../core/media_url.dart';
 import 'flix_network_image.dart';
 
 class UserReviewCard extends StatefulWidget {
@@ -40,7 +41,7 @@ class _UserReviewCardState extends State<UserReviewCard> {
                 backgroundColor: AppTheme.inputBg,
                 backgroundImage: review.userAvatar.isEmpty
                     ? null
-                    : NetworkImage(review.userAvatar),
+                    : NetworkImage(resolveImageUrl(review.userAvatar)),
                 child: review.userAvatar.isEmpty
                     ? const Icon(Icons.person,
                         color: AppTheme.textMuted, size: 18)

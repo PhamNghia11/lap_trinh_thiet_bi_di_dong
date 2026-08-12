@@ -15,6 +15,20 @@ export class TmdbService {
     timeout: 8000,
   });
 
+  async image(size: string, file: string) {
+    const response = await axios.get<Buffer>(
+      `https://image.tmdb.org/t/p/${size}/${file}`,
+      { responseType: 'arraybuffer', timeout: 8000 },
+    );
+    const contentType = response.headers['content-type'];
+    if (typeof contentType !== 'string' || !contentType.startsWith('image/')) {
+      throw new ServiceUnavailableException(
+        'TMDB không trả về dữ liệu ảnh hợp lệ',
+      );
+    }
+    return { data: Buffer.from(response.data), contentType };
+  }
+
   private async get<T>(path: string, params: Record<string, unknown> = {}) {
     const apiKey = process.env.TMDB_API_KEY;
     if (!apiKey)
