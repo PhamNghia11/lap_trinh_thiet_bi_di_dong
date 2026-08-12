@@ -46,7 +46,6 @@ app.*.map.json
 # Platform generated
 /android/
 /ios/
-/web/
 /windows/
 /macos/
 /linux/
