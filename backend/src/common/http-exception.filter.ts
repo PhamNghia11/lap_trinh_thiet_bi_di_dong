@@ -25,6 +25,22 @@ export class HttpExceptionResponseFilter implements ExceptionFilter {
         : ((exceptionResponse as { message?: string | string[] } | undefined)
             ?.message ?? 'Đã xảy ra lỗi máy chủ');
 
+    if (status >= 500) {
+      console.error(
+        JSON.stringify({
+          level: 'error',
+          event: 'http_exception',
+          status,
+          requestId: request.requestId,
+          method: request.method,
+          path: request.url,
+          message: exception instanceof Error ? exception.message : message,
+          stack: exception instanceof Error ? exception.stack : undefined,
+          timestamp: new Date().toISOString(),
+        }),
+      );
+    }
+
     response.status(status).json({
       success: false,
       code: status >= 500 ? 'INTERNAL_ERROR' : 'REQUEST_ERROR',

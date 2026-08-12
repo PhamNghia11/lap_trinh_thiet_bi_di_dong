@@ -127,7 +127,7 @@ jobs:
       - name: Deploy live channel
         uses: FirebaseExtended/action-hosting-deploy@500ac625ca2dd40cbd15f7659af953801858032a
         with:
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FLIX }}
+          firebaseServiceAccount: ${{ secrets['FIREBASE_SERVICE_ACCOUNT_FLIX'] }}
           projectId: flix-da-movie-m-app
           channelId: live
 
@@ -148,8 +148,8 @@ jobs:
     steps:
       - name: Trigger deploy and wait until live
         env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          RENDER_API_KEY: ${{ secrets['RENDER_API_KEY'] }}
+          RENDER_SERVICE_ID: ${{ secrets['RENDER_SERVICE_ID'] }}
         run: |
           set -euo pipefail
           test -n "$RENDER_API_KEY"

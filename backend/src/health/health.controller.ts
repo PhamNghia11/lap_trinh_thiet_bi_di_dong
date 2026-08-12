@@ -19,6 +19,12 @@ export class HealthController {
     return {
       status: database === 'down' ? 'degraded' : 'ok',
       database,
+      storage:
+        process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+          ? 'configured'
+          : 'not_configured',
+      uptimeSeconds: Math.floor(process.uptime()),
+      version: process.env.RENDER_GIT_COMMIT ?? process.env.npm_package_version,
       timestamp: new Date().toISOString(),
     };
   }
