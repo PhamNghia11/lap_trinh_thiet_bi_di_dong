@@ -1,5 +1,6 @@
 // lib/screens/home_screen.dart
 import 'dart:ui';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -15,6 +16,26 @@ import '../models/movie_filter.dart';
 import '../widgets/flix_drawer.dart';
 import '../core/ui_state_store.dart';
 
+Map<String, List<Movie>> diversifyGenreMovies(
+  Iterable<MapEntry<String, List<Movie>>> collections, {
+  required int seed,
+  Iterable<String> initiallyUsedIds = const [],
+}) {
+  final used = initiallyUsedIds.toSet();
+  return {
+    for (final entry in collections)
+      entry.key: (() {
+        final movies = [...entry.value]
+          ..shuffle(Random(seed + entry.key.hashCode));
+        final fresh = movies.where((movie) => !used.contains(movie.id));
+        final repeated = movies.where((movie) => used.contains(movie.id));
+        final ordered = [...fresh, ...repeated];
+        used.addAll(ordered.take(8).map((movie) => movie.id));
+        return ordered;
+      })(),
+  };
+}
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -29,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Movie> _movies = mockMovies;
   List<Movie> _nowPlaying = const [];
   final Map<String, List<Movie>> _genreMovies = {};
+  int _catalogSeed = DateTime.now().difference(DateTime(2020)).inDays;
 
   @override
   void initState() {
@@ -44,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadMovies({bool forceRefresh = false}) async {
     try {
+      if (forceRefresh) _catalogSeed++;
       final catalog = await Future.wait([
         forceRefresh ? _repository.refreshTrending() : _repository.trending(),
         forceRefresh ? _repository.refreshPopular() : _repository.popular(),
@@ -57,22 +80,45 @@ class _HomeScreenState extends State<HomeScreen> {
       final unique = <String, Movie>{
         for (final movie in [...movies, ...popular]) movie.id: movie,
       };
-      final collections = await Future.wait(genreList.map((genre) async {
+      final collections =
+          await Future.wait(genreList.indexed.map((entry) async {
+        final index = entry.$1;
+        final genre = entry.$2;
         try {
           final genreId = movieGenreOptions[genre];
+          final page = 1 + ((_catalogSeed + index) % 3);
+          const sorts = [
+            'popularity.desc',
+            'vote_average.desc',
+            'primary_release_date.desc',
+          ];
+          final sortBy = sorts[(_catalogSeed + index) % sorts.length];
           final result = forceRefresh
-              ? await _repository.refreshDiscover(genreId: genreId)
-              : await _repository.discover(genreId: genreId);
+              ? await _repository.refreshDiscover(
+                  page: page,
+                  genreId: genreId,
+                  sortBy: sortBy,
+                )
+              : await _repository.discover(
+                  page: page,
+                  genreId: genreId,
+                  sortBy: sortBy,
+                );
           return MapEntry(genre, result);
         } catch (_) {
           return MapEntry(genre, const <Movie>[]);
         }
       }));
+      final diverseCollections = diversifyGenreMovies(
+        collections,
+        seed: _catalogSeed,
+        initiallyUsedIds: nowPlaying.take(8).map((movie) => movie.id),
+      );
       if (!mounted) return;
       setState(() {
         if (unique.isNotEmpty) _movies = unique.values.toList();
         if (nowPlaying.isNotEmpty) _nowPlaying = nowPlaying;
-        for (final entry in collections) {
+        for (final entry in diverseCollections.entries) {
           if (entry.value.isNotEmpty) _genreMovies[entry.key] = entry.value;
         }
       });

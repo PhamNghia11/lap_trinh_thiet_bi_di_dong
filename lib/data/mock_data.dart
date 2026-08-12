@@ -289,6 +289,12 @@ const List<String> genreList = [
   'Hài Hước',
   'Tình Cảm',
   'Phiêu Lưu',
+  'Hoạt Hình',
+  'Tội Phạm',
+  'Chính Kịch',
+  'Kỳ Ảo',
+  'Bí Ẩn',
+  'Giật Gân',
 ];
 
 /// Từ khóa tìm kiếm gần đây (mock)

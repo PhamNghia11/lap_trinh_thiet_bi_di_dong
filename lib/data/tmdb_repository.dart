@@ -38,10 +38,14 @@ class TmdbRepository {
     return _movies('/movies/discover?${Uri(queryParameters: query).query}');
   }
 
-  Future<List<Movie>> refreshDiscover({int? genreId}) {
+  Future<List<Movie>> refreshDiscover({
+    int page = 1,
+    int? genreId,
+    String sortBy = 'popularity.desc',
+  }) {
     final query = <String, String>{
-      'page': '1',
-      'sortBy': 'popularity.desc',
+      'page': '$page',
+      'sortBy': sortBy,
       if (genreId != null) 'genreId': '$genreId',
     };
     return _movies(
