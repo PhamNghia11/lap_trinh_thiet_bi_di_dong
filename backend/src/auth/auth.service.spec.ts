@@ -1,8 +1,13 @@
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from './auth.service';
+
+jest.mock('axios');
+
+const mockedAxios = jest.mocked(axios);
 
 describe('AuthService social authentication', () => {
   const values: Record<string, string> = {
@@ -14,6 +19,9 @@ describe('AuthService social authentication', () => {
     PUBLIC_API_URL: 'http://localhost:3000',
     OAUTH_RETURN_URL: 'http://localhost:8765/#/auth/callback',
     JWT_SECRET: 'test-secret',
+    BREVO_API_KEY: 'brevo-api-key',
+    BREVO_SENDER_EMAIL: 'no-reply@flix.test',
+    BREVO_SENDER_NAME: 'FLIX',
   };
 
   const prisma = {
@@ -88,6 +96,42 @@ describe('AuthService social authentication', () => {
     await expect(
       service.requestPasswordReset({ email: 'missing@example.com' }),
     ).resolves.toEqual({ requested: true });
+  });
+
+  it('sends password reset codes through Brevo', async () => {
+    const update = jest.fn().mockResolvedValue({});
+    (prisma as unknown as { user: { update: jest.Mock } }).user.update = update;
+    (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
+      id: 'user-id',
+      email: 'user@example.com',
+      fullName: 'FLIX User',
+    });
+    mockedAxios.post.mockResolvedValueOnce({
+      data: { messageId: '1' },
+    });
+
+    await expect(
+      service.requestPasswordReset({ email: 'USER@example.com' }),
+    ).resolves.toEqual({ requested: true });
+
+    // Axios declares `post` as a method, while Jest replaces it with a mock.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      'https://api.brevo.com/v3/smtp/email',
+      expect.objectContaining({
+        sender: { email: 'no-reply@flix.test', name: 'FLIX' },
+        to: [{ email: 'user@example.com', name: 'FLIX User' }],
+        subject: 'Mã khôi phục mật khẩu FLIX',
+        textContent: expect.stringMatching(/\d{6}/) as string,
+      }),
+      {
+        headers: {
+          'api-key': 'brevo-api-key',
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+    expect(update).toHaveBeenCalledTimes(1);
   });
 
   it('rejects an expired password reset code', async () => {

@@ -38,8 +38,9 @@ Sao chép `.env.example` thành `.env`, sau đó điền:
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: OAuth Web credentials từ Google.
 - `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`: thông tin Facebook Login app.
 - `FACEBOOK_GRAPH_VERSION`: phiên bản Graph API đang bật cho Facebook app.
-- `RESEND_API_KEY`: API key gửi email khôi phục mật khẩu qua Resend.
-- `RESET_EMAIL_FROM`: địa chỉ người gửi đã xác minh trên Resend.
+- `BREVO_API_KEY`: API key gửi email khôi phục mật khẩu qua Brevo.
+- `BREVO_SENDER_EMAIL`: địa chỉ người gửi đã xác minh trên Brevo.
+- `BREVO_SENDER_NAME`: tên người gửi hiển thị, mặc định là `FLIX`.
 
 Callback URL cần đăng ký với provider:
 

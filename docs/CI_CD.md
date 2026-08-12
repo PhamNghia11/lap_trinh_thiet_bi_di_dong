@@ -68,7 +68,9 @@ Start Command: npm run start:prod
 Health Check Path: /api/v1/health
 ```
 
-Các biến môi trường runtime (`DATABASE_URL`, `JWT_SECRET`, `TMDB_API_KEY`, OAuth, Resend...) tiếp tục được quản lý trong Render Dashboard.
+Các biến môi trường runtime (`DATABASE_URL`, `JWT_SECRET`, `TMDB_API_KEY`, OAuth, Brevo...) tiếp tục được quản lý trong Render Dashboard.
+
+Để gửi email khôi phục mật khẩu qua Brevo, cấu hình `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` và `BREVO_SENDER_NAME`. Email người gửi phải được xác minh trong Brevo trước khi deploy.
 
 ## Quy trình phát hành
 

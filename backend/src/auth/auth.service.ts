@@ -452,16 +452,19 @@ export class AuthService {
     code: string,
   ) {
     await axios.post(
-      'https://api.resend.com/emails',
+      'https://api.brevo.com/v3/smtp/email',
       {
-        from: this.required('RESET_EMAIL_FROM'),
-        to: [email],
+        sender: {
+          email: this.required('BREVO_SENDER_EMAIL'),
+          name: this.config.get<string>('BREVO_SENDER_NAME', 'FLIX').trim(),
+        },
+        to: [{ email, name: fullName?.trim() || undefined }],
         subject: 'Mã khôi phục mật khẩu FLIX',
-        text: `Xin chào ${fullName?.trim() || 'bạn'},\n\nMã khôi phục mật khẩu FLIX của bạn là: ${code}\nMã có hiệu lực trong 15 phút. Nếu bạn không yêu cầu, hãy bỏ qua email này.`,
+        textContent: `Xin chào ${fullName?.trim() || 'bạn'},\n\nMã khôi phục mật khẩu FLIX của bạn là: ${code}\nMã có hiệu lực trong 15 phút. Nếu bạn không yêu cầu, hãy bỏ qua email này.`,
       },
       {
         headers: {
-          Authorization: `Bearer ${this.required('RESEND_API_KEY')}`,
+          'api-key': this.required('BREVO_API_KEY'),
           'Content-Type': 'application/json',
         },
       },
