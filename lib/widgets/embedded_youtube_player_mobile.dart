@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 class EmbeddedYoutubePlayer extends StatefulWidget {
@@ -6,10 +8,12 @@ class EmbeddedYoutubePlayer extends StatefulWidget {
     super.key,
     required this.videoId,
     required this.autoPlay,
+    required this.quality,
   });
 
   final String videoId;
   final bool autoPlay;
+  final String quality;
 
   @override
   State<EmbeddedYoutubePlayer> createState() => _EmbeddedYoutubePlayerState();
@@ -55,6 +59,12 @@ class _EmbeddedYoutubePlayerState extends State<EmbeddedYoutubePlayer> {
         ),
       );
     }
-    return YoutubePlayer(controller: controller);
+    return YoutubePlayer(
+      controller: controller,
+      gestureRecognizers: const {
+        Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
+      },
+      enableFullScreenOnVerticalDrag: true,
+    );
   }
 }

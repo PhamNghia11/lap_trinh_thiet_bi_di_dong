@@ -65,6 +65,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  void _goBack() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    navigator.pushNamedAndRemoveUntil(AppRoutes.home, (_) => false);
+  }
+
   void _clearCache() {
     PaintingBinding.instance.imageCache.clear();
     PaintingBinding.instance.imageCache.clearLiveImages();
@@ -287,7 +296,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppTheme.primaryRed),
-          onPressed: () => Navigator.pop(context),
+          onPressed: _goBack,
         ),
         title: const Text('Cài Đặt',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),

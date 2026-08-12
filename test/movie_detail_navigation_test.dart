@@ -1,4 +1,5 @@
 import 'package:flix_app/models/movie_model.dart';
+import 'package:flix_app/core/app_preferences.dart';
 import 'package:flix_app/routes/app_routes.dart';
 import 'package:flix_app/screens/home_screen.dart';
 import 'package:flix_app/screens/movie_detail_screen.dart';
@@ -76,5 +77,42 @@ void main() {
 
     expect(find.text('OPEN_DETAIL'), findsOneWidget);
     expect(find.byType(HomeScreen), findsNothing);
+  });
+
+  testWidgets('tự động phát không tự điều hướng khỏi trang chi tiết',
+      (tester) async {
+    ignoreNetworkImages();
+    final previousAutoPlay = AppPreferences.instance.autoPlayTrailer;
+    AppPreferences.instance.autoPlayTrailer = true;
+    addTearDown(
+      () => AppPreferences.instance.autoPlayTrailer = previousAutoPlay,
+    );
+
+    const movieWithTrailer = Movie(
+      id: 'local-test',
+      title: 'Phim có trailer',
+      genres: [],
+      year: 2026,
+      rating: 8,
+      duration: '120 phút',
+      description: 'Nội dung kiểm thử',
+      imageUrl: '',
+      reviews: [],
+      trailerKey: 'trailer-key',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          AppRoutes.trailer: (_) =>
+              const Scaffold(body: Text('TRAILER_SCREEN')),
+        },
+        home: const MovieDetailScreen(movie: movieWithTrailer),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Phim có trailer'), findsWidgets);
+    expect(find.text('TRAILER_SCREEN'), findsNothing);
   });
 }

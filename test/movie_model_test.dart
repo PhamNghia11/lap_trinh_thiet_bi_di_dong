@@ -2,6 +2,94 @@ import 'package:flix_app/models/movie_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('giữ danh sách trailer, teaser và clip YouTube từ TMDB', () {
+    final movie = Movie.fromTmdbJson({
+      'id': 1,
+      'title': 'Movie',
+      'videos': {
+        'results': [
+          {
+            'site': 'YouTube',
+            'type': 'Teaser',
+            'key': 'teaser',
+            'name': 'Teaser',
+            'official': false,
+            'iso_639_1': 'en',
+            'published_at': '2026-01-01T00:00:00Z',
+          },
+          {
+            'site': 'YouTube',
+            'type': 'Trailer',
+            'key': 'trailer',
+            'name': 'Trailer',
+            'official': true,
+            'iso_639_1': 'vi',
+            'published_at': '2025-01-01T00:00:00Z',
+          },
+          {
+            'site': 'Vimeo',
+            'type': 'Trailer',
+            'key': 'ignored',
+            'name': 'Ignored'
+          },
+        ],
+      },
+    });
+
+    expect(movie.trailerKey, 'trailer');
+    expect(movie.videos.map((video) => video.key), ['trailer', 'teaser']);
+    expect(movie.videos.first.official, isTrue);
+    expect(movie.videos.first.language, 'vi');
+    expect(movie.videos.first.publishedAt, '2025-01-01T00:00:00Z');
+  });
+
+  test('xếp video official, loại video, ngôn ngữ rồi thời gian', () {
+    const videos = [
+      MovieVideo(
+        key: 'new-en',
+        name: 'New English trailer',
+        type: 'Trailer',
+        language: 'en',
+        publishedAt: '2026-02-01',
+      ),
+      MovieVideo(
+        key: 'vi',
+        name: 'Vietnamese trailer',
+        type: 'Trailer',
+        language: 'vi',
+        publishedAt: '2026-01-01',
+      ),
+      MovieVideo(
+        key: 'official-teaser',
+        name: 'Official teaser',
+        type: 'Teaser',
+        official: true,
+      ),
+      MovieVideo(
+        key: 'clip',
+        name: 'Clip',
+        type: 'Clip',
+      ),
+    ];
+
+    expect(
+      rankMovieVideos(videos).map((video) => video.key),
+      ['official-teaser', 'vi', 'new-en', 'clip'],
+    );
+  });
+
+  test('MovieVideo đọc được dữ liệu cache cũ thiếu metadata', () {
+    final video = MovieVideo.fromJson({
+      'key': 'legacy',
+      'name': 'Legacy trailer',
+      'type': 'Trailer',
+    });
+
+    expect(video.official, isFalse);
+    expect(video.language, isEmpty);
+    expect(video.publishedAt, isEmpty);
+  });
+
   test('Movie ánh xạ đầy đủ dữ liệu chi tiết TMDB', () {
     final movie = Movie.fromTmdbJson({
       'id': 693134,

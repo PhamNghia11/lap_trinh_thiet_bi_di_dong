@@ -16,7 +16,6 @@ import '../widgets/user_review_card.dart';
 import '../data/tmdb_repository.dart';
 import '../data/user_data_repository.dart';
 import '../core/app_session.dart';
-import '../core/app_preferences.dart';
 import '../models/movie_filter.dart';
 import '../core/ui_state_store.dart';
 import '../core/media_url.dart';
@@ -43,7 +42,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   final _userData = UserDataRepository();
   late final PersistentScrollController _scrollController;
   List<Movie> _relatedMovies = [];
-  bool _autoPlayHandled = false;
 
   @override
   void initState() {
@@ -109,19 +107,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
           );
           _relatedMovies = related;
         });
-        if (!_autoPlayHandled &&
-            AppPreferences.instance.autoPlayTrailer &&
-            detail.trailerKey != null) {
-          _autoPlayHandled = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            Navigator.pushNamed(
-              context,
-              AppRoutes.trailer,
-              arguments: _currentMovie,
-            );
-          });
-        }
       }
     } catch (_) {
       // Giữ dữ liệu hiện tại khi kết nối tạm thời không khả dụng.

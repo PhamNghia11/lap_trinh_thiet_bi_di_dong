@@ -1,5 +1,6 @@
 import 'package:flix_app/core/app_preferences.dart';
 import 'package:flix_app/screens/settings_screen.dart';
+import 'package:flix_app/routes/app_routes.dart';
 import 'package:flix_app/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,5 +30,27 @@ void main() {
       tester.element(find.byType(SettingsScreen)),
     ).switchTheme.thumbColor!.resolve({WidgetState.selected});
     expect(selectedThumb, Colors.white);
+  });
+
+  testWidgets('settings back về Home khi Settings là route gốc',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await AppPreferences.instance.load();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.darkTheme(),
+        routes: {
+          AppRoutes.home: (_) => const Scaffold(body: Text('HOME_SCREEN')),
+        },
+        home: const SettingsScreen(),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    expect(find.text('HOME_SCREEN'), findsOneWidget);
   });
 }

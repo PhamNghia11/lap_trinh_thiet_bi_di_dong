@@ -70,6 +70,76 @@ double reviewRatingRatio(Iterable<UserReview> reviews, int stars) {
   return count / items.length;
 }
 
+class MovieVideo {
+  const MovieVideo({
+    required this.key,
+    required this.name,
+    required this.type,
+    this.official = false,
+    this.language = '',
+    this.publishedAt = '',
+  });
+
+  final String key;
+  final String name;
+  final String type;
+  final bool official;
+  final String language;
+  final String publishedAt;
+
+  Map<String, dynamic> toJson() => {
+        'key': key,
+        'name': name,
+        'type': type,
+        'official': official,
+        'language': language,
+        'publishedAt': publishedAt,
+      };
+
+  factory MovieVideo.fromJson(Map<String, dynamic> json) => MovieVideo(
+        key: json['key'] as String? ?? '',
+        name: json['name'] as String? ?? '',
+        type: json['type'] as String? ?? 'Trailer',
+        official: json['official'] as bool? ?? false,
+        language: json['language'] as String? ?? '',
+        publishedAt: json['publishedAt'] as String? ?? '',
+      );
+}
+
+List<MovieVideo> rankMovieVideos(Iterable<MovieVideo> videos) {
+  final ranked = videos.toList(growable: false);
+  ranked.sort((left, right) {
+    final official = _compareBool(right.official, left.official);
+    if (official != 0) return official;
+
+    final type =
+        _videoTypeRank(left.type).compareTo(_videoTypeRank(right.type));
+    if (type != 0) return type;
+
+    final language = _videoLanguageRank(left.language)
+        .compareTo(_videoLanguageRank(right.language));
+    if (language != 0) return language;
+
+    return right.publishedAt.compareTo(left.publishedAt);
+  });
+  return ranked;
+}
+
+int _compareBool(bool left, bool right) => (left ? 1 : 0) - (right ? 1 : 0);
+
+int _videoTypeRank(String type) => switch (type) {
+      'Trailer' => 0,
+      'Teaser' => 1,
+      'Clip' => 2,
+      _ => 3,
+    };
+
+int _videoLanguageRank(String language) => switch (language.toLowerCase()) {
+      'vi' => 0,
+      'en' => 1,
+      _ => 2,
+    };
+
 /// Model class đại diện cho một bộ phim trong ứng dụng FLIX.
 class Movie {
   final String id;
@@ -111,6 +181,9 @@ class Movie {
   final List<CastMember> castList;
   final List<UserReview> reviews;
   final String? trailerKey;
+  final List<MovieVideo>? _videos;
+
+  List<MovieVideo> get videos => _videos ?? const [];
 
   const Movie({
     required this.id,
@@ -167,7 +240,8 @@ class Movie {
       ),
     ],
     this.trailerKey,
-  });
+    List<MovieVideo> videos = const [],
+  }) : _videos = videos;
 
   /// Trả về chuỗi thể loại nối bằng dấu " • "
   factory Movie.fromTmdbJson(Map<String, dynamic> json) {
@@ -228,11 +302,26 @@ class Movie {
     final videos = (json['videos'] as Map<String, dynamic>?)?['results']
             as List<dynamic>? ??
         const [];
-    final trailer = videos
+    final youtubeVideos = videos
         .whereType<Map<String, dynamic>>()
-        .where(
-            (video) => video['site'] == 'YouTube' && video['type'] == 'Trailer')
-        .firstOrNull;
+        .where((video) =>
+            video['site'] == 'YouTube' &&
+            const {'Trailer', 'Teaser', 'Clip'}.contains(video['type']) &&
+            (video['key'] as String? ?? '').isNotEmpty)
+        .map((video) => MovieVideo(
+              key: video['key'] as String,
+              name: video['name'] as String? ?? video['type'] as String,
+              type: video['type'] as String,
+              official: video['official'] as bool? ?? false,
+              language: video['iso_639_1'] as String? ?? '',
+              publishedAt: video['published_at'] as String? ?? '',
+            ))
+        .toList();
+    final rankedYoutubeVideos = rankMovieVideos(youtubeVideos);
+    final trailer = rankedYoutubeVideos
+            .where((video) => video.type == 'Trailer')
+            .firstOrNull ??
+        rankedYoutubeVideos.firstOrNull;
     final tmdbReviews = _tmdbReviews(json['reviews']);
     return Movie(
       id: '${json['id'] ?? ''}',
@@ -280,7 +369,8 @@ class Movie {
           'Đang cập nhật',
       castList: cast,
       reviews: tmdbReviews,
-      trailerKey: trailer?['key'] as String?,
+      trailerKey: trailer?.key,
+      videos: rankedYoutubeVideos,
     );
   }
 
@@ -349,6 +439,7 @@ class Movie {
         'castList': castList.map((item) => item.toJson()).toList(),
         'reviews': reviews.map((item) => item.toJson()).toList(),
         'trailerKey': trailerKey,
+        'videos': videos.map((item) => item.toJson()).toList(),
       };
 
   factory Movie.fromJson(Map<String, dynamic> json) => Movie(
@@ -410,6 +501,10 @@ class Movie {
             .map((item) => UserReview.fromJson(Map<String, dynamic>.from(item)))
             .toList(),
         trailerKey: json['trailerKey'] as String?,
+        videos: (json['videos'] as List<dynamic>? ?? const [])
+            .whereType<Map>()
+            .map((item) => MovieVideo.fromJson(Map<String, dynamic>.from(item)))
+            .toList(),
       );
 
   static List<String> _names(
@@ -531,6 +626,7 @@ class Movie {
     List<CastMember>? castList,
     List<UserReview>? reviews,
     String? trailerKey,
+    List<MovieVideo>? videos,
   }) {
     return Movie(
       id: id ?? this.id,
@@ -570,6 +666,7 @@ class Movie {
       castList: castList ?? this.castList,
       reviews: reviews ?? this.reviews,
       trailerKey: trailerKey ?? this.trailerKey,
+      videos: videos ?? this.videos,
     );
   }
 }

@@ -8,10 +8,12 @@ class EmbeddedYoutubePlayer extends StatefulWidget {
     super.key,
     required this.videoId,
     required this.autoPlay,
+    required this.quality,
   });
 
   final String videoId;
   final bool autoPlay;
+  final String quality;
 
   @override
   State<EmbeddedYoutubePlayer> createState() => _EmbeddedYoutubePlayerState();
@@ -30,11 +32,14 @@ class _EmbeddedYoutubePlayerState extends State<EmbeddedYoutubePlayer> {
       final iframe = web.HTMLIFrameElement()
         ..src = 'https://www.youtube-nocookie.com/embed/${widget.videoId}'
             '?autoplay=$autoPlay&mute=$mute&controls=1&playsinline=1&rel=0'
+            '&fs=1&enablejsapi=1&vq=${widget.quality}'
         ..title = 'Trailer YouTube'
         ..allow =
             'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe
         ..style.border = '0'
+        ..style.display = 'block'
+        ..style.pointerEvents = 'auto'
         ..style.width = '100%'
         ..style.height = '100%';
       iframe.setAttribute('allowfullscreen', 'true');

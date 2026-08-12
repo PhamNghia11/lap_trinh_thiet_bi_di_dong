@@ -9,10 +9,12 @@ class EmbeddedYoutubePlayer extends StatelessWidget {
     super.key,
     required this.videoId,
     required this.autoPlay,
+    required this.quality,
   });
 
   final String videoId;
   final bool autoPlay;
+  final String quality;
 
   Future<void> _openYoutube() => launchUrl(
         Uri.parse('https://www.youtube.com/watch?v=$videoId'),
