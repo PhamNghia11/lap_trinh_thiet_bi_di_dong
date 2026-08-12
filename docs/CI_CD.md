@@ -13,6 +13,7 @@ Workflow chính nằm tại `.github/workflows/ci-cd.yml`.
 
 Flutter:
 
+- Flutter `3.44.6` / Dart `3.12.2`
 - `flutter pub get`
 - `flutter analyze`
 - `flutter test`
