@@ -21,7 +21,8 @@ npm run db:deploy
 npm run start:dev
 ```
 
-Swagger: `http://localhost:3000/api/docs`
+Swagger local: `http://localhost:3000/api/docs`. Ở production Swagger mặc định
+tắt; chỉ đặt `ENABLE_SWAGGER=true` khi thực sự cần mở tài liệu API.
 
 Health check: `http://localhost:3000/api/v1/health`
 
@@ -35,6 +36,10 @@ Sao chép `.env.example` thành `.env`, sau đó điền:
 - `WEB_ORIGIN`: origin Flutter Web nếu sử dụng.
 - `PUBLIC_API_URL`: URL public của backend, không gồm `/api/v1`.
 - `OAUTH_RETURN_URL`: route Flutter Web nhận kết quả đăng nhập social.
+- `ENABLE_SWAGGER`: bật Swagger; production mặc định tắt nếu không đặt `true`.
+- `SUPABASE_URL`: URL project Supabase dùng cho Storage.
+- `SUPABASE_SERVICE_ROLE_KEY`: service role key, chỉ lưu ở backend/Render.
+- `SUPABASE_STORAGE_BUCKET`: bucket public chứa media, mặc định `flix-media`.
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: OAuth Web credentials từ Google.
 - `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`: thông tin Facebook Login app.
 - `FACEBOOK_GRAPH_VERSION`: phiên bản Graph API đang bật cho Facebook app.
@@ -62,6 +67,7 @@ Không commit file `.env`.
 - `GET /api/v1/auth/oauth/:provider/url`
 - `GET /api/v1/auth/oauth/:provider/callback`
 - `GET/PATCH /api/v1/me` (họ tên, avatar và ảnh bìa)
+- `DELETE /api/v1/me` (xóa tài khoản và dữ liệu liên quan)
 - `GET /api/v1/me/reviews`
 - `GET /api/v1/movies/popular`
 - `GET /api/v1/movies/now-playing`

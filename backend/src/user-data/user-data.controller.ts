@@ -16,12 +16,14 @@ import type { AuthUser } from '../auth/current-user.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { HistoryDto, ReviewDto, UpdateProfileDto } from './user-data.dto';
+import { MediaStorageService } from './media-storage.service';
 
 @Controller()
 export class UserDataController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tmdb: TmdbService,
+    private readonly mediaStorage: MediaStorageService,
   ) {}
 
   @UseGuards(AuthGuard('jwt'))
@@ -43,14 +45,21 @@ export class UserDataController {
 
   @UseGuards(AuthGuard('jwt'))
   @Patch('me')
-  updateProfile(@CurrentUser() user: AuthUser, @Body() dto: UpdateProfileDto) {
+  async updateProfile(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    const [avatarUrl, coverUrl] = await Promise.all([
+      this.mediaStorage.persist(dto.avatarUrl, user.id, 'avatar'),
+      this.mediaStorage.persist(dto.coverUrl, user.id, 'cover'),
+    ]);
     return this.prisma.user.update({
       where: { id: user.id },
       data: {
         ...(dto.fullName !== undefined && { fullName: dto.fullName.trim() }),
-        ...(dto.avatarUrl !== undefined && { avatarUrl: dto.avatarUrl.trim() }),
+        ...(avatarUrl !== undefined && { avatarUrl }),
         ...(dto.avatarUrl !== undefined && { avatarCustomized: true }),
-        ...(dto.coverUrl !== undefined && { coverUrl: dto.coverUrl.trim() }),
+        ...(coverUrl !== undefined && { coverUrl }),
       },
       select: {
         id: true,
@@ -114,6 +123,14 @@ export class UserDataController {
       create: { userId: user.id, tmdbMovieId: movieId },
       update: {},
     });
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('me')
+  async deleteAccount(@CurrentUser() user: AuthUser) {
+    await this.prisma.user.delete({ where: { id: user.id } });
+    await this.mediaStorage.removeOwnerMedia(user.id);
+    return { deleted: true };
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -184,15 +201,21 @@ export class UserDataController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('movies/:movieId/reviews')
-  saveReview(
+  async saveReview(
     @CurrentUser() user: AuthUser,
     @Param('movieId', ParseIntPipe) movieId: number,
     @Body() dto: ReviewDto,
   ) {
+    const imageUrl = await this.mediaStorage.persist(
+      dto.imageUrl,
+      user.id,
+      'review',
+    );
+    const data = { ...dto, ...(imageUrl !== undefined && { imageUrl }) };
     return this.prisma.review.upsert({
       where: { userId_tmdbMovieId: { userId: user.id, tmdbMovieId: movieId } },
-      create: { userId: user.id, tmdbMovieId: movieId, ...dto },
-      update: dto,
+      create: { userId: user.id, tmdbMovieId: movieId, ...data },
+      update: data,
     });
   }
 
