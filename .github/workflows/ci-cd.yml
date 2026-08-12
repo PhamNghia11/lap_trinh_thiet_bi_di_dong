@@ -1,0 +1,187 @@
+name: CI/CD
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - X.Bach-Full-Frontend-and-Backend-v1.1
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Deploy production after CI passes
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.35.3'
+  NODE_VERSION: '22'
+
+jobs:
+  flutter:
+    name: Flutter analyze, test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      - name: Build web
+        run: flutter build web --release --dart-define=FLIX_API_URL=https://lap-trinh-thiet-bi-di-dong.onrender.com/api/v1
+
+      - name: Upload web artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: flix-web-${{ github.sha }}
+          path: build/web
+          if-no-files-found: error
+          retention-days: 7
+
+  backend:
+    name: Backend lint, test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/flix_ci
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Prisma schema
+        run: npm run db:validate
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Lint
+        run: npx eslint "{src,test}/**/*.ts"
+
+      - name: Test
+        run: npx jest --runInBand
+
+      - name: Build
+        run: npm run build
+
+  deploy_firebase:
+    name: Deploy Firebase Hosting
+    needs:
+      - flutter
+      - backend
+      - deploy_render
+    if: >-
+      github.event_name != 'pull_request' &&
+      (github.ref == 'refs/heads/main' ||
+       (github.event_name == 'workflow_dispatch' && inputs.deploy))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Firebase configuration
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Download tested web artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: flix-web-${{ github.sha }}
+          path: build/web
+
+      - name: Deploy live channel
+        uses: FirebaseExtended/action-hosting-deploy@500ac625ca2dd40cbd15f7659af953801858032a
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FLIX }}
+          projectId: flix-da-movie-m-app
+          channelId: live
+
+  deploy_render:
+    name: Deploy Render backend
+    needs:
+      - flutter
+      - backend
+    if: >-
+      github.event_name != 'pull_request' &&
+      (github.ref == 'refs/heads/main' ||
+       (github.event_name == 'workflow_dispatch' && inputs.deploy))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - name: Trigger deploy and wait until live
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$RENDER_API_KEY"
+          test -n "$RENDER_SERVICE_ID"
+
+          response=$(curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $RENDER_API_KEY" \
+            --header "Content-Type: application/json" \
+            --data "{\"clearCache\":\"do_not_clear\",\"commitId\":\"$GITHUB_SHA\"}" \
+            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys")
+          deploy_id=$(node -e "const d=JSON.parse(process.argv[1]); process.stdout.write(d.id ?? '')" "$response")
+          test -n "$deploy_id"
+
+          for attempt in $(seq 1 60); do
+            response=$(curl --fail-with-body --silent --show-error \
+              --header "Authorization: Bearer $RENDER_API_KEY" \
+              "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/$deploy_id")
+            status=$(node -e "const d=JSON.parse(process.argv[1]); process.stdout.write(d.status ?? '')" "$response")
+            echo "Render deploy $deploy_id: $status"
+            case "$status" in
+              live) exit 0 ;;
+              build_failed|pre_deploy_failed|update_failed|canceled|deactivated) exit 1 ;;
+            esac
+            sleep 15
+          done
+
+          echo "Timed out waiting for Render deploy $deploy_id" >&2
+          exit 1
+
+      - name: Verify backend health
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --retry 5 --retry-all-errors --retry-delay 10 \
+            https://lap-trinh-thiet-bi-di-dong.onrender.com/api/v1/health
