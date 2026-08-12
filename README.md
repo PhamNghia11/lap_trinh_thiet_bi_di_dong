@@ -1,11 +1,19 @@
 # FLIX – Ứng dụng Tra cứu Phim
 
-Ứng dụng Flutter tra cứu phim với giao diện dark theme hiện đại, bao gồm 17 màn hình: Splash, Onboarding, Login/Register, Home, Search, Movie Detail, Trailer, Review, Favorites, History, Profile, Settings.
+Ứng dụng Flutter đa nền tảng để khám phá và quản lý phim, sử dụng TMDB cho dữ
+liệu công khai, NestJS/Prisma/PostgreSQL cho tài khoản và dữ liệu người dùng.
+Frontend Web được phát hành bằng Firebase Hosting, backend chạy trên Render.
+
+- Frontend production: <https://flix-da-movie-m-app.web.app>
+- Backend production: <https://lap-trinh-thiet-bi-di-dong.onrender.com>
+- Health check: <https://lap-trinh-thiet-bi-di-dong.onrender.com/api/v1/health>
 
 ## Yêu cầu
 
-- Flutter SDK >= 3.0.0
-- Dart SDK >= 3.0.0
+- Flutter 3.44.6 (stable)
+- Dart 3.12.2
+- Node.js 22
+- PostgreSQL (project hiện dùng Supabase)
 
 ## Cài đặt lần đầu
 
@@ -14,15 +22,16 @@ Từ thư mục gốc của project, cài dependencies cho Flutter và backend:
 ```powershell
 flutter pub get
 cd backend
-npm install
+npm ci
 Copy-Item .env.example .env
 npm run db:generate
 npm run db:deploy
 cd ..
 ```
 
-Sau khi tạo `backend/.env`, điền đúng `DATABASE_URL`, `JWT_SECRET` và
-`TMDB_API_KEY` trước khi chạy backend. Không commit file `.env`.
+Sau khi tạo `backend/.env`, điền đúng `DATABASE_URL`, `JWT_SECRET`,
+`TMDB_API_KEY` và các biến OAuth/Brevo cần sử dụng trước khi chạy backend.
+Không commit file `.env`.
 
 ## Chạy project trên Chrome
 
@@ -110,6 +119,22 @@ Port `8765` trong lệnh Flutter phải khớp `OAUTH_RETURN_URL`. Sau khi thay 
 schema hoặc kéo migration mới, chạy `npm run db:generate` và
 `npm run db:deploy` trong thư mục `backend`.
 
+## Khôi phục mật khẩu qua Brevo
+
+Backend gửi mã khôi phục sáu chữ số qua Brevo Transactional Email API bằng
+HTTPS, không sử dụng SMTP. Trong `backend/.env`, cấu hình:
+
+```env
+BREVO_API_KEY="..."
+BREVO_SENDER_EMAIL="email-da-xac-minh@example.com"
+BREVO_SENDER_NAME="FLIX"
+```
+
+`BREVO_SENDER_EMAIL` phải ở trạng thái active trong Brevo. Khi chạy trên
+Render, thêm ba biến trên vào Environment của backend service. Nếu bật giới
+hạn Authorized IPs cho API key, cần bảo đảm outbound IP của Render được cho
+phép; Render Free không đảm bảo một outbound IP cố định.
+
 ### Test Google OAuth trên Chrome local
 
 Chrome do `flutter run -d chrome` mở có thể dùng profile debug/automation tạm
@@ -165,18 +190,79 @@ các lần OAuth sau sẽ không ghi đè ảnh đó.
 ## Backend
 
 Backend NestJS nằm trong thư mục `backend/`, sử dụng Prisma và PostgreSQL trên
-Supabase. Xem `backend/README.md` để cấu hình database, TMDB và chạy API.
+Supabase. Backend cung cấp authentication, OAuth, khôi phục mật khẩu, TMDB
+proxy/cache, yêu thích, lịch sử xem, đánh giá và hồ sơ người dùng. Xem
+`backend/README.md` để biết chi tiết cấu hình và API.
+
+## Kiểm tra chất lượng
+
+Flutter:
+
+```powershell
+flutter analyze
+flutter test
+flutter build web --release --dart-define=FLIX_API_URL=https://lap-trinh-thiet-bi-di-dong.onrender.com/api/v1
+```
+
+Backend:
+
+```powershell
+cd backend
+npm run db:validate
+npm run db:generate
+npx eslint "{src,test}/**/*.ts"
+npx jest --runInBand
+npm run build
+```
+
+## CI/CD và triển khai
+
+Workflow `.github/workflows/ci-cd.yml` chạy phân tích, kiểm thử và build cho
+Flutter lẫn backend trên pull request và các branch chính.
+
+- Push branch phát triển: chỉ chạy CI.
+- Push hoặc merge vào `main`: CI xanh rồi deploy backend Render, kiểm tra health
+  và cuối cùng deploy artifact Web lên Firebase Hosting.
+- Có thể chạy thủ công bằng `workflow_dispatch` và bật tùy chọn `deploy`.
+
+Chi tiết GitHub Environment, secrets, cấu hình Render và rollback nằm tại
+[`docs/CI_CD.md`](docs/CI_CD.md).
 
 ## Cấu trúc Project
 
-```
-lib/
-├── main.dart              # Entry point
-├── models/                # Data models (Movie)
-├── core/                  # API client và phiên đăng nhập
-├── data/                  # Repository API và dữ liệu fallback
-├── theme/                 # App theme, colors, styles
-├── widgets/               # Reusable widgets
-├── routes/                # Route declarations
-└── screens/               # 17 screen files
+```text
+.
+├── .github/
+│   └── workflows/ci-cd.yml       # CI Flutter/backend và CD Render/Firebase
+├── backend/
+│   ├── prisma/
+│   │   ├── migrations/           # Lịch sử migration PostgreSQL
+│   │   └── schema.prisma         # User, OAuth, phim, lịch sử và đánh giá
+│   ├── src/
+│   │   ├── auth/                 # JWT, OAuth, đổi/quên mật khẩu và Brevo
+│   │   ├── common/               # Response, lỗi và runtime configuration
+│   │   ├── health/               # Health check backend/database
+│   │   ├── prisma/               # Prisma service
+│   │   ├── tmdb/                 # TMDB proxy, cache và metadata phim
+│   │   └── user-data/            # Hồ sơ, yêu thích, lịch sử và đánh giá
+│   ├── test/                      # NestJS end-to-end tests
+│   ├── .env.example              # Danh sách biến môi trường mẫu
+│   └── package.json
+├── docs/
+│   └── CI_CD.md                  # Secrets, phát hành và rollback
+├── lib/
+│   ├── core/                     # API client, session, preferences, UI state
+│   ├── data/                     # TMDB/user repositories và fallback data
+│   ├── models/                   # Movie và bộ lọc
+│   ├── routes/                   # Route declarations
+│   ├── screens/                  # Các màn hình Flutter hiện tại
+│   ├── theme/                    # Theme, màu sắc và style dùng chung
+│   ├── widgets/                  # Movie card, navigation, media và review
+│   └── main.dart                 # Entry point
+├── test/                         # Widget, navigation, state và API tests
+├── web/                          # Bootstrap, manifest, favicon và PWA icons
+├── .firebaserc                   # Firebase project flix-da-movie-m-app
+├── firebase.json                 # Hosting build/web và SPA rewrite
+├── pubspec.yaml                  # Flutter dependencies
+└── README.md
 ```
