@@ -26,6 +26,11 @@ tắt; chỉ đặt `ENABLE_SWAGGER=true` khi thực sự cần mở tài liệu
 
 Health check: `http://localhost:3000/api/v1/health`
 
+Health check trả HTTP `503` khi database không sẵn sàng hoặc production thiếu
+`DATABASE_URL`, để Render không đánh dấu một instance lỗi là healthy. Backend
+ghi mỗi request thành JSON log gồm request ID, method, path, status và thời gian
+xử lý; query string không được ghi để tránh lộ OAuth code.
+
 ## Biến môi trường
 
 Sao chép `.env.example` thành `.env`, sau đó điền:

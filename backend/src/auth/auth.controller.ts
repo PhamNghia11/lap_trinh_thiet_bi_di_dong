@@ -28,11 +28,13 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   register(@Body() dto: RegisterDto) {
     return this.auth.register(dto);
   }
 
   @Post('login')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   login(@Body() dto: LoginDto) {
     return this.auth.login(dto);
   }
@@ -55,6 +57,7 @@ export class AuthController {
   }
 
   @Get('oauth/:provider/url')
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   socialAuthorizationUrl(@Param('provider') provider: string) {
     return this.auth.socialAuthorizationUrl(provider);
   }

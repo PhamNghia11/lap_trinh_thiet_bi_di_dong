@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { json, urlencoded } from 'express';
@@ -9,7 +10,9 @@ import { HttpExceptionResponseFilter } from './common/http-exception.filter';
 import { corsOrigin, swaggerEnabled } from './common/runtime-config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.set('trust proxy', 1);
+  app.enableShutdownHooks();
   app.use(json({ limit: '3mb' }));
   app.use(urlencoded({ extended: true, limit: '3mb' }));
   app.setGlobalPrefix('api/v1');

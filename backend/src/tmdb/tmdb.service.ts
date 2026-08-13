@@ -16,10 +16,26 @@ export class TmdbService {
   });
 
   async image(size: string, file: string) {
-    const response = await axios.get<Buffer>(
-      `https://image.tmdb.org/t/p/${size}/${file}`,
-      { responseType: 'arraybuffer', timeout: 8000 },
-    );
+    const url = `https://image.tmdb.org/t/p/${size}/${file}`;
+    let response;
+    try {
+      response = await axios.get<Buffer>(url, {
+        responseType: 'arraybuffer',
+        timeout: 8000,
+      });
+    } catch (error) {
+      if (
+        axios.isAxiosError(error) &&
+        error.response?.status !== undefined &&
+        error.response.status < 500
+      ) {
+        throw error;
+      }
+      response = await axios.get<Buffer>(url, {
+        responseType: 'arraybuffer',
+        timeout: 8000,
+      });
+    }
     const contentType = response.headers['content-type'];
     if (typeof contentType !== 'string' || !contentType.startsWith('image/')) {
       throw new ServiceUnavailableException(

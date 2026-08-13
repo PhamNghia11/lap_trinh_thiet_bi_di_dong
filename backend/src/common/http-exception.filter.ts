@@ -33,7 +33,7 @@ export class HttpExceptionResponseFilter implements ExceptionFilter {
           status,
           requestId: request.requestId,
           method: request.method,
-          path: request.url,
+          path: request.path,
           message: exception instanceof Error ? exception.message : message,
           stack: exception instanceof Error ? exception.stack : undefined,
           timestamp: new Date().toISOString(),
@@ -46,7 +46,7 @@ export class HttpExceptionResponseFilter implements ExceptionFilter {
       code: status >= 500 ? 'INTERNAL_ERROR' : 'REQUEST_ERROR',
       message,
       requestId: request.requestId,
-      path: request.url,
+      path: request.path,
       timestamp: new Date().toISOString(),
     });
   }

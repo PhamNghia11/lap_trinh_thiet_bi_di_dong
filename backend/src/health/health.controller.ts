@@ -1,4 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Header, HttpStatus, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('health')
@@ -6,7 +7,8 @@ export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get()
-  async check() {
+  @Header('Cache-Control', 'no-store')
+  async check(@Res({ passthrough: true }) response: Response) {
     let database = 'not_configured';
     if (process.env.DATABASE_URL) {
       try {
@@ -16,8 +18,14 @@ export class HealthController {
         database = 'down';
       }
     }
+    const databaseUnavailable =
+      database === 'down' ||
+      (process.env.NODE_ENV === 'production' && database === 'not_configured');
+    response.status(
+      databaseUnavailable ? HttpStatus.SERVICE_UNAVAILABLE : HttpStatus.OK,
+    );
     return {
-      status: database === 'down' ? 'degraded' : 'ok',
+      status: databaseUnavailable ? 'degraded' : 'ok',
       database,
       storage:
         process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
