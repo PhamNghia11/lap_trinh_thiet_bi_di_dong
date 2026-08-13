@@ -102,6 +102,12 @@ void main() {
     await tester.tap(find.text('Xem tất cả'));
     await tester.pumpAndSettle();
     expect(find.text('Tất cả video'), findsOneWidget);
+    expect(
+      tester
+          .widget<EmbeddedYoutubePlayer>(find.byType(EmbeddedYoutubePlayer))
+          .interactive,
+      isFalse,
+    );
 
     final clipFilter = find.byWidgetPredicate(
       (widget) =>
@@ -127,5 +133,11 @@ void main() {
     expect(find.text('Tất cả video'), findsNothing);
     expect(find.text('Clip 3'), findsOneWidget);
     expect(find.byType(EmbeddedYoutubePlayer), findsOneWidget);
+    expect(
+      tester
+          .widget<EmbeddedYoutubePlayer>(find.byType(EmbeddedYoutubePlayer))
+          .interactive,
+      isTrue,
+    );
   });
 }

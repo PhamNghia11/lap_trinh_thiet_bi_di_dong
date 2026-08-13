@@ -9,11 +9,13 @@ class EmbeddedYoutubePlayer extends StatefulWidget {
     required this.videoId,
     required this.autoPlay,
     required this.quality,
+    this.interactive = true,
   });
 
   final String videoId;
   final bool autoPlay;
   final String quality;
+  final bool interactive;
 
   @override
   State<EmbeddedYoutubePlayer> createState() => _EmbeddedYoutubePlayerState();
@@ -59,12 +61,15 @@ class _EmbeddedYoutubePlayerState extends State<EmbeddedYoutubePlayer> {
         ),
       );
     }
-    return YoutubePlayer(
-      controller: controller,
-      gestureRecognizers: const {
-        Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
-      },
-      enableFullScreenOnVerticalDrag: true,
+    return AbsorbPointer(
+      absorbing: !widget.interactive,
+      child: YoutubePlayer(
+        controller: controller,
+        gestureRecognizers: const {
+          Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
+        },
+        enableFullScreenOnVerticalDrag: true,
+      ),
     );
   }
 }

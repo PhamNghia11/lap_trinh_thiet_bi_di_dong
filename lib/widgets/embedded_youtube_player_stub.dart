@@ -10,11 +10,13 @@ class EmbeddedYoutubePlayer extends StatelessWidget {
     required this.videoId,
     required this.autoPlay,
     required this.quality,
+    this.interactive = true,
   });
 
   final String videoId;
   final bool autoPlay;
   final String quality;
+  final bool interactive;
 
   Future<void> _openYoutube() => launchUrl(
         Uri.parse('https://www.youtube.com/watch?v=$videoId'),
@@ -23,23 +25,26 @@ class EmbeddedYoutubePlayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.black,
-      child: InkWell(
-        onTap: _openYoutube,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            FlixNetworkImage(
-              'https://i.ytimg.com/vi/$videoId/hqdefault.jpg',
-              fit: BoxFit.cover,
-            ),
-            Container(color: Colors.black38),
-            const Center(
-              child: Icon(Icons.play_circle_fill_rounded,
-                  color: AppTheme.primaryRed, size: 72),
-            ),
-          ],
+    return AbsorbPointer(
+      absorbing: !interactive,
+      child: Material(
+        color: Colors.black,
+        child: InkWell(
+          onTap: _openYoutube,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              FlixNetworkImage(
+                'https://i.ytimg.com/vi/$videoId/hqdefault.jpg',
+                fit: BoxFit.cover,
+              ),
+              Container(color: Colors.black38),
+              const Center(
+                child: Icon(Icons.play_circle_fill_rounded,
+                    color: AppTheme.primaryRed, size: 72),
+              ),
+            ],
+          ),
         ),
       ),
     );

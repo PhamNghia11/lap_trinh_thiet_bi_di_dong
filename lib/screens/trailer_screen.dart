@@ -31,6 +31,7 @@ class _TrailerScreenState extends State<TrailerScreen> {
   bool _historySaved = false;
   String? _error;
   String? _selectedVideoKey;
+  bool _videoPickerOpen = false;
 
   @override
   void dispose() {
@@ -124,17 +125,24 @@ class _TrailerScreenState extends State<TrailerScreen> {
       .toList(growable: false);
 
   Future<void> _showAllVideos() async {
-    final selected = await showModalBottomSheet<MovieVideo>(
-      context: context,
-      backgroundColor: const Color(0xFF171717),
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (_) => _AllVideosSheet(
-        videos: _movie.videos,
-        selectedVideoKey: _selectedVideoKey ?? _movie.trailerKey,
-      ),
-    );
-    if (selected != null && mounted) _selectVideo(selected);
+    setState(() => _videoPickerOpen = true);
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+      final selected = await showModalBottomSheet<MovieVideo>(
+        context: context,
+        backgroundColor: const Color(0xFF171717),
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (_) => _AllVideosSheet(
+          videos: _movie.videos,
+          selectedVideoKey: _selectedVideoKey ?? _movie.trailerKey,
+        ),
+      );
+      if (selected != null && mounted) _selectVideo(selected);
+    } finally {
+      if (mounted) setState(() => _videoPickerOpen = false);
+    }
   }
 
   String get _youtubeQuality => switch (AppPreferences.instance.videoQuality) {
@@ -225,6 +233,7 @@ class _TrailerScreenState extends State<TrailerScreen> {
                                     autoPlay:
                                         AppPreferences.instance.autoPlayTrailer,
                                     quality: _youtubeQuality,
+                                    interactive: !_videoPickerOpen,
                                   ),
                           ),
                           Expanded(

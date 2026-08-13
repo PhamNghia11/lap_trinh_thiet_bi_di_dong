@@ -9,11 +9,13 @@ class EmbeddedYoutubePlayer extends StatefulWidget {
     required this.videoId,
     required this.autoPlay,
     required this.quality,
+    this.interactive = true,
   });
 
   final String videoId;
   final bool autoPlay;
   final String quality;
+  final bool interactive;
 
   @override
   State<EmbeddedYoutubePlayer> createState() => _EmbeddedYoutubePlayerState();
@@ -21,6 +23,7 @@ class EmbeddedYoutubePlayer extends StatefulWidget {
 
 class _EmbeddedYoutubePlayerState extends State<EmbeddedYoutubePlayer> {
   late final String _viewType;
+  web.HTMLIFrameElement? _iframe;
 
   @override
   void initState() {
@@ -39,12 +42,21 @@ class _EmbeddedYoutubePlayerState extends State<EmbeddedYoutubePlayer> {
       iframe
         ..style.border = '0'
         ..style.display = 'block'
-        ..style.pointerEvents = 'auto'
+        ..style.pointerEvents = widget.interactive ? 'auto' : 'none'
         ..style.width = '100%'
         ..style.height = '100%';
       iframe.setAttribute('allowfullscreen', 'true');
+      _iframe = iframe;
       return iframe;
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant EmbeddedYoutubePlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.interactive != widget.interactive) {
+      _iframe?.style.pointerEvents = widget.interactive ? 'auto' : 'none';
+    }
   }
 
   @override
