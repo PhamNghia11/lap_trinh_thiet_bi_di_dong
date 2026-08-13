@@ -84,6 +84,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Validate Prisma schema
         run: npm run db:validate
 
@@ -130,6 +133,15 @@ jobs:
           firebaseServiceAccount: ${{ secrets['FIREBASE_SERVICE_ACCOUNT_FLIX'] }}
           projectId: flix-da-movie-m-app
           channelId: live
+
+      - name: Smoke-test public web pages
+        run: |
+          set -euo pipefail
+          base_url="https://flix-da-movie-m-app.web.app"
+          curl --fail-with-body --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 "$base_url/" | grep -F '<title>FLIX</title>'
+          curl --fail-with-body --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 "$base_url/privacy.html" | grep -F '<title>Chính sách bảo mật - FLIX</title>'
+          curl --fail-with-body --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 "$base_url/terms.html" | grep -F '<title>Điều khoản sử dụng - FLIX</title>'
+          curl --fail-with-body --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 "$base_url/account-deletion.html" | grep -F '<title>Xóa tài khoản - FLIX</title>'
 
   deploy_render:
     name: Deploy Render backend

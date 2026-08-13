@@ -22,6 +22,7 @@ Flutter:
 Backend:
 
 - `npm ci`
+- `npm audit --omit=dev --audit-level=high`
 - `npm run db:validate`
 - `npm run db:generate`
 - ESLint
@@ -79,6 +80,7 @@ Các biến môi trường runtime (`DATABASE_URL`, `JWT_SECRET`, `TMDB_API_KEY`
 3. CI chạy lại trên commit merge.
 4. GitHub Actions yêu cầu Render deploy đúng commit đang chạy CI, đợi deploy `live`, rồi kiểm tra `/api/v1/health`.
 5. Chỉ sau khi backend khỏe, Firebase mới nhận đúng artifact web đã qua test.
+6. Workflow gọi thật trang chủ, privacy, terms và account deletion; deployment thất bại nếu một trang không trả về đúng nội dung.
 
 Nếu deploy thất bại, mở job tương ứng trong GitHub Actions. Source cũ trên Firebase/Render vẫn có thể rollback từ lịch sử release/deploy của từng nền tảng.
 
