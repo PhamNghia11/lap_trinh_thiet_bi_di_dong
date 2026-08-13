@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - main
-      - X.Bach-Full-Frontend-and-Backend-v1.1
+      - X.Bach-Full-Frontend-and-Backend-v1.2
   workflow_dispatch:
     inputs:
       deploy:

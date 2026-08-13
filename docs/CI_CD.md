@@ -5,7 +5,7 @@ Workflow chính nằm tại `.github/workflows/ci-cd.yml`.
 ## Khi nào workflow chạy
 
 - Pull request: chạy CI, không deploy.
-- Push lên `X.Bach-Full-Frontend-and-Backend-v1.1`: chạy CI để kiểm tra branch phát triển.
+- Push lên `X.Bach-Full-Frontend-and-Backend-v1.2`: chạy CI để kiểm tra branch phát triển.
 - Push lên `main`: chạy CI, sau đó deploy Firebase Hosting và Render nếu toàn bộ kiểm tra thành công.
 - Chạy thủ công trong GitHub Actions: bật `deploy` để deploy commit đang chọn sau khi CI thành công.
 
