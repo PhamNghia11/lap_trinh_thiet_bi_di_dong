@@ -96,6 +96,13 @@ class AppSession extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> deleteAccount() async {
+    await ApiClient.instance.delete('/me', authenticated: true);
+    await ApiClient.instance.clearToken();
+    user = null;
+    notifyListeners();
+  }
+
   Future<void> changePassword(
       String currentPassword, String newPassword) async {
     await ApiClient.instance.patch(

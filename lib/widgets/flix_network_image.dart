@@ -33,8 +33,16 @@ class FlixNetworkImage extends StatelessWidget {
         return _error();
       }
     }
+    final resolvedUrl = resolveImageUrl(url);
+    return _networkImage(
+      resolvedUrl,
+      fallbackUrl: resolvedUrl == url ? null : url,
+    );
+  }
+
+  Widget _networkImage(String source, {String? fallbackUrl}) {
     return Image.network(
-      resolveImageUrl(url),
+      source,
       width: width,
       height: height,
       fit: fit,
@@ -49,7 +57,8 @@ class FlixNetworkImage extends StatelessWidget {
           child: const CircularProgressIndicator(strokeWidth: 2),
         );
       },
-      errorBuilder: (context, error, stackTrace) => _error(),
+      errorBuilder: (context, error, stackTrace) =>
+          fallbackUrl == null ? _error() : _networkImage(fallbackUrl),
     );
   }
 

@@ -19,12 +19,14 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  static const _siteBaseUrl = 'https://flix-da-movie-m-app.web.app';
   final _preferences = AppPreferences.instance;
   final _session = AppSession.instance;
   final _scrollController = PersistentScrollController('settings.scroll');
   bool _notifications = true;
   bool _autoPlay = false;
   bool _wifiOnlyDownload = true;
+  bool _deletingAccount = false;
   bool get _darkMode => _preferences.cinematicNoir;
 
   String _cacheSize = 'Đang tính...';
@@ -154,6 +156,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _confirmDeleteAccount() async {
+    if (_deletingAccount) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppTheme.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.delete_forever_outlined, color: AppTheme.primaryRed),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text('Xóa tài khoản',
+                  style: TextStyle(color: Colors.white, fontSize: 18)),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Tài khoản, danh sách yêu thích, lịch sử và đánh giá của bạn sẽ bị xóa vĩnh viễn. Thao tác này không thể hoàn tác.',
+          style: TextStyle(color: AppTheme.textMuted),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child:
+                const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
+          ),
+          ElevatedButton(
+            key: const ValueKey('confirm_delete_account'),
+            style: AppTheme.primaryButtonStyle(),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Xóa vĩnh viễn',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _deletingAccount = true);
+    try {
+      await _session.deleteAccount();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tài khoản FLIX đã được xóa.')),
+      );
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.onboarding,
+        (_) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể xóa tài khoản: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _deletingAccount = false);
+    }
+  }
+
   Future<void> _chooseQuality() async {
     final value = await showModalBottomSheet<String>(
       context: context,
@@ -200,6 +264,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _openLegalPage(String path) async {
+    final launched = await launchUrl(
+      Uri.parse('$_siteBaseUrl/$path'),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không thể mở trang thông tin.')),
+      );
+    }
+  }
+
   void _showLegal() {
     showDialog<void>(
       context: context,
@@ -207,9 +283,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: AppTheme.cardBg,
         title: const Text('Điều khoản & Chính sách bảo mật',
             style: TextStyle(color: Colors.white)),
-        content: const Text(
-            'FLIX dùng TMDB cho dữ liệu phim. Tài khoản, yêu thích, lịch sử và đánh giá được lưu an toàn trên Supabase.',
-            style: AppTheme.mutedText),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'FLIX lưu dữ liệu tài khoản, yêu thích, lịch sử, đánh giá và ảnh do bạn chủ động cung cấp để vận hành ứng dụng.',
+                style: AppTheme.mutedText,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'This product uses the TMDB API but is not endorsed or certified by TMDB.',
+                style: AppTheme.mutedText,
+              ),
+              const SizedBox(height: 12),
+              TextButton.icon(
+                onPressed: () => _openLegalPage('privacy.html'),
+                icon: const Icon(Icons.privacy_tip_outlined),
+                label: const Text('Chính sách bảo mật'),
+              ),
+              TextButton.icon(
+                onPressed: () => _openLegalPage('terms.html'),
+                icon: const Icon(Icons.description_outlined),
+                label: const Text('Điều khoản sử dụng'),
+              ),
+              TextButton.icon(
+                onPressed: () => _openLegalPage('account-deletion.html'),
+                icon: const Icon(Icons.manage_accounts_outlined),
+                label: const Text('Quyền và cách xóa dữ liệu'),
+              ),
+            ],
+          ),
+        ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
@@ -409,6 +515,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: AppTheme.textMuted),
             onTap: () => Navigator.pushNamed(context, AppRoutes.forgotPassword),
           ),
+          if (_session.user != null)
+            ListTile(
+              leading: const Icon(Icons.delete_forever_outlined,
+                  color: AppTheme.primaryRed),
+              title: const Text('Xóa tài khoản',
+                  style: TextStyle(color: AppTheme.primaryRed)),
+              subtitle: const Text('Xóa vĩnh viễn tài khoản và dữ liệu',
+                  style: AppTheme.smallText),
+              trailing: _deletingAccount
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.chevron_right_rounded,
+                      color: AppTheme.textMuted),
+              onTap: _deletingAccount ? null : _confirmDeleteAccount,
+            ),
           const Divider(color: Colors.white12, height: 24),
 
           // ─── Nhóm 2: Phát Video & Tải Xuống ────────────────────────

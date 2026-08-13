@@ -175,6 +175,11 @@ tiên. Người dùng có thể bấm nút bút chì ở avatar hoặc nút ản
 crop/chỉnh khung, xem trước rồi mới xác nhận. Khi người dùng đã tự đổi avatar,
 các lần OAuth sau sẽ không ghi đè ảnh đó.
 
+Người dùng đã đăng nhập có thể xóa vĩnh viễn tài khoản tại
+`Cài đặt > Tài khoản & Bảo mật > Xóa tài khoản`. Web cũng cung cấp
+`/account-deletion.html` cho tài khoản email/mật khẩu. Chính sách bảo mật và
+điều khoản sử dụng công khai lần lượt nằm tại `/privacy.html` và `/terms.html`.
+
 ## State và cache
 
 - App khôi phục màn hình gần nhất sau khi reload, gồm cả phim/thể loại đang mở.

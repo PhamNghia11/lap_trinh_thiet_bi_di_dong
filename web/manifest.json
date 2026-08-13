@@ -1,11 +1,11 @@
 {
-    "name": "flix_app",
-    "short_name": "flix_app",
+    "name": "FLIX Movie App",
+    "short_name": "FLIX",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#080506",
+    "theme_color": "#080506",
+    "description": "Khám phá phim, trailer, đánh giá và danh sách yêu thích cùng FLIX.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
