@@ -2,6 +2,7 @@ import { validate } from 'class-validator';
 import {
   ChangePasswordDto,
   LoginDto,
+  RefreshTokenDto,
   RegisterDto,
   ResetPasswordDto,
 } from './auth.dto';
@@ -55,5 +56,21 @@ describe('Auth DTO limits', () => {
     });
 
     await expect(validate(register)).resolves.toEqual([]);
+  });
+
+  it('requires a high-entropy refresh token shape', async () => {
+    const tooShort = Object.assign(new RefreshTokenDto(), {
+      refreshToken: 'short-token',
+    });
+    const valid = Object.assign(new RefreshTokenDto(), {
+      refreshToken: 'a'.repeat(43),
+    });
+
+    await expect(validate(tooShort)).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ property: 'refreshToken' }),
+      ]),
+    );
+    await expect(validate(valid)).resolves.toEqual([]);
   });
 });

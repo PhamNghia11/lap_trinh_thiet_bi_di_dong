@@ -16,6 +16,7 @@ import { AuthService } from './auth.service';
 import {
   ChangePasswordDto,
   LoginDto,
+  RefreshTokenDto,
   RegisterDto,
   RequestPasswordResetDto,
   ResetPasswordDto,
@@ -37,6 +38,18 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   login(@Body() dto: LoginDto) {
     return this.auth.login(dto);
+  }
+
+  @Post('refresh')
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  refresh(@Body() dto: RefreshTokenDto) {
+    return this.auth.refreshSession(dto.refreshToken);
+  }
+
+  @Post('logout')
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  logout(@Body() dto: RefreshTokenDto) {
+    return this.auth.logout(dto.refreshToken);
   }
 
   @Post('password/forgot')
@@ -78,7 +91,10 @@ export class AuthController {
         state,
       );
       return response.redirect(
-        this.auth.socialReturnUrl({ accessToken: session.accessToken }),
+        this.auth.socialReturnUrl({
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken,
+        }),
       );
     } catch (error) {
       const message =

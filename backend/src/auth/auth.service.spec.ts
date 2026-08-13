@@ -70,9 +70,14 @@ describe('AuthService social authentication', () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it('returns social tokens in the URL fragment callback route', () => {
-    expect(service.socialReturnUrl({ accessToken: 'a+b/c' })).toBe(
-      'http://localhost:8765/#/auth/callback?token=a%2Bb%2Fc',
+  it('returns social session tokens in the URL fragment callback route', () => {
+    expect(
+      service.socialReturnUrl({
+        accessToken: 'a+b/c',
+        refreshToken: 'refresh+/token',
+      }),
+    ).toBe(
+      'http://localhost:8765/#/auth/callback?token=a%2Bb%2Fc&refresh=refresh%2B%2Ftoken',
     );
   });
 

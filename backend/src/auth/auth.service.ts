@@ -8,7 +8,13 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import { compare, hash } from 'bcrypt';
-import { createHash, randomInt, timingSafeEqual } from 'crypto';
+import {
+  createHash,
+  randomBytes,
+  randomInt,
+  randomUUID,
+  timingSafeEqual,
+} from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -90,6 +96,7 @@ export class AuthService {
       where: { id: userId },
       data: { passwordHash: await hash(dto.newPassword, 12) },
     });
+    await this.revokeUserSessions(userId);
     return { changed: true };
   }
 
@@ -148,7 +155,68 @@ export class AuthService {
         passwordResetExpiresAt: null,
       },
     });
+    await this.revokeUserSessions(user.id);
     return { changed: true };
+  }
+
+  async refreshSession(refreshToken: string) {
+    const tokenHash = this.refreshTokenHash(refreshToken);
+    const current = await this.prisma.refreshSession.findUnique({
+      where: { tokenHash },
+      include: { user: true },
+    });
+    if (!current) {
+      throw new UnauthorizedException('Phiên đăng nhập không hợp lệ');
+    }
+    const now = new Date();
+    if (current.revokedAt) {
+      await this.revokeTokenFamily(current.familyId, now);
+      throw new UnauthorizedException('Phiên đăng nhập đã bị thu hồi');
+    }
+    if (current.expiresAt.getTime() <= now.getTime()) {
+      await this.prisma.refreshSession.updateMany({
+        where: { id: current.id, revokedAt: null },
+        data: { revokedAt: now },
+      });
+      throw new UnauthorizedException('Phiên đăng nhập đã hết hạn');
+    }
+
+    const nextRefreshToken = this.newRefreshToken();
+    const rotated = await this.prisma.$transaction(async (tx) => {
+      const claimed = await tx.refreshSession.updateMany({
+        where: { id: current.id, revokedAt: null },
+        data: { revokedAt: now },
+      });
+      if (claimed.count !== 1) {
+        await tx.refreshSession.updateMany({
+          where: { familyId: current.familyId, revokedAt: null },
+          data: { revokedAt: now },
+        });
+        return false;
+      }
+      await tx.refreshSession.create({
+        data: {
+          tokenHash: this.refreshTokenHash(nextRefreshToken),
+          familyId: current.familyId,
+          userId: current.userId,
+          expiresAt: current.expiresAt,
+        },
+      });
+      return true;
+    });
+    if (!rotated) {
+      throw new UnauthorizedException('Phiên đăng nhập đã bị thu hồi');
+    }
+    return this.sessionPayload(current.user, nextRefreshToken);
+  }
+
+  async logout(refreshToken: string) {
+    const current = await this.prisma.refreshSession.findUnique({
+      where: { tokenHash: this.refreshTokenHash(refreshToken) },
+      select: { familyId: true },
+    });
+    if (current) await this.revokeTokenFamily(current.familyId);
+    return { loggedOut: true };
   }
 
   availableSocialProviders() {
@@ -219,14 +287,22 @@ export class AuthService {
     return this.upsertSocialUser(profile);
   }
 
-  socialReturnUrl(result: { accessToken?: string; error?: string }) {
+  socialReturnUrl(result: {
+    accessToken?: string;
+    refreshToken?: string;
+    error?: string;
+  }) {
     const base = this.config.get<string>(
       'OAUTH_RETURN_URL',
       'http://localhost:8765/#/auth/callback',
     );
     const separator = base.includes('?') ? '&' : '?';
-    if (result.accessToken) {
-      return `${base}${separator}token=${encodeURIComponent(result.accessToken)}`;
+    if (result.accessToken && result.refreshToken) {
+      const query = new URLSearchParams({
+        token: result.accessToken,
+        refresh: result.refreshToken,
+      });
+      return `${base}${separator}${query}`;
     }
     return `${base}${separator}error=${encodeURIComponent(result.error ?? 'Đăng nhập không thành công')}`;
   }
@@ -387,6 +463,29 @@ export class AuthService {
     fullName: string | null;
     avatarUrl: string | null;
   }) {
+    const refreshToken = this.newRefreshToken();
+    await this.prisma.refreshSession.create({
+      data: {
+        tokenHash: this.refreshTokenHash(refreshToken),
+        familyId: randomUUID(),
+        userId: user.id,
+        expiresAt: new Date(
+          Date.now() + this.refreshTokenDays() * 24 * 60 * 60 * 1000,
+        ),
+      },
+    });
+    return this.sessionPayload(user, refreshToken);
+  }
+
+  private async sessionPayload(
+    user: {
+      id: string;
+      email: string;
+      fullName: string | null;
+      avatarUrl: string | null;
+    },
+    refreshToken: string,
+  ) {
     return {
       user: {
         id: user.id,
@@ -398,7 +497,39 @@ export class AuthService {
         sub: user.id,
         email: user.email,
       }),
+      refreshToken,
     };
+  }
+
+  private newRefreshToken() {
+    return randomBytes(32).toString('base64url');
+  }
+
+  private refreshTokenHash(token: string) {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
+  private refreshTokenDays() {
+    const configured = Number(
+      this.config.get<string>('REFRESH_TOKEN_DAYS', '30'),
+    );
+    return Number.isInteger(configured) && configured >= 1 && configured <= 365
+      ? configured
+      : 30;
+  }
+
+  private async revokeUserSessions(userId: string) {
+    await this.prisma.refreshSession.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+  }
+
+  private async revokeTokenFamily(familyId: string, revokedAt = new Date()) {
+    await this.prisma.refreshSession.updateMany({
+      where: { familyId, revokedAt: null },
+      data: { revokedAt },
+    });
   }
 
   private parseProvider(value: string): SocialProvider {

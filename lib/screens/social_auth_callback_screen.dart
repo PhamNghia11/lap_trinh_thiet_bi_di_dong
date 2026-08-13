@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/auth_callback_url.dart';
 import '../core/app_session.dart';
 import '../routes/app_routes.dart';
 import '../theme/app_theme.dart';
@@ -8,10 +9,12 @@ class SocialAuthCallbackScreen extends StatefulWidget {
   const SocialAuthCallbackScreen({
     super.key,
     this.accessToken,
+    this.refreshToken,
     this.error,
   });
 
   final String? accessToken;
+  final String? refreshToken;
   final String? error;
 
   @override
@@ -26,18 +29,23 @@ class _SocialAuthCallbackScreenState extends State<SocialAuthCallbackScreen> {
   void initState() {
     super.initState();
     _error = widget.error;
+    clearAuthCallbackUrl();
     WidgetsBinding.instance.addPostFrameCallback((_) => _complete());
   }
 
   Future<void> _complete() async {
     if (_error != null) return;
     final token = widget.accessToken;
-    if (token == null || token.isEmpty) {
+    final refreshToken = widget.refreshToken;
+    if (token == null ||
+        token.isEmpty ||
+        refreshToken == null ||
+        refreshToken.isEmpty) {
       setState(() => _error = 'Không nhận được phiên đăng nhập từ máy chủ');
       return;
     }
     try {
-      await AppSession.instance.completeSocialLogin(token);
+      await AppSession.instance.completeSocialLogin(token, refreshToken);
       if (!mounted) return;
       Navigator.pushNamedAndRemoveUntil(
         context,

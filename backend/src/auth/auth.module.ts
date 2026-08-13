@@ -13,7 +13,7 @@ import { jwtSecret } from '../common/runtime-config';
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService): JwtModuleOptions => {
-        const expiresIn = config.get<string>('JWT_EXPIRES_IN', '15m');
+        const expiresIn = config.get<string>('ACCESS_TOKEN_EXPIRES_IN', '1h');
         return {
           secret: jwtSecret(config),
           signOptions: {

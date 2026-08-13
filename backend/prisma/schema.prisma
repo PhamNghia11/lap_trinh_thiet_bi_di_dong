@@ -23,6 +23,22 @@ model User {
   favorites        Favorite[]
   history          WatchHistory[]
   reviews          Review[]
+  refreshSessions  RefreshSession[]
+}
+
+model RefreshSession {
+  id        String    @id @default(uuid()) @db.Uuid
+  tokenHash String    @unique
+  familyId  String    @db.Uuid
+  userId    String    @db.Uuid
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([expiresAt])
 }
 
 model SocialAccount {

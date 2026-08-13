@@ -31,3 +31,7 @@ export class ResetPasswordDto {
   @IsString() @MinLength(6) @MaxLength(6) code!: string;
   @IsString() @MinLength(8) @MaxLength(72) newPassword!: string;
 }
+
+export class RefreshTokenDto {
+  @IsString() @MinLength(32) @MaxLength(200) refreshToken!: string;
+}

@@ -43,7 +43,10 @@ class AppSession extends ChangeNotifier {
       '/auth/login',
       body: {'email': email, 'password': password},
     ));
-    await ApiClient.instance.saveToken(data['accessToken'] as String);
+    await ApiClient.instance.saveSession(
+      data['accessToken'] as String,
+      data['refreshToken'] as String,
+    );
     user = Map<String, dynamic>.from(data['user'] as Map);
     notifyListeners();
   }
@@ -53,13 +56,17 @@ class AppSession extends ChangeNotifier {
       '/auth/register',
       body: {'fullName': fullName, 'email': email, 'password': password},
     ));
-    await ApiClient.instance.saveToken(data['accessToken'] as String);
+    await ApiClient.instance.saveSession(
+      data['accessToken'] as String,
+      data['refreshToken'] as String,
+    );
     user = Map<String, dynamic>.from(data['user'] as Map);
     notifyListeners();
   }
 
-  Future<void> completeSocialLogin(String accessToken) async {
-    await ApiClient.instance.saveToken(accessToken);
+  Future<void> completeSocialLogin(
+      String accessToken, String refreshToken) async {
+    await ApiClient.instance.saveSession(accessToken, refreshToken);
     try {
       user = Map<String, dynamic>.from(
           await ApiClient.instance.get('/me', authenticated: true));
@@ -91,7 +98,7 @@ class AppSession extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await ApiClient.instance.clearToken();
+    await ApiClient.instance.logout();
     user = null;
     notifyListeners();
   }

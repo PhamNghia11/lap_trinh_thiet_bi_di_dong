@@ -204,6 +204,7 @@ class AppRoutes {
         settings: settings,
         builder: (_) => SocialAuthCallbackScreen(
           accessToken: uri.queryParameters['token'],
+          refreshToken: uri.queryParameters['refresh'],
           error: uri.queryParameters['error'],
         ),
       );

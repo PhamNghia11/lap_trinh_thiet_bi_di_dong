@@ -89,12 +89,15 @@ void main() {
   test('OAuth callback is recovered from the browser URL fragment', () {
     final route = AppRoutes.resolveInitialRouteName(
       baseUri: Uri.parse(
-        'http://localhost:8765/#/auth/callback?token=google-token',
+        'http://localhost:8765/#/auth/callback?token=google-token&refresh=refresh-token',
       ),
       platformRouteName: '/',
     );
 
-    expect(route, '/auth/callback?token=google-token');
+    expect(
+      route,
+      '/auth/callback?token=google-token&refresh=refresh-token',
+    );
   });
 
   test('shared movie URL opens the matching movie detail route', () {

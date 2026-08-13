@@ -37,6 +37,8 @@ Sao chép `.env.example` thành `.env`, sau đó điền:
 
 - `DATABASE_URL`: connection string PostgreSQL từ Supabase.
 - `JWT_SECRET`: chuỗi bí mật dài và ngẫu nhiên.
+- `ACCESS_TOKEN_EXPIRES_IN`: thời hạn access token, mặc định `1h`.
+- `REFRESH_TOKEN_DAYS`: thời hạn tuyệt đối của refresh session, mặc định `30` ngày.
 - `TMDB_API_KEY`: API key của TMDB.
 - `WEB_ORIGIN`: origin Flutter Web nếu sử dụng.
 - `PUBLIC_API_URL`: URL public của backend, không gồm `/api/v1`.
@@ -66,6 +68,8 @@ Không commit file `.env`.
 
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh`
+- `POST /api/v1/auth/logout`
 - `POST /api/v1/auth/password/forgot`
 - `POST /api/v1/auth/password/reset`
 - `GET /api/v1/auth/oauth/providers`
@@ -84,6 +88,10 @@ Không commit file `.env`.
 - `GET/PUT/DELETE /api/v1/me/history`
 
 Các API `/me/*` yêu cầu Bearer JWT.
+
+Access token có thời hạn ngắn và được tự gia hạn bằng refresh token lưu trong
+secure storage. Refresh token được xoay vòng sau mỗi lần sử dụng; reuse một
+token đã thu hồi sẽ khóa phần còn lại của cùng token family.
 
 Ảnh hồ sơ được Flutter crop và nén trước khi gửi. Backend chấp nhận JSON tối đa
 3 MB cho luồng này; không tăng giới hạn nếu chưa có kiểm tra kích thước tương
