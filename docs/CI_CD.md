@@ -2,6 +2,14 @@
 
 Workflow chính nằm tại `.github/workflows/ci-cd.yml`.
 
+Các workflow production bổ sung:
+
+- `.github/workflows/production-uptime.yml`: kiểm tra backend/Web mỗi 15 phút và quản lý incident issue.
+- `.github/workflows/codeql.yml`: quét bảo mật backend TypeScript.
+- `.github/dependabot.yml`: cập nhật dependency npm, pub và GitHub Actions hàng tuần.
+
+Runbook vận hành: `docs/PRODUCTION_RUNBOOK.md`.
+
 ## Khi nào workflow chạy
 
 - Pull request: chạy CI, không deploy.

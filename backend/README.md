@@ -24,7 +24,9 @@ npm run start:dev
 Swagger local: `http://localhost:3000/api/docs`. Ở production Swagger mặc định
 tắt; chỉ đặt `ENABLE_SWAGGER=true` khi thực sự cần mở tài liệu API.
 
-Health check: `http://localhost:3000/api/v1/health`
+Health/readiness check: `http://localhost:3000/api/v1/health` hoặc
+`http://localhost:3000/api/v1/health/ready`. Liveness không truy cập database:
+`http://localhost:3000/api/v1/health/live`.
 
 Health check trả HTTP `503` khi database không sẵn sàng hoặc production thiếu
 `DATABASE_URL`, để Render không đánh dấu một instance lỗi là healthy. Backend
@@ -36,6 +38,13 @@ xử lý; query string không được ghi để tránh lộ OAuth code.
 Sao chép `.env.example` thành `.env`, sau đó điền:
 
 - `DATABASE_URL`: connection string PostgreSQL từ Supabase.
+- `LOG_LEVEL`: mức log JSON tối thiểu, mặc định `info`.
+- `HTTP_REQUEST_TIMEOUT_MS`: thời gian tối đa xử lý HTTP, mặc định 30 giây.
+- `HEALTHCHECK_TIMEOUT_MS`: thời gian tối đa chờ database trong readiness check, mặc định 3 giây.
+- `SESSION_CLEANUP_INTERVAL_HOURS`: chu kỳ dọn refresh session hết hạn, mặc định 24 giờ.
+- `SENTRY_DSN`: bật error/performance monitoring backend khi có giá trị.
+- `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`: định danh môi trường và release trên Sentry.
+- `SENTRY_TRACES_SAMPLE_RATE`: tỷ lệ trace từ `0` đến `1`, mặc định `0.1`.
 - `JWT_SECRET`: chuỗi bí mật dài và ngẫu nhiên.
 - `ACCESS_TOKEN_EXPIRES_IN`: thời hạn access token, mặc định `1h`.
 - `REFRESH_TOKEN_DAYS`: thời hạn tuyệt đối của refresh session, mặc định `30` ngày.

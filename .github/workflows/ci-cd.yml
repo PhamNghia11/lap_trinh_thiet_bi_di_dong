@@ -22,8 +22,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  FLUTTER_VERSION: '3.44.6'
-  NODE_VERSION: '22'
+  FLUTTER_VERSION: "3.44.6"
+  NODE_VERSION: "22"
 
 jobs:
   flutter:
@@ -51,7 +51,12 @@ jobs:
         run: flutter test
 
       - name: Build web
-        run: flutter build web --release --dart-define=FLIX_API_URL=https://lap-trinh-thiet-bi-di-dong.onrender.com/api/v1
+        run: >-
+          flutter build web --release
+          --dart-define=FLIX_API_URL=https://lap-trinh-thiet-bi-di-dong.onrender.com/api/v1
+          --dart-define=FLIX_SENTRY_DSN=${{ secrets.FLIX_SENTRY_DSN }}
+          --dart-define=FLIX_ENVIRONMENT=production
+          --dart-define=FLIX_RELEASE=${{ github.sha }}
 
       - name: Upload web artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

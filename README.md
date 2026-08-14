@@ -233,6 +233,9 @@ Flutter lẫn backend trên pull request và các branch chính.
 Chi tiết GitHub Environment, secrets, cấu hình Render và rollback nằm tại
 [`docs/CI_CD.md`](docs/CI_CD.md).
 
+Checklist observability, uptime incident, backup, xoay secret và phục hồi sự cố
+nằm tại [`docs/PRODUCTION_RUNBOOK.md`](docs/PRODUCTION_RUNBOOK.md).
+
 ## Cấu trúc Project
 
 ```text
@@ -254,7 +257,8 @@ Chi tiết GitHub Environment, secrets, cấu hình Render và rollback nằm t�
 │   ├── .env.example              # Danh sách biến môi trường mẫu
 │   └── package.json
 ├── docs/
-│   └── CI_CD.md                  # Secrets, phát hành và rollback
+│   ├── CI_CD.md                  # Secrets, phát hành và rollback
+│   └── PRODUCTION_RUNBOOK.md     # Monitoring, backup và xử lý sự cố
 ├── lib/
 │   ├── core/                     # API client, session, preferences, UI state
 │   ├── data/                     # TMDB/user repositories và fallback data

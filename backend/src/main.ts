@@ -1,5 +1,6 @@
+import './instrument';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ConsoleLogger, ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -7,10 +8,24 @@ import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/response.interceptor';
 import { HttpExceptionResponseFilter } from './common/http-exception.filter';
-import { corsOrigin, swaggerEnabled } from './common/runtime-config';
+import {
+  corsOrigin,
+  httpRequestTimeoutMs,
+  swaggerEnabled,
+  validateRuntimeConfig,
+} from './common/runtime-config';
+import { StructuredLogger } from './common/structured-logger';
+
+const logger =
+  process.env.NODE_ENV === 'production'
+    ? new StructuredLogger()
+    : new ConsoleLogger({ colors: true });
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  validateRuntimeConfig();
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger,
+  });
   app.set('trust proxy', 1);
   app.enableShutdownHooks();
   app.use(json({ limit: '3mb' }));
@@ -44,6 +59,25 @@ async function bootstrap() {
       SwaggerModule.createDocument(app, swaggerConfig),
     );
   }
-  await app.listen(process.env.PORT ?? 3000);
+  const port = Number(process.env.PORT ?? 3000);
+  await app.listen(port, '0.0.0.0');
+  const server = app.getHttpServer();
+  const requestTimeout = httpRequestTimeoutMs();
+  server.requestTimeout = requestTimeout;
+  server.timeout = requestTimeout;
+  server.headersTimeout = Math.min(15_000, requestTimeout);
+  server.keepAliveTimeout = 5_000;
+  logger.log(
+    {
+      event: 'application_ready',
+      port,
+      environment: process.env.NODE_ENV ?? 'development',
+      version: process.env.RENDER_GIT_COMMIT ?? process.env.npm_package_version,
+    },
+    'Bootstrap',
+  );
 }
-void bootstrap();
+void bootstrap().catch((error: unknown) => {
+  logger.fatal(error, 'Bootstrap');
+  process.exitCode = 1;
+});

@@ -10,6 +10,7 @@ describe('HttpExceptionResponseFilter', () => {
   it('does not expose query parameters in error responses or logs', () => {
     const status = jest.fn().mockReturnThis();
     const json = jest.fn();
+    const setHeader = jest.fn();
     const request = {
       requestId: 'request-123',
       method: 'GET',
@@ -19,7 +20,7 @@ describe('HttpExceptionResponseFilter', () => {
     const host = {
       switchToHttp: () => ({
         getRequest: () => request,
-        getResponse: () => ({ status, json }),
+        getResponse: () => ({ status, json, setHeader }),
       }),
     } as unknown as ArgumentsHost;
     const error = jest.spyOn(console, 'error').mockImplementation();
@@ -27,6 +28,7 @@ describe('HttpExceptionResponseFilter', () => {
     new HttpExceptionResponseFilter().catch(new Error('upstream failed'), host);
 
     expect(status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(setHeader).toHaveBeenCalledWith('Cache-Control', 'no-store');
     expect(json).toHaveBeenCalledWith(
       expect.objectContaining({
         path: '/api/v1/auth/oauth/google/callback',

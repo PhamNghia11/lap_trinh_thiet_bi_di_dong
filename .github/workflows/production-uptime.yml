@@ -1,0 +1,70 @@
+name: Production uptime
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: production-uptime
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check production services
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check backend readiness and web
+        run: |
+          set -euo pipefail
+          backend=$(mktemp)
+          web=$(mktemp)
+          trap 'rm -f "$backend" "$web"' EXIT
+          curl --fail-with-body --silent --show-error --max-time 30 \
+            --retry 3 --retry-all-errors --retry-delay 5 \
+            https://lap-trinh-thiet-bi-di-dong.onrender.com/api/v1/health/ready > "$backend"
+          grep -F '"status":"ok"' "$backend"
+          curl --fail-with-body --silent --show-error --max-time 30 \
+            --retry 3 --retry-all-errors --retry-delay 5 \
+            https://flix-da-movie-m-app.web.app/ > "$web"
+          grep -F '<title>FLIX</title>' "$web"
+
+      - name: Open one incident when unhealthy
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          gh api --method POST "repos/$repo/labels" \
+            -f name='production-incident' -f color='d73a4a' \
+            -f description='Production uptime incident' >/dev/null 2>&1 || true
+          issue=$(gh issue list --repo "$repo" --state open \
+            --label production-incident --search 'FLIX production unavailable in:title' \
+            --json number --jq '.[0].number // empty')
+          if [ -z "$issue" ]; then
+            gh issue create --repo "$repo" \
+              --title 'FLIX production unavailable' \
+              --label production-incident \
+              --body "Automated uptime check failed. Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          fi
+
+      - name: Close incident after recovery
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          issue=$(gh issue list --repo "$repo" --state open \
+            --label production-incident --search 'FLIX production unavailable in:title' \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$issue" ]; then
+            gh issue close "$issue" --repo "$repo" \
+              --comment "Production recovered. Verified by run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          fi

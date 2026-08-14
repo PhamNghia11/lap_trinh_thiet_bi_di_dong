@@ -35,6 +35,7 @@
     "@nestjs/swagger": "11.4.6",
     "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "6.19.3",
+    "@sentry/nestjs": "^10.70.0",
     "axios": "^1.19.0",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",

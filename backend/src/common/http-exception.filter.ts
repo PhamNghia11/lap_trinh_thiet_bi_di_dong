@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { captureBackendException } from '../instrument';
 
 @Catch()
 export class HttpExceptionResponseFilter implements ExceptionFilter {
@@ -26,6 +27,12 @@ export class HttpExceptionResponseFilter implements ExceptionFilter {
             ?.message ?? 'Đã xảy ra lỗi máy chủ');
 
     if (status >= 500) {
+      captureBackendException(exception, {
+        requestId: request.requestId,
+        method: request.method,
+        path: request.path,
+        status,
+      });
       console.error(
         JSON.stringify({
           level: 'error',
@@ -41,10 +48,12 @@ export class HttpExceptionResponseFilter implements ExceptionFilter {
       );
     }
 
+    const publicMessage = status >= 500 ? 'Đã xảy ra lỗi máy chủ' : message;
+    response.setHeader('Cache-Control', 'no-store');
     response.status(status).json({
       success: false,
       code: status >= 500 ? 'INTERNAL_ERROR' : 'REQUEST_ERROR',
-      message,
+      message: publicMessage,
       requestId: request.requestId,
       path: request.path,
       timestamp: new Date().toISOString(),

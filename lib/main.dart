@@ -1,5 +1,7 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'theme/app_theme.dart';
 import 'routes/app_routes.dart';
 import 'core/ui_state_store.dart';
@@ -8,6 +10,40 @@ import 'core/app_preferences.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (_sentryDsn.isEmpty) {
+    _runFlixApp();
+    return;
+  }
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = _sentryDsn;
+      options.environment = _sentryEnvironment;
+      options.release = _sentryRelease.isEmpty ? null : _sentryRelease;
+      options.sendDefaultPii = false;
+      options.attachScreenshot = false;
+      options.tracesSampleRate = _sentryTracesSampleRate;
+    },
+    appRunner: _runFlixApp,
+  );
+}
+
+const _sentryDsn = String.fromEnvironment('FLIX_SENTRY_DSN');
+const _sentryEnvironment = String.fromEnvironment(
+  'FLIX_ENVIRONMENT',
+  defaultValue: kReleaseMode ? 'production' : 'development',
+);
+const _sentryRelease = String.fromEnvironment('FLIX_RELEASE');
+final _sentryTracesSampleRate = (double.tryParse(
+          const String.fromEnvironment(
+            'FLIX_SENTRY_TRACES_SAMPLE_RATE',
+            defaultValue: '0.1',
+          ),
+        ) ??
+        0.1)
+    .clamp(0.0, 1.0)
+    .toDouble();
+
+void _runFlixApp() {
   final initialRouteName = AppRoutes.resolveInitialRouteName(
     baseUri: Uri.base,
     platformRouteName:
@@ -48,7 +84,14 @@ class _FlixBootstrapState extends State<_FlixBootstrap> {
   Future<void> _guardInitialization(String name, Future<void> operation) async {
     try {
       await operation.timeout(const Duration(seconds: 8));
-    } catch (error) {
+    } catch (error, stackTrace) {
+      if (_sentryDsn.isNotEmpty) {
+        await Sentry.captureException(
+          error,
+          stackTrace: stackTrace,
+          withScope: (scope) => scope.setTag('initialization', name),
+        );
+      }
       debugPrint('Không thể khôi phục $name khi khởi động: $error');
     }
   }
@@ -161,7 +204,10 @@ class _FlixAppState extends State<FlixApp> {
       onGenerateInitialRoutes: AppRoutes.onGenerateInitialRoutes,
       routes: AppRoutes.routes,
       onGenerateRoute: AppRoutes.onGenerateRoute,
-      navigatorObservers: [AppRoutes.navigationObserver],
+      navigatorObservers: [
+        AppRoutes.navigationObserver,
+        if (_sentryDsn.isNotEmpty) SentryNavigatorObserver(),
+      ],
     );
   }
 }
