@@ -10,7 +10,7 @@ import '../data/user_data_repository.dart';
 import '../core/app_session.dart';
 import '../routes/app_routes.dart';
 import '../core/ui_state_store.dart';
-import '../core/media_url.dart';
+import '../widgets/user_review_card.dart';
 
 class ReviewScreen extends StatefulWidget {
   final Movie? movie;
@@ -556,57 +556,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 style: AppTheme.headingSmall),
             const SizedBox(height: 12),
             Column(
-              children: movie.reviews.map((rev) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppTheme.cardBg,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                    border: Border.all(color: Colors.white10),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 16,
-                            backgroundImage:
-                                NetworkImage(resolveImageUrl(rev.userAvatar)),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              rev.userName,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13),
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              const Icon(Icons.star_rounded,
-                                  color: AppTheme.accentGold, size: 16),
-                              const SizedBox(width: 2),
-                              Text(
-                                '${rev.rating}',
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(rev.comment, style: AppTheme.bodyText),
-                    ],
-                  ),
-                );
-              }).toList(),
+              children: movie.reviews
+                  .map((review) => UserReviewCard(review: review))
+                  .toList(),
             ),
             const SizedBox(height: 30),
           ],
