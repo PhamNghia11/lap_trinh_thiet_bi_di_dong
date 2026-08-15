@@ -403,7 +403,7 @@ export class AuthService {
   }
 
   private async upsertSocialUser(profile: SocialProfile) {
-    const user = await this.prisma.$transaction(async (tx: any) => {
+    const user = await this.prisma.$transaction(async (tx) => {
       const existingAccount = await tx.socialAccount.findUnique({
         where: {
           provider_providerUserId: {

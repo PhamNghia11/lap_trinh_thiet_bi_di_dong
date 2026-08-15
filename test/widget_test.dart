@@ -10,8 +10,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flix_app/main.dart';
 
 void main() {
-  testWidgets('FLIX app starts on the splash screen', (tester) async {
+  testWidgets('FLIX app starts on welcome and continues to splash',
+      (tester) async {
     await tester.pumpWidget(const FlixApp());
+
+    expect(find.text('Khám phá ngay'), findsOneWidget);
+
+    await tester.tap(find.text('Khám phá ngay'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
     expect(find.text('MOVIE FINDER'), findsOneWidget);
     await tester.pump(const Duration(seconds: 3));
   });
