@@ -10,6 +10,7 @@ import '../routes/app_routes.dart';
 import '../core/api_client.dart';
 import '../core/ui_state_store.dart';
 import '../widgets/flix_network_image.dart';
+import '../widgets/adaptive_scaffold.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -407,300 +408,310 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: const Text('Cài Đặt',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
-      body: ListView(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(20),
-        children: [
-          // ─── User Profile Header Card ─────────────────────────────
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.cardBg,
-              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              border: Border.all(color: Colors.white10),
-              boxShadow: const [
-                BoxShadow(
-                    color: Colors.black38, blurRadius: 6, offset: Offset(0, 3)),
-              ],
-            ),
-            child: Row(
-              children: [
-                ClipOval(
-                  child: (_session.user?['avatarUrl'] as String? ?? '').isEmpty
-                      ? const ColoredBox(
-                          color: AppTheme.inputBg,
-                          child: SizedBox(
-                            width: 56,
-                            height: 56,
-                            child: Icon(Icons.person,
-                                color: AppTheme.textMuted, size: 30),
-                          ),
-                        )
-                      : FlixNetworkImage(
-                          _session.user!['avatarUrl'] as String,
-                          width: 56,
-                          height: 56,
-                        ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _session.user?['fullName'] as String? ?? 'Khách FLIX',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _session.user?['email'] as String? ?? 'Chưa đăng nhập',
-                        style: AppTheme.smallText,
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppTheme.accentGold.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                              color: AppTheme.accentGold, width: 0.5),
-                        ),
-                        child: const Text(
-                          'TÀI KHOẢN FLIX',
-                          style: TextStyle(
-                            color: AppTheme.accentGold,
-                            fontSize: 10,
+      body: FlixResponsiveContent(
+        maxWidth: 860,
+        child: ListView(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(20),
+          children: [
+            // ─── User Profile Header Card ─────────────────────────────
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBg,
+                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                border: Border.all(color: Colors.white10),
+                boxShadow: const [
+                  BoxShadow(
+                      color: Colors.black38,
+                      blurRadius: 6,
+                      offset: Offset(0, 3)),
+                ],
+              ),
+              child: Row(
+                children: [
+                  ClipOval(
+                    child:
+                        (_session.user?['avatarUrl'] as String? ?? '').isEmpty
+                            ? const ColoredBox(
+                                color: AppTheme.inputBg,
+                                child: SizedBox(
+                                  width: 56,
+                                  height: 56,
+                                  child: Icon(Icons.person,
+                                      color: AppTheme.textMuted, size: 30),
+                                ),
+                              )
+                            : FlixNetworkImage(
+                                _session.user!['avatarUrl'] as String,
+                                width: 56,
+                                height: 56,
+                              ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _session.user?['fullName'] as String? ?? 'Khách FLIX',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          _session.user?['email'] as String? ??
+                              'Chưa đăng nhập',
+                          style: AppTheme.smallText,
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentGold.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                                color: AppTheme.accentGold, width: 0.5),
+                          ),
+                          child: const Text(
+                            'TÀI KHOẢN FLIX',
+                            style: TextStyle(
+                              color: AppTheme.accentGold,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                TextButton(
-                  onPressed: () =>
-                      Navigator.pushNamed(context, AppRoutes.profile),
-                  child: const Text('Sửa',
-                      style: TextStyle(
-                          color: AppTheme.primaryRed,
-                          fontWeight: FontWeight.bold)),
-                ),
-              ],
+                  TextButton(
+                    onPressed: () =>
+                        Navigator.pushNamed(context, AppRoutes.profile),
+                    child: const Text('Sửa',
+                        style: TextStyle(
+                            color: AppTheme.primaryRed,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // ─── Nhóm 1: Tài khoản & Bảo mật ──────────────────────────
-          _buildSectionHeader('TÀI KHOẢN & BẢO MẬT'),
-          ListTile(
-            leading: const Icon(Icons.person_outline_rounded,
-                color: AppTheme.textMuted),
-            title: const Text('Thông tin cá nhân',
-                style: TextStyle(color: Colors.white)),
-            trailing: const Icon(Icons.chevron_right_rounded,
-                color: AppTheme.textMuted),
-            onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
-          ),
-          ListTile(
-            leading: const Icon(Icons.lock_outline_rounded,
-                color: AppTheme.textMuted),
-            title: const Text('Đổi mật khẩu',
-                style: TextStyle(color: Colors.white)),
-            trailing: const Icon(Icons.chevron_right_rounded,
-                color: AppTheme.textMuted),
-            onTap: () => Navigator.pushNamed(context, AppRoutes.forgotPassword),
-          ),
-          if (_session.user != null)
+            // ─── Nhóm 1: Tài khoản & Bảo mật ──────────────────────────
+            _buildSectionHeader('TÀI KHOẢN & BẢO MẬT'),
             ListTile(
-              leading: const Icon(Icons.delete_forever_outlined,
-                  color: AppTheme.primaryRed),
-              title: const Text('Xóa tài khoản',
-                  style: TextStyle(color: AppTheme.primaryRed)),
-              subtitle: const Text('Xóa vĩnh viễn tài khoản và dữ liệu',
-                  style: AppTheme.smallText),
-              trailing: _deletingAccount
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.chevron_right_rounded,
-                      color: AppTheme.textMuted),
-              onTap: _deletingAccount ? null : _confirmDeleteAccount,
+              leading: const Icon(Icons.person_outline_rounded,
+                  color: AppTheme.textMuted),
+              title: const Text('Thông tin cá nhân',
+                  style: TextStyle(color: Colors.white)),
+              trailing: const Icon(Icons.chevron_right_rounded,
+                  color: AppTheme.textMuted),
+              onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
             ),
-          const Divider(color: Colors.white12, height: 24),
-
-          // ─── Nhóm 2: Phát Video & Tải Xuống ────────────────────────
-          _buildSectionHeader('PHÁT VIDEO & TẢI XUỐNG'),
-          SwitchListTile(
-            secondary: const Icon(Icons.play_circle_outline_rounded,
-                color: AppTheme.textMuted),
-            title: const Text('Tự động phát Trailer',
-                style: TextStyle(color: Colors.white)),
-            value: _autoPlay,
-            onChanged: (val) => _preferences.setAutoPlayTrailer(val),
-          ),
-          SwitchListTile(
-            secondary:
-                const Icon(Icons.wifi_rounded, color: AppTheme.textMuted),
-            title: const Text('Chỉ tải xuống qua Wi-Fi',
-                style: TextStyle(color: Colors.white)),
-            value: _wifiOnlyDownload,
-            onChanged: (val) => _preferences.setWifiOnly(val),
-          ),
-          ListTile(
-            leading: const Icon(Icons.high_quality_rounded,
-                color: AppTheme.textMuted),
-            title: const Text('Chất lượng video',
-                style: TextStyle(color: Colors.white)),
-            subtitle:
-                Text(_preferences.videoQuality, style: AppTheme.mutedText),
-            trailing: const Icon(Icons.chevron_right_rounded,
-                color: AppTheme.textMuted),
-            onTap: _chooseQuality,
-          ),
-          ListTile(
-            leading: const Icon(Icons.download_for_offline_outlined,
-                color: AppTheme.textMuted),
-            title: const Text('Quản lý dung lượng tải xuống',
-                style: TextStyle(color: Colors.white)),
-            subtitle: const Text('Chưa có nội dung tải xuống',
-                style: AppTheme.mutedText),
-            trailing: const Icon(Icons.chevron_right_rounded,
-                color: AppTheme.textMuted),
-            onTap: _showDownloads,
-          ),
-          ListTile(
-            leading: const Icon(Icons.cleaning_services_rounded,
-                color: AppTheme.textMuted),
-            title: const Text('Xóa bộ nhớ đệm',
-                style: TextStyle(color: Colors.white)),
-            subtitle:
-                Text('Dung lượng đệm: $_cacheSize', style: AppTheme.mutedText),
-            trailing: const Icon(Icons.chevron_right_rounded,
-                color: AppTheme.textMuted),
-            onTap: _clearCache,
-          ),
-          const Divider(color: Colors.white12, height: 24),
-
-          // ─── Nhóm 3: Giao diện & Ngôn ngữ ─────────────────────────
-          _buildSectionHeader('GIAO DIỆN & NGÔN NGỮ'),
-          SwitchListTile(
-            secondary:
-                const Icon(Icons.dark_mode_outlined, color: AppTheme.textMuted),
-            title: const Text('Giao diện tối (Cinematic Noir)',
-                style: TextStyle(color: Colors.white)),
-            value: _darkMode,
-            onChanged: _preferences.setCinematicNoir,
-          ),
-          ListTile(
-            leading:
-                const Icon(Icons.language_rounded, color: AppTheme.textMuted),
-            title: const Text('Ngôn ngữ ứng dụng',
-                style: TextStyle(color: Colors.white)),
-            subtitle: const Text('Tiếng Việt', style: AppTheme.mutedText),
-            trailing: const Icon(Icons.chevron_right_rounded,
-                color: AppTheme.textMuted),
-            onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('FLIX hiện chỉ hỗ trợ Tiếng Việt'))),
-          ),
-          const Divider(color: Colors.white12, height: 24),
-
-          // ─── Nhóm 4: Thông báo ────────────────────────────────────
-          _buildSectionHeader('THÔNG BÁO'),
-          SwitchListTile(
-            secondary: const Icon(Icons.notifications_none_rounded,
-                color: AppTheme.textMuted),
-            title: const Text('Thông báo phim mới & cập nhật',
-                style: TextStyle(color: Colors.white)),
-            value: _notifications,
-            onChanged: (val) => _preferences.setNotifications(val),
-          ),
-          const Divider(color: Colors.white12, height: 24),
-
-          // ─── Nhóm 5: Hỗ trợ & Về ứng dụng ─────────────────────────
-          _buildSectionHeader('VỀ ỨNG DỤNG'),
-          ListTile(
-            leading:
-                const Icon(Icons.star_rate_rounded, color: AppTheme.accentGold),
-            title: const Text('Đánh giá ứng dụng',
-                style: TextStyle(color: Colors.white)),
-            trailing: const Icon(Icons.chevron_right_rounded,
-                color: AppTheme.textMuted),
-            onTap: _rateApp,
-          ),
-          ListTile(
-            leading: const Icon(Icons.share_rounded, color: AppTheme.textMuted),
-            title: const Text('Chia sẻ ứng dụng',
-                style: TextStyle(color: Colors.white)),
-            trailing: const Icon(Icons.chevron_right_rounded,
-                color: AppTheme.textMuted),
-            onTap: _shareApp,
-          ),
-          ListTile(
-            leading: const Icon(Icons.headset_mic_outlined,
-                color: AppTheme.textMuted),
-            title: const Text('Liên hệ hỗ trợ',
-                style: TextStyle(color: Colors.white)),
-            trailing: const Icon(Icons.chevron_right_rounded,
-                color: AppTheme.textMuted),
-            onTap: _contactSupport,
-          ),
-          ListTile(
-            leading: const Icon(Icons.privacy_tip_outlined,
-                color: AppTheme.textMuted),
-            title: const Text('Điều khoản & Chính sách bảo mật',
-                style: TextStyle(color: Colors.white)),
-            trailing: const Icon(Icons.chevron_right_rounded,
-                color: AppTheme.textMuted),
-            onTap: _showLegal,
-          ),
-          ListTile(
-            leading: const Icon(Icons.info_outline_rounded,
-                color: AppTheme.textMuted),
-            title: const Text('Phiên bản ứng dụng',
-                style: TextStyle(color: Colors.white)),
-            subtitle:
-                const Text('FLIX v1.0.0 (Build 1)', style: AppTheme.mutedText),
-            onTap: () => showAboutDialog(
-              context: context,
-              applicationName: 'FLIX',
-              applicationVersion: '1.0.0+1',
-              applicationLegalese: '© 2026 FLIX Movie App',
+            ListTile(
+              leading: const Icon(Icons.lock_outline_rounded,
+                  color: AppTheme.textMuted),
+              title: const Text('Đổi mật khẩu',
+                  style: TextStyle(color: Colors.white)),
+              trailing: const Icon(Icons.chevron_right_rounded,
+                  color: AppTheme.textMuted),
+              onTap: () =>
+                  Navigator.pushNamed(context, AppRoutes.forgotPassword),
             ),
-          ),
-          const SizedBox(height: 28),
-
-          // ─── Nút Đăng Xuất Đỏ Viền Tách Biệt ───────────────────────
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppTheme.primaryRed, width: 1.5),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+            if (_session.user != null)
+              ListTile(
+                leading: const Icon(Icons.delete_forever_outlined,
+                    color: AppTheme.primaryRed),
+                title: const Text('Xóa tài khoản',
+                    style: TextStyle(color: AppTheme.primaryRed)),
+                subtitle: const Text('Xóa vĩnh viễn tài khoản và dữ liệu',
+                    style: AppTheme.smallText),
+                trailing: _deletingAccount
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.chevron_right_rounded,
+                        color: AppTheme.textMuted),
+                onTap: _deletingAccount ? null : _confirmDeleteAccount,
               ),
-              onPressed: _confirmLogout,
-              icon:
-                  const Icon(Icons.logout_rounded, color: AppTheme.primaryRed),
-              label: const Text(
-                'Đăng Xuất Tài Khoản',
-                style: TextStyle(
-                    color: AppTheme.primaryRed,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15),
+            const Divider(color: Colors.white12, height: 24),
+
+            // ─── Nhóm 2: Phát Video & Tải Xuống ────────────────────────
+            _buildSectionHeader('PHÁT VIDEO & TẢI XUỐNG'),
+            SwitchListTile(
+              secondary: const Icon(Icons.play_circle_outline_rounded,
+                  color: AppTheme.textMuted),
+              title: const Text('Tự động phát Trailer',
+                  style: TextStyle(color: Colors.white)),
+              value: _autoPlay,
+              onChanged: (val) => _preferences.setAutoPlayTrailer(val),
+            ),
+            SwitchListTile(
+              secondary:
+                  const Icon(Icons.wifi_rounded, color: AppTheme.textMuted),
+              title: const Text('Chỉ tải xuống qua Wi-Fi',
+                  style: TextStyle(color: Colors.white)),
+              value: _wifiOnlyDownload,
+              onChanged: (val) => _preferences.setWifiOnly(val),
+            ),
+            ListTile(
+              leading: const Icon(Icons.high_quality_rounded,
+                  color: AppTheme.textMuted),
+              title: const Text('Chất lượng video',
+                  style: TextStyle(color: Colors.white)),
+              subtitle:
+                  Text(_preferences.videoQuality, style: AppTheme.mutedText),
+              trailing: const Icon(Icons.chevron_right_rounded,
+                  color: AppTheme.textMuted),
+              onTap: _chooseQuality,
+            ),
+            ListTile(
+              leading: const Icon(Icons.download_for_offline_outlined,
+                  color: AppTheme.textMuted),
+              title: const Text('Quản lý dung lượng tải xuống',
+                  style: TextStyle(color: Colors.white)),
+              subtitle: const Text('Chưa có nội dung tải xuống',
+                  style: AppTheme.mutedText),
+              trailing: const Icon(Icons.chevron_right_rounded,
+                  color: AppTheme.textMuted),
+              onTap: _showDownloads,
+            ),
+            ListTile(
+              leading: const Icon(Icons.cleaning_services_rounded,
+                  color: AppTheme.textMuted),
+              title: const Text('Xóa bộ nhớ đệm',
+                  style: TextStyle(color: Colors.white)),
+              subtitle: Text('Dung lượng đệm: $_cacheSize',
+                  style: AppTheme.mutedText),
+              trailing: const Icon(Icons.chevron_right_rounded,
+                  color: AppTheme.textMuted),
+              onTap: _clearCache,
+            ),
+            const Divider(color: Colors.white12, height: 24),
+
+            // ─── Nhóm 3: Giao diện & Ngôn ngữ ─────────────────────────
+            _buildSectionHeader('GIAO DIỆN & NGÔN NGỮ'),
+            SwitchListTile(
+              secondary: const Icon(Icons.dark_mode_outlined,
+                  color: AppTheme.textMuted),
+              title: const Text('Giao diện tối (Cinematic Noir)',
+                  style: TextStyle(color: Colors.white)),
+              value: _darkMode,
+              onChanged: _preferences.setCinematicNoir,
+            ),
+            ListTile(
+              leading:
+                  const Icon(Icons.language_rounded, color: AppTheme.textMuted),
+              title: const Text('Ngôn ngữ ứng dụng',
+                  style: TextStyle(color: Colors.white)),
+              subtitle: const Text('Tiếng Việt', style: AppTheme.mutedText),
+              trailing: const Icon(Icons.chevron_right_rounded,
+                  color: AppTheme.textMuted),
+              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('FLIX hiện chỉ hỗ trợ Tiếng Việt'))),
+            ),
+            const Divider(color: Colors.white12, height: 24),
+
+            // ─── Nhóm 4: Thông báo ────────────────────────────────────
+            _buildSectionHeader('THÔNG BÁO'),
+            SwitchListTile(
+              secondary: const Icon(Icons.notifications_none_rounded,
+                  color: AppTheme.textMuted),
+              title: const Text('Thông báo phim mới & cập nhật',
+                  style: TextStyle(color: Colors.white)),
+              value: _notifications,
+              onChanged: (val) => _preferences.setNotifications(val),
+            ),
+            const Divider(color: Colors.white12, height: 24),
+
+            // ─── Nhóm 5: Hỗ trợ & Về ứng dụng ─────────────────────────
+            _buildSectionHeader('VỀ ỨNG DỤNG'),
+            ListTile(
+              leading: const Icon(Icons.star_rate_rounded,
+                  color: AppTheme.accentGold),
+              title: const Text('Đánh giá ứng dụng',
+                  style: TextStyle(color: Colors.white)),
+              trailing: const Icon(Icons.chevron_right_rounded,
+                  color: AppTheme.textMuted),
+              onTap: _rateApp,
+            ),
+            ListTile(
+              leading:
+                  const Icon(Icons.share_rounded, color: AppTheme.textMuted),
+              title: const Text('Chia sẻ ứng dụng',
+                  style: TextStyle(color: Colors.white)),
+              trailing: const Icon(Icons.chevron_right_rounded,
+                  color: AppTheme.textMuted),
+              onTap: _shareApp,
+            ),
+            ListTile(
+              leading: const Icon(Icons.headset_mic_outlined,
+                  color: AppTheme.textMuted),
+              title: const Text('Liên hệ hỗ trợ',
+                  style: TextStyle(color: Colors.white)),
+              trailing: const Icon(Icons.chevron_right_rounded,
+                  color: AppTheme.textMuted),
+              onTap: _contactSupport,
+            ),
+            ListTile(
+              leading: const Icon(Icons.privacy_tip_outlined,
+                  color: AppTheme.textMuted),
+              title: const Text('Điều khoản & Chính sách bảo mật',
+                  style: TextStyle(color: Colors.white)),
+              trailing: const Icon(Icons.chevron_right_rounded,
+                  color: AppTheme.textMuted),
+              onTap: _showLegal,
+            ),
+            ListTile(
+              leading: const Icon(Icons.info_outline_rounded,
+                  color: AppTheme.textMuted),
+              title: const Text('Phiên bản ứng dụng',
+                  style: TextStyle(color: Colors.white)),
+              subtitle: const Text('FLIX v1.0.0 (Build 1)',
+                  style: AppTheme.mutedText),
+              onTap: () => showAboutDialog(
+                context: context,
+                applicationName: 'FLIX',
+                applicationVersion: '1.0.0+1',
+                applicationLegalese: '© 2026 FLIX Movie App',
               ),
             ),
-          ),
-          const SizedBox(height: 40),
-        ],
+            const SizedBox(height: 28),
+
+            // ─── Nút Đăng Xuất Đỏ Viền Tách Biệt ───────────────────────
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  side:
+                      const BorderSide(color: AppTheme.primaryRed, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: _confirmLogout,
+                icon: const Icon(Icons.logout_rounded,
+                    color: AppTheme.primaryRed),
+                label: const Text(
+                  'Đăng Xuất Tài Khoản',
+                  style: TextStyle(
+                      color: AppTheme.primaryRed,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15),
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }

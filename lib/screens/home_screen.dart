@@ -10,7 +10,7 @@ import '../models/movie_model.dart';
 import '../data/mock_data.dart';
 import '../widgets/movie_card.dart';
 import '../widgets/custom_button.dart';
-import '../widgets/bottom_nav_bar.dart';
+import '../widgets/adaptive_scaffold.dart';
 import '../data/tmdb_repository.dart';
 import '../models/movie_filter.dart';
 import '../widgets/flix_drawer.dart';
@@ -143,8 +143,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final List<Movie> featuredMovies = _movies.take(4).toList();
 
-    return Scaffold(
-      backgroundColor: AppTheme.scaffoldBg,
+    return FlixAdaptiveScaffold(
+      currentIndex: 0,
+      contentMaxWidth: 1500,
       appBar: AppBar(
         backgroundColor: AppTheme.appBarBg,
         elevation: 0,
@@ -166,6 +167,25 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.person, color: AppTheme.textMuted),
             onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
           ),
+        ],
+      ),
+      desktopAppBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: AppTheme.appBarBg,
+        elevation: 0,
+        title: const Text('Khám phá', style: AppTheme.headingMedium),
+        actions: [
+          IconButton(
+            tooltip: 'Tìm kiếm',
+            icon: const Icon(Icons.search, color: AppTheme.textMuted),
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.search),
+          ),
+          IconButton(
+            tooltip: 'Trang cá nhân',
+            icon: const Icon(Icons.person, color: AppTheme.textMuted),
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
+          ),
+          const SizedBox(width: 16),
         ],
       ),
       body: ScrollConfiguration(
@@ -450,7 +470,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       drawer: const FlixDrawer(),
-      bottomNavigationBar: const FlixBottomNavBar(currentIndex: 0),
     );
   }
 }

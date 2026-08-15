@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
-import '../widgets/bottom_nav_bar.dart';
+import '../widgets/adaptive_scaffold.dart';
 import '../core/app_session.dart';
 import '../core/ui_state_store.dart';
 import '../widgets/flix_network_image.dart';
@@ -267,8 +267,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isAuthenticated = _session.isAuthenticated;
-    return Scaffold(
-      backgroundColor: AppTheme.scaffoldBg,
+    return FlixAdaptiveScaffold(
+      currentIndex: 4,
+      contentMaxWidth: 880,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -702,7 +703,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: const FlixBottomNavBar(currentIndex: 4),
     );
   }
 

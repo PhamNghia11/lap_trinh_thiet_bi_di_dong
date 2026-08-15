@@ -5,6 +5,7 @@ import '../models/movie_model.dart';
 import '../routes/app_routes.dart';
 import '../theme/app_theme.dart';
 import '../widgets/flix_network_image.dart';
+import '../widgets/adaptive_scaffold.dart';
 import '../core/ui_state_store.dart';
 
 enum MovieCollection { popular, nowPlaying }
@@ -117,7 +118,7 @@ class _MovieListScreenState extends State<MovieListScreen> {
           ),
         ],
       ),
-      body: _buildBody(),
+      body: FlixResponsiveContent(maxWidth: 920, child: _buildBody()),
     );
   }
 

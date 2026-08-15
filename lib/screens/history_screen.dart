@@ -6,7 +6,7 @@ import '../data/user_data_repository.dart';
 import '../models/movie_model.dart';
 import '../routes/app_routes.dart';
 import '../theme/app_theme.dart';
-import '../widgets/bottom_nav_bar.dart';
+import '../widgets/adaptive_scaffold.dart';
 import '../widgets/flix_network_image.dart';
 import '../core/ui_state_store.dart';
 
@@ -225,8 +225,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.scaffoldBg,
+    return FlixAdaptiveScaffold(
+      currentIndex: 3,
+      contentMaxWidth: 960,
       appBar: AppBar(
         backgroundColor: AppTheme.appBarBg,
         title: const Text('Lịch Sử Xem',
@@ -247,7 +248,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ],
       ),
       body: _buildBody(),
-      bottomNavigationBar: const FlixBottomNavBar(currentIndex: 3),
     );
   }
 

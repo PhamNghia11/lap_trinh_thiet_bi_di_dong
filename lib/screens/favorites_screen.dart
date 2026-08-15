@@ -5,7 +5,7 @@ import '../data/user_data_repository.dart';
 import '../models/movie_model.dart';
 import '../routes/app_routes.dart';
 import '../theme/app_theme.dart';
-import '../widgets/bottom_nav_bar.dart';
+import '../widgets/adaptive_scaffold.dart';
 import '../widgets/movie_card.dart';
 import '../core/ui_state_store.dart';
 
@@ -203,8 +203,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     final filteredMovies = _filteredMovies;
-    return Scaffold(
-      backgroundColor: AppTheme.scaffoldBg,
+    return FlixAdaptiveScaffold(
+      currentIndex: 2,
+      contentMaxWidth: 1180,
       appBar: AppBar(
         backgroundColor: AppTheme.appBarBg,
         title: Text(
@@ -257,7 +258,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         ],
       ),
       body: _buildBody(filteredMovies),
-      bottomNavigationBar: const FlixBottomNavBar(currentIndex: 2),
     );
   }
 
@@ -401,8 +401,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     controller: _scrollController,
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
                     gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 210,
                       childAspectRatio: 0.65,
                       crossAxisSpacing: 14,
                       mainAxisSpacing: 14,

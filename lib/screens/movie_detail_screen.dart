@@ -13,6 +13,7 @@ import '../widgets/movie_card.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/flix_network_image.dart';
 import '../widgets/user_review_card.dart';
+import '../widgets/adaptive_scaffold.dart';
 import '../data/tmdb_repository.dart';
 import '../data/user_data_repository.dart';
 import '../core/app_session.dart';
@@ -313,696 +314,711 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
 
     final page = Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
-      body: Stack(
-        children: [
-          CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              // ─── Header Parallax với Ảnh Nền & Play Button Glassmorphism ───
-              SliverAppBar(
-                expandedHeight: 340,
-                pinned: true,
-                backgroundColor: AppTheme.scaffoldBg,
-                leading: IconButton(
-                  tooltip: 'Quay lại',
-                  icon: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: Colors.black45,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.arrow_back,
-                        color: Colors.white, size: 20),
-                  ),
-                  onPressed: _goBack,
-                ),
-                actions: [
-                  // Nút Tim Yêu Thích với Animation
-                  IconButton(
-                    tooltip: _isFavorite
-                        ? 'Xóa khỏi yêu thích'
-                        : 'Thêm vào yêu thích',
-                    icon: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: Colors.black45,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        _isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: AppTheme.primaryRed,
-                        size: 22,
-                      ),
-                    ),
-                    onPressed: _toggleFavorite,
-                  ),
-                  // Nút Chia Sẻ với Animation
-                  IconButton(
-                    tooltip: 'Chia sẻ phim',
+      body: FlixResponsiveContent(
+        maxWidth: 1100,
+        desktopPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                // ─── Header Parallax với Ảnh Nền & Play Button Glassmorphism ───
+                SliverAppBar(
+                  expandedHeight: 340,
+                  pinned: true,
+                  backgroundColor: AppTheme.scaffoldBg,
+                  leading: IconButton(
+                    tooltip: 'Quay lại',
                     icon: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: const BoxDecoration(
                         color: Colors.black45,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.share,
+                      child: const Icon(Icons.arrow_back,
                           color: Colors.white, size: 20),
                     ),
-                    onPressed: () async {
-                      try {
-                        await SharePlus.instance.share(
-                          ShareParams(
-                            text:
-                                'Xem ${movie.title} trên FLIX: https://flix-da-movie-m-app.web.app/?movie=${movie.id}',
-                          ),
-                        );
-                      } catch (error) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('$error')),
-                        );
-                      }
-                    },
+                    onPressed: _goBack,
                   ),
-                  const SizedBox(width: 8),
-                ],
-                flexibleSpace: FlexibleSpaceBar(
-                  collapseMode: CollapseMode.parallax,
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      FlixNetworkImage(
-                        movie.backdropUrl.isNotEmpty
-                            ? movie.backdropUrl
-                            : movie.imageUrl,
-                        fit: BoxFit.cover,
-                      ),
-                      // Gradient phủ mờ tối bên dưới
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.transparent,
-                              AppTheme.scaffoldBg.withValues(alpha: 0.8),
-                              AppTheme.scaffoldBg,
-                            ],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
+                  actions: [
+                    // Nút Tim Yêu Thích với Animation
+                    IconButton(
+                      tooltip: _isFavorite
+                          ? 'Xóa khỏi yêu thích'
+                          : 'Thêm vào yêu thích',
+                      icon: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.black45,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: AppTheme.primaryRed,
+                          size: 22,
                         ),
                       ),
+                      onPressed: _toggleFavorite,
+                    ),
+                    // Nút Chia Sẻ với Animation
+                    IconButton(
+                      tooltip: 'Chia sẻ phim',
+                      icon: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.black45,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.share,
+                            color: Colors.white, size: 20),
+                      ),
+                      onPressed: () async {
+                        try {
+                          await SharePlus.instance.share(
+                            ShareParams(
+                              text:
+                                  'Xem ${movie.title} trên FLIX: https://flix-da-movie-m-app.web.app/?movie=${movie.id}',
+                            ),
+                          );
+                        } catch (error) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('$error')),
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  flexibleSpace: FlexibleSpaceBar(
+                    collapseMode: CollapseMode.parallax,
+                    background: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        FlixNetworkImage(
+                          movie.backdropUrl.isNotEmpty
+                              ? movie.backdropUrl
+                              : movie.imageUrl,
+                          fit: BoxFit.cover,
+                        ),
+                        // Gradient phủ mờ tối bên dưới
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.transparent,
+                                AppTheme.scaffoldBg.withValues(alpha: 0.8),
+                                AppTheme.scaffoldBg,
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                        ),
 
-                      // Nút Play Tròn Nổi Giữa (Glassmorphism)
-                      Center(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(40),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                            child: Container(
-                              width: 72,
-                              height: 72,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.15),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: Colors.white30, width: 1.5),
-                              ),
-                              child: IconButton(
-                                iconSize: 38,
-                                icon: const Icon(Icons.play_arrow_rounded,
-                                    color: Colors.white),
-                                onPressed: () => Navigator.pushNamed(
-                                    context, AppRoutes.trailer,
-                                    arguments: movie),
+                        // Nút Play Tròn Nổi Giữa (Glassmorphism)
+                        Center(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(40),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                              child: Container(
+                                width: 72,
+                                height: 72,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: Colors.white30, width: 1.5),
+                                ),
+                                child: IconButton(
+                                  iconSize: 38,
+                                  icon: const Icon(Icons.play_arrow_rounded,
+                                      color: Colors.white),
+                                  onPressed: () => Navigator.pushNamed(
+                                      context, AppRoutes.trailer,
+                                      arguments: movie),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              // ─── Thân Bài Nội Dung Phim ─────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                      20, 10, 20, 100), // chừa lề dưới cho Sticky Bottom Bar
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Tên phim
-                      Text(movie.title, style: AppTheme.headingLarge),
-                      if (movie.tagline.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          '“${movie.tagline}”',
-                          style: const TextStyle(
-                            color: AppTheme.textMuted,
-                            fontSize: 14,
-                            fontStyle: FontStyle.italic,
-                            height: 1.4,
+                // ─── Thân Bài Nội Dung Phim ─────────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                        20, 10, 20, 100), // chừa lề dưới cho Sticky Bottom Bar
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Tên phim
+                        Text(movie.title, style: AppTheme.headingLarge),
+                        if (movie.tagline.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            '“${movie.tagline}”',
+                            style: const TextStyle(
+                              color: AppTheme.textMuted,
+                              fontSize: 14,
+                              fontStyle: FontStyle.italic,
+                              height: 1.4,
+                            ),
                           ),
-                        ),
-                      ],
-                      const SizedBox(height: 8),
-
-                      // Hàng Badge Thông Tin (Chất lượng, Độ tuổi, Phụ đề)
-                      Row(
-                        children: [
-                          _buildBadge(movie.quality, AppTheme.primaryRed),
-                          const SizedBox(width: 8),
-                          _buildBadge(movie.ageRating, Colors.orange),
-                          const SizedBox(width: 8),
-                          _buildBadge(movie.languageInfo, Colors.white24),
                         ],
-                      ),
-                      const SizedBox(height: 12),
+                        const SizedBox(height: 8),
 
-                      // Rating Sao (Có thể bấm mở rộng phân bố đánh giá)
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            _isRatingExpanded = !_isRatingExpanded;
-                          });
-                          UiStateStore.instance.setBool(
-                            'movie.${movie.id}.ratingExpanded',
-                            _isRatingExpanded,
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.star_rounded,
-                                  color: AppTheme.accentGold, size: 22),
-                              const SizedBox(width: 4),
-                              Text(
-                                movie.ratingText,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(movie.infoText, style: AppTheme.mutedText),
-                              const Spacer(),
-                              Icon(
-                                _isRatingExpanded
-                                    ? Icons.keyboard_arrow_up
-                                    : Icons.keyboard_arrow_down,
-                                color: AppTheme.textMuted,
-                                size: 20,
-                              ),
-                            ],
+                        // Hàng Badge Thông Tin (Chất lượng, Độ tuổi, Phụ đề)
+                        Row(
+                          children: [
+                            _buildBadge(movie.quality, AppTheme.primaryRed),
+                            const SizedBox(width: 8),
+                            _buildBadge(movie.ageRating, Colors.orange),
+                            const SizedBox(width: 8),
+                            _buildBadge(movie.languageInfo, Colors.white24),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Rating Sao (Có thể bấm mở rộng phân bố đánh giá)
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              _isRatingExpanded = !_isRatingExpanded;
+                            });
+                            UiStateStore.instance.setBool(
+                              'movie.${movie.id}.ratingExpanded',
+                              _isRatingExpanded,
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.star_rounded,
+                                    color: AppTheme.accentGold, size: 22),
+                                const SizedBox(width: 4),
+                                Text(
+                                  movie.ratingText,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(movie.infoText, style: AppTheme.mutedText),
+                                const Spacer(),
+                                Icon(
+                                  _isRatingExpanded
+                                      ? Icons.keyboard_arrow_up
+                                      : Icons.keyboard_arrow_down,
+                                  color: AppTheme.textMuted,
+                                  size: 20,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
 
-                      // Thống kê phân bố đánh giá (Mở rộng khi bấm)
-                      if (_isRatingExpanded) ...[
-                        const SizedBox(height: 10),
+                        // Thống kê phân bố đánh giá (Mở rộng khi bấm)
+                        if (_isRatingExpanded) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: AppTheme.cardBg,
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusMd),
+                              border: Border.all(color: Colors.white10),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Phân bố đánh giá',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13)),
+                                const SizedBox(height: 8),
+                                _buildRatingBar(
+                                    5, reviewRatingRatio(movie.reviews, 5)),
+                                _buildRatingBar(
+                                    4, reviewRatingRatio(movie.reviews, 4)),
+                                _buildRatingBar(
+                                    3, reviewRatingRatio(movie.reviews, 3)),
+                                _buildRatingBar(
+                                    2, reviewRatingRatio(movie.reviews, 2)),
+                                _buildRatingBar(
+                                    1, reviewRatingRatio(movie.reviews, 1)),
+                              ],
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+
+                        // Hàng Nút Hành Động ("Xem Trailer", "Đánh giá", "+ Danh sách")
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            PrimaryIconButton(
+                              text: 'Xem Trailer',
+                              icon: Icons.play_arrow_rounded,
+                              onPressed: () => Navigator.pushNamed(
+                                  context, AppRoutes.trailer,
+                                  arguments: movie),
+                            ),
+                            OutlinedActionButton(
+                              text: 'Đánh giá',
+                              icon: Icons.rate_review_outlined,
+                              onPressed: () => Navigator.pushNamed(
+                                  context, AppRoutes.review,
+                                  arguments: movie),
+                            ),
+                            OutlinedButton.icon(
+                              style: AppTheme.outlinedButtonStyle(),
+                              onPressed: () => Navigator.pushNamed(
+                                  context, AppRoutes.favorites),
+                              icon: const Icon(
+                                  Icons.collections_bookmark_outlined,
+                                  color: Colors.white,
+                                  size: 18),
+                              label: const Text('Danh sách của tôi',
+                                  style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        // ─── Phần Nội Dung Phim ─────────────────────────
+                        const Text('Nội Dung Phim',
+                            style: AppTheme.headingMedium),
+                        const SizedBox(height: 8),
+                        Text(
+                          movie.description,
+                          maxLines: _isDescriptionExpanded ? null : 3,
+                          overflow: _isDescriptionExpanded
+                              ? TextOverflow.visible
+                              : TextOverflow.ellipsis,
+                          style: AppTheme.bodyText,
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isDescriptionExpanded = !_isDescriptionExpanded;
+                            });
+                            UiStateStore.instance.setBool(
+                              'movie.${movie.id}.descriptionExpanded',
+                              _isDescriptionExpanded,
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              _isDescriptionExpanded
+                                  ? 'Thu gọn ▲'
+                                  : 'Xem thêm ▼',
+                              style: const TextStyle(
+                                  color: AppTheme.primaryRed,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Chips Thể Loại Phim (Bấm vào điều hướng sang GenreDetailScreen)
+                        Wrap(
+                          spacing: 8,
+                          children: movie.genres.map((genre) {
+                            return ActionChip(
+                              backgroundColor: AppTheme.cardBg,
+                              labelStyle: const TextStyle(
+                                  color: AppTheme.textLight, fontSize: 12),
+                              side: const BorderSide(color: Colors.white12),
+                              label: Text(genre),
+                              onPressed: () => Navigator.pushNamed(
+                                  context, AppRoutes.genreDetail,
+                                  arguments: 'Phim $genre'),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Bảng Thông Tin Phụ (Đạo diễn, Quốc gia, Ngày phát hành)
                         Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: AppTheme.cardBg,
+                            color: AppTheme.cardBg.withValues(alpha: 0.6),
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusMd),
-                            border: Border.all(color: Colors.white10),
                           ),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Phân bố đánh giá',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13)),
-                              const SizedBox(height: 8),
-                              _buildRatingBar(
-                                  5, reviewRatingRatio(movie.reviews, 5)),
-                              _buildRatingBar(
-                                  4, reviewRatingRatio(movie.reviews, 4)),
-                              _buildRatingBar(
-                                  3, reviewRatingRatio(movie.reviews, 3)),
-                              _buildRatingBar(
-                                  2, reviewRatingRatio(movie.reviews, 2)),
-                              _buildRatingBar(
-                                  1, reviewRatingRatio(movie.reviews, 1)),
-                            ],
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-
-                      // Hàng Nút Hành Động ("Xem Trailer", "Đánh giá", "+ Danh sách")
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          PrimaryIconButton(
-                            text: 'Xem Trailer',
-                            icon: Icons.play_arrow_rounded,
-                            onPressed: () => Navigator.pushNamed(
-                                context, AppRoutes.trailer,
-                                arguments: movie),
-                          ),
-                          OutlinedActionButton(
-                            text: 'Đánh giá',
-                            icon: Icons.rate_review_outlined,
-                            onPressed: () => Navigator.pushNamed(
-                                context, AppRoutes.review,
-                                arguments: movie),
-                          ),
-                          OutlinedButton.icon(
-                            style: AppTheme.outlinedButtonStyle(),
-                            onPressed: () => Navigator.pushNamed(
-                                context, AppRoutes.favorites),
-                            icon: const Icon(
-                                Icons.collections_bookmark_outlined,
-                                color: Colors.white,
-                                size: 18),
-                            label: const Text('Danh sách của tôi',
-                                style: TextStyle(color: Colors.white)),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // ─── Phần Nội Dung Phim ─────────────────────────
-                      const Text('Nội Dung Phim',
-                          style: AppTheme.headingMedium),
-                      const SizedBox(height: 8),
-                      Text(
-                        movie.description,
-                        maxLines: _isDescriptionExpanded ? null : 3,
-                        overflow: _isDescriptionExpanded
-                            ? TextOverflow.visible
-                            : TextOverflow.ellipsis,
-                        style: AppTheme.bodyText,
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _isDescriptionExpanded = !_isDescriptionExpanded;
-                          });
-                          UiStateStore.instance.setBool(
-                            'movie.${movie.id}.descriptionExpanded',
-                            _isDescriptionExpanded,
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Text(
-                            _isDescriptionExpanded ? 'Thu gọn ▲' : 'Xem thêm ▼',
-                            style: const TextStyle(
-                                color: AppTheme.primaryRed,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Chips Thể Loại Phim (Bấm vào điều hướng sang GenreDetailScreen)
-                      Wrap(
-                        spacing: 8,
-                        children: movie.genres.map((genre) {
-                          return ActionChip(
-                            backgroundColor: AppTheme.cardBg,
-                            labelStyle: const TextStyle(
-                                color: AppTheme.textLight, fontSize: 12),
-                            side: const BorderSide(color: Colors.white12),
-                            label: Text(genre),
-                            onPressed: () => Navigator.pushNamed(
-                                context, AppRoutes.genreDetail,
-                                arguments: 'Phim $genre'),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Bảng Thông Tin Phụ (Đạo diễn, Quốc gia, Ngày phát hành)
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardBg.withValues(alpha: 0.6),
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusMd),
-                        ),
-                        child: Column(
-                          children: [
-                            _buildInfoRow('Đạo diễn', movie.director),
-                            const Divider(color: Colors.white10, height: 16),
-                            if (movie.originalTitle.isNotEmpty &&
-                                movie.originalTitle != movie.title) ...[
-                              _buildInfoRow('Tên gốc', movie.originalTitle),
+                              _buildInfoRow('Đạo diễn', movie.director),
                               const Divider(color: Colors.white10, height: 16),
-                            ],
-                            _buildInfoRow('Quốc gia', movie.country),
-                            const Divider(color: Colors.white10, height: 16),
-                            _buildInfoRow('Ngày phát hành', movie.releaseDate),
-                            const Divider(color: Colors.white10, height: 16),
-                            _buildInfoRow('Thời lượng', movie.duration),
-                            const Divider(color: Colors.white10, height: 16),
-                            _buildInfoRow(
-                                'Trạng thái', _statusLabel(movie.status)),
-                            if (movie.languages.isNotEmpty) ...[
+                              if (movie.originalTitle.isNotEmpty &&
+                                  movie.originalTitle != movie.title) ...[
+                                _buildInfoRow('Tên gốc', movie.originalTitle),
+                                const Divider(
+                                    color: Colors.white10, height: 16),
+                              ],
+                              _buildInfoRow('Quốc gia', movie.country),
                               const Divider(color: Colors.white10, height: 16),
                               _buildInfoRow(
-                                  'Ngôn ngữ', movie.languages.join(', ')),
-                            ],
-                            if (movie.collectionName.isNotEmpty) ...[
+                                  'Ngày phát hành', movie.releaseDate),
                               const Divider(color: Colors.white10, height: 16),
-                              _buildInfoRow('Bộ sưu tập', movie.collectionName),
-                            ],
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      const Text('Thông Tin Chuyên Sâu',
-                          style: AppTheme.headingMedium),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildStatCard(
-                              icon: Icons.star_rounded,
-                              label: 'Điểm TMDB',
-                              value: movie.rating.toStringAsFixed(1),
-                              color: AppTheme.accentGold,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _buildStatCard(
-                              icon: Icons.people_alt_outlined,
-                              label: 'Lượt đánh giá',
-                              value: _compactNumber(movie.ratingCount),
-                              color: AppTheme.primaryRed,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _buildStatCard(
-                              icon: Icons.trending_up_rounded,
-                              label: 'Độ phổ biến',
-                              value: _formatPopularity(movie.popularity),
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardBg.withValues(alpha: 0.6),
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusMd),
-                        ),
-                        child: Column(
-                          children: [
-                            _buildInfoRow(
-                                'Kinh phí', _formatMoney(movie.budget)),
-                            const Divider(color: Colors.white10, height: 16),
-                            _buildInfoRow(
-                                'Doanh thu', _formatMoney(movie.revenue)),
-                            if (movie.writers.isNotEmpty) ...[
+                              _buildInfoRow('Thời lượng', movie.duration),
                               const Divider(color: Colors.white10, height: 16),
                               _buildInfoRow(
-                                  'Biên kịch', movie.writers.join(', ')),
+                                  'Trạng thái', _statusLabel(movie.status)),
+                              if (movie.languages.isNotEmpty) ...[
+                                const Divider(
+                                    color: Colors.white10, height: 16),
+                                _buildInfoRow(
+                                    'Ngôn ngữ', movie.languages.join(', ')),
+                              ],
+                              if (movie.collectionName.isNotEmpty) ...[
+                                const Divider(
+                                    color: Colors.white10, height: 16),
+                                _buildInfoRow(
+                                    'Bộ sưu tập', movie.collectionName),
+                              ],
                             ],
-                            if (movie.producers.isNotEmpty) ...[
-                              const Divider(color: Colors.white10, height: 16),
-                              _buildInfoRow(
-                                  'Nhà sản xuất', movie.producers.join(', ')),
-                            ],
-                            if (movie.productionCompanies.isNotEmpty) ...[
-                              const Divider(color: Colors.white10, height: 16),
-                              _buildInfoRow('Hãng phim',
-                                  movie.productionCompanies.join(', ')),
-                            ],
-                          ],
+                          ),
                         ),
-                      ),
-                      if (movie.watchProviders.isNotEmpty) ...[
                         const SizedBox(height: 24),
-                        const Text('Nơi Có Thể Xem',
+
+                        const Text('Thông Tin Chuyên Sâu',
+                            style: AppTheme.headingMedium),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildStatCard(
+                                icon: Icons.star_rounded,
+                                label: 'Điểm TMDB',
+                                value: movie.rating.toStringAsFixed(1),
+                                color: AppTheme.accentGold,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildStatCard(
+                                icon: Icons.people_alt_outlined,
+                                label: 'Lượt đánh giá',
+                                value: _compactNumber(movie.ratingCount),
+                                color: AppTheme.primaryRed,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildStatCard(
+                                icon: Icons.trending_up_rounded,
+                                label: 'Độ phổ biến',
+                                value: _formatPopularity(movie.popularity),
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppTheme.cardBg.withValues(alpha: 0.6),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
+                          ),
+                          child: Column(
+                            children: [
+                              _buildInfoRow(
+                                  'Kinh phí', _formatMoney(movie.budget)),
+                              const Divider(color: Colors.white10, height: 16),
+                              _buildInfoRow(
+                                  'Doanh thu', _formatMoney(movie.revenue)),
+                              if (movie.writers.isNotEmpty) ...[
+                                const Divider(
+                                    color: Colors.white10, height: 16),
+                                _buildInfoRow(
+                                    'Biên kịch', movie.writers.join(', ')),
+                              ],
+                              if (movie.producers.isNotEmpty) ...[
+                                const Divider(
+                                    color: Colors.white10, height: 16),
+                                _buildInfoRow(
+                                    'Nhà sản xuất', movie.producers.join(', ')),
+                              ],
+                              if (movie.productionCompanies.isNotEmpty) ...[
+                                const Divider(
+                                    color: Colors.white10, height: 16),
+                                _buildInfoRow('Hãng phim',
+                                    movie.productionCompanies.join(', ')),
+                              ],
+                            ],
+                          ),
+                        ),
+                        if (movie.watchProviders.isNotEmpty) ...[
+                          const SizedBox(height: 24),
+                          const Text('Nơi Có Thể Xem',
+                              style: AppTheme.headingMedium),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: movie.watchProviders
+                                .map((provider) => _buildInfoChip(
+                                      provider,
+                                      Icons.play_circle_outline,
+                                    ))
+                                .toList(),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                              'Thông tin nhà cung cấp từ JustWatch/TMDB.',
+                              style: AppTheme.smallText),
+                        ],
+                        if (movie.keywords.isNotEmpty) ...[
+                          const SizedBox(height: 24),
+                          const Text('Từ Khóa', style: AppTheme.headingMedium),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: movie.keywords
+                                .take(10)
+                                .map((keyword) =>
+                                    _buildInfoChip(keyword, Icons.tag_rounded))
+                                .toList(),
+                          ),
+                        ],
+                        const SizedBox(height: 24),
+                        const Text('Liên Kết Chính Thức',
                             style: AppTheme.headingMedium),
                         const SizedBox(height: 10),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: movie.watchProviders
-                              .map((provider) => _buildInfoChip(
-                                    provider,
-                                    Icons.play_circle_outline,
-                                  ))
-                              .toList(),
-                        ),
-                        const SizedBox(height: 6),
-                        const Text('Thông tin nhà cung cấp từ JustWatch/TMDB.',
-                            style: AppTheme.smallText),
-                      ],
-                      if (movie.keywords.isNotEmpty) ...[
-                        const SizedBox(height: 24),
-                        const Text('Từ Khóa', style: AppTheme.headingMedium),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: movie.keywords
-                              .take(10)
-                              .map((keyword) =>
-                                  _buildInfoChip(keyword, Icons.tag_rounded))
-                              .toList(),
-                        ),
-                      ],
-                      const SizedBox(height: 24),
-                      const Text('Liên Kết Chính Thức',
-                          style: AppTheme.headingMedium),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          if (movie.imdbId?.isNotEmpty == true)
-                            OutlinedActionButton(
-                              text: 'IMDb',
-                              icon: Icons.open_in_new,
-                              onPressed: () => _openExternal(
-                                  'https://www.imdb.com/title/${movie.imdbId}/'),
-                            ),
-                          OutlinedActionButton(
-                            text: 'TMDB',
-                            icon: Icons.movie_filter_outlined,
-                            onPressed: () => _openExternal(
-                                'https://www.themoviedb.org/movie/${movie.id}'),
-                          ),
-                          if (movie.homepage?.isNotEmpty == true)
-                            OutlinedActionButton(
-                              text: 'Trang chủ',
-                              icon: Icons.language_rounded,
-                              onPressed: () => _openExternal(movie.homepage!),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // ─── Phần Diễn Viên Chính ───────────────────────
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Diễn Viên Chính',
-                              style: AppTheme.headingMedium),
-                          TextButton(
-                            onPressed:
-                                movie.castList.isEmpty ? null : _showAllCast,
-                            child: const Text('Xem tất cả',
-                                style: TextStyle(color: AppTheme.primaryRed)),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 130,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: movie.castList.length,
-                          itemBuilder: (context, index) {
-                            final actor = movie.castList[index];
-                            return GestureDetector(
-                              onTap: () => _showActorInfoBottomSheet(actor),
-                              child: Container(
-                                width: 95,
-                                margin: const EdgeInsets.only(right: 12),
-                                child: Column(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 32,
-                                      backgroundColor: AppTheme.inputBg,
-                                      backgroundImage: actor.avatarUrl.isEmpty
-                                          ? null
-                                          : NetworkImage(
-                                              resolveImageUrl(actor.avatarUrl)),
-                                      child: actor.avatarUrl.isEmpty
-                                          ? const Icon(Icons.person,
-                                              color: AppTheme.textMuted,
-                                              size: 28)
-                                          : null,
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      actor.name,
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    Text(
-                                      actor.role,
-                                      style: AppTheme.smallText,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // ─── Phần Đánh Giá Từ Người Xem ──────────────────
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Đánh Giá Từ Người Xem',
-                              style: AppTheme.headingMedium),
-                          TextButton(
-                            onPressed: () => Navigator.pushNamed(
-                                context, AppRoutes.review,
-                                arguments: movie),
-                            child: const Text('Viết đánh giá',
-                                style: TextStyle(color: AppTheme.primaryRed)),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      if (movie.reviews.isEmpty)
-                        _buildEmptyState(
-                          icon: Icons.rate_review_outlined,
-                          text:
-                              'Chưa có đánh giá nào. Hãy là người đầu tiên chia sẻ cảm nhận.',
-                        )
-                      else
-                        Column(
                           children: [
-                            ...movie.reviews
-                                .take(3)
-                                .map((rev) => UserReviewCard(review: rev)),
-                            if (movie.reviews.length > 3)
-                              TextButton.icon(
-                                onPressed: () => Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.movieReviews,
-                                  arguments: movie,
-                                ),
-                                icon: const Icon(Icons.forum_outlined,
-                                    color: AppTheme.primaryRed),
-                                label: Text(
-                                  'Xem tất cả ${movie.reviews.length} đánh giá',
-                                  style: const TextStyle(
-                                      color: AppTheme.primaryRed),
-                                ),
+                            if (movie.imdbId?.isNotEmpty == true)
+                              OutlinedActionButton(
+                                text: 'IMDb',
+                                icon: Icons.open_in_new,
+                                onPressed: () => _openExternal(
+                                    'https://www.imdb.com/title/${movie.imdbId}/'),
+                              ),
+                            OutlinedActionButton(
+                              text: 'TMDB',
+                              icon: Icons.movie_filter_outlined,
+                              onPressed: () => _openExternal(
+                                  'https://www.themoviedb.org/movie/${movie.id}'),
+                            ),
+                            if (movie.homepage?.isNotEmpty == true)
+                              OutlinedActionButton(
+                                text: 'Trang chủ',
+                                icon: Icons.language_rounded,
+                                onPressed: () => _openExternal(movie.homepage!),
                               ),
                           ],
                         ),
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
-                      // ─── Phần Có Thể Bạn Cũng Thích ─────────────────
-                      const Text('Có Thể Bạn Cũng Thích',
-                          style: AppTheme.headingMedium),
-                      const SizedBox(height: 12),
-                      if (relatedMovies.isEmpty)
-                        _buildEmptyState(
-                          icon: Icons.movie_filter_outlined,
-                          text: 'Chưa tìm thấy phim tương tự phù hợp.',
-                        )
-                      else
+                        // ─── Phần Diễn Viên Chính ───────────────────────
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Diễn Viên Chính',
+                                style: AppTheme.headingMedium),
+                            TextButton(
+                              onPressed:
+                                  movie.castList.isEmpty ? null : _showAllCast,
+                              child: const Text('Xem tất cả',
+                                  style: TextStyle(color: AppTheme.primaryRed)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
                         SizedBox(
-                          height: 220,
+                          height: 130,
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
-                            itemCount: relatedMovies.length,
+                            itemCount: movie.castList.length,
                             itemBuilder: (context, index) {
-                              final relMovie = relatedMovies[index];
-                              return MovieCard.poster(
-                                movie: relMovie,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          MovieDetailScreen(movie: relMovie),
-                                    ),
-                                  );
-                                },
+                              final actor = movie.castList[index];
+                              return GestureDetector(
+                                onTap: () => _showActorInfoBottomSheet(actor),
+                                child: Container(
+                                  width: 95,
+                                  margin: const EdgeInsets.only(right: 12),
+                                  child: Column(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 32,
+                                        backgroundColor: AppTheme.inputBg,
+                                        backgroundImage: actor.avatarUrl.isEmpty
+                                            ? null
+                                            : NetworkImage(resolveImageUrl(
+                                                actor.avatarUrl)),
+                                        child: actor.avatarUrl.isEmpty
+                                            ? const Icon(Icons.person,
+                                                color: AppTheme.textMuted,
+                                                size: 28)
+                                            : null,
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        actor.name,
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      Text(
+                                        actor.role,
+                                        style: AppTheme.smallText,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               );
                             },
                           ),
                         ),
-                    ],
+                        const SizedBox(height: 24),
+
+                        // ─── Phần Đánh Giá Từ Người Xem ──────────────────
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Đánh Giá Từ Người Xem',
+                                style: AppTheme.headingMedium),
+                            TextButton(
+                              onPressed: () => Navigator.pushNamed(
+                                  context, AppRoutes.review,
+                                  arguments: movie),
+                              child: const Text('Viết đánh giá',
+                                  style: TextStyle(color: AppTheme.primaryRed)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        if (movie.reviews.isEmpty)
+                          _buildEmptyState(
+                            icon: Icons.rate_review_outlined,
+                            text:
+                                'Chưa có đánh giá nào. Hãy là người đầu tiên chia sẻ cảm nhận.',
+                          )
+                        else
+                          Column(
+                            children: [
+                              ...movie.reviews
+                                  .take(3)
+                                  .map((rev) => UserReviewCard(review: rev)),
+                              if (movie.reviews.length > 3)
+                                TextButton.icon(
+                                  onPressed: () => Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.movieReviews,
+                                    arguments: movie,
+                                  ),
+                                  icon: const Icon(Icons.forum_outlined,
+                                      color: AppTheme.primaryRed),
+                                  label: Text(
+                                    'Xem tất cả ${movie.reviews.length} đánh giá',
+                                    style: const TextStyle(
+                                        color: AppTheme.primaryRed),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        const SizedBox(height: 24),
+
+                        // ─── Phần Có Thể Bạn Cũng Thích ─────────────────
+                        const Text('Có Thể Bạn Cũng Thích',
+                            style: AppTheme.headingMedium),
+                        const SizedBox(height: 12),
+                        if (relatedMovies.isEmpty)
+                          _buildEmptyState(
+                            icon: Icons.movie_filter_outlined,
+                            text: 'Chưa tìm thấy phim tương tự phù hợp.',
+                          )
+                        else
+                          SizedBox(
+                            height: 220,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: relatedMovies.length,
+                              itemBuilder: (context, index) {
+                                final relMovie = relatedMovies[index];
+                                return MovieCard.poster(
+                                  movie: relMovie,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            MovieDetailScreen(movie: relMovie),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
 
-          // ─── Sticky Bottom Action Bar (▶ Xem Ngay) ───────────────
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: ClipRRect(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.cardBg.withValues(alpha: 0.85),
-                    border:
-                        const Border(top: BorderSide(color: Colors.white10)),
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                        style: AppTheme.primaryButtonStyle(
-                            borderRadius: AppTheme.radiusXl),
-                        onPressed: () => Navigator.pushNamed(
-                            context, AppRoutes.trailer,
-                            arguments: movie),
-                        icon: const Icon(Icons.play_circle_fill_rounded,
-                            color: Colors.white, size: 24),
-                        label: const Text(
-                          '▶ XEM NGAY',
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: 0.5),
+            // ─── Sticky Bottom Action Bar (▶ Xem Ngay) ───────────────
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: ClipRRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.cardBg.withValues(alpha: 0.85),
+                      border:
+                          const Border(top: BorderSide(color: Colors.white10)),
+                    ),
+                    child: SafeArea(
+                      top: false,
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          style: AppTheme.primaryButtonStyle(
+                              borderRadius: AppTheme.radiusXl),
+                          onPressed: () => Navigator.pushNamed(
+                              context, AppRoutes.trailer,
+                              arguments: movie),
+                          icon: const Icon(Icons.play_circle_fill_rounded,
+                              color: Colors.white, size: 24),
+                          label: const Text(
+                            '▶ XEM NGAY',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 0.5),
+                          ),
                         ),
                       ),
                     ),
@@ -1010,8 +1026,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
     return PopScope(

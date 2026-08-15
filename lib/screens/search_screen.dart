@@ -7,7 +7,7 @@ import '../models/movie_filter.dart';
 import '../models/movie_model.dart';
 import '../routes/app_routes.dart';
 import '../theme/app_theme.dart';
-import '../widgets/bottom_nav_bar.dart';
+import '../widgets/adaptive_scaffold.dart';
 import '../widgets/flix_network_image.dart';
 import 'search_filter_screen.dart';
 import '../core/ui_state_store.dart';
@@ -143,8 +143,9 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        backgroundColor: AppTheme.scaffoldBg,
+  Widget build(BuildContext context) => FlixAdaptiveScaffold(
+        currentIndex: 1,
+        contentMaxWidth: 1040,
         appBar: AppBar(
           titleSpacing: 8,
           title: TextField(
@@ -257,7 +258,6 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
           ),
         ]),
-        bottomNavigationBar: const FlixBottomNavBar(currentIndex: 1),
       );
 
   Widget _chip(String label) => Padding(

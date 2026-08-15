@@ -6,6 +6,7 @@ import '../models/movie_model.dart';
 import '../routes/app_routes.dart';
 import '../theme/app_theme.dart';
 import '../widgets/movie_card.dart';
+import '../widgets/adaptive_scaffold.dart';
 import '../core/ui_state_store.dart';
 
 class GenreDetailScreen extends StatefulWidget {
@@ -239,66 +240,70 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-            color: AppTheme.cardBg.withValues(alpha: 0.5),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Text('${_movies.length} phim đã tải',
-                        style: AppTheme.smallText),
-                    const Spacer(),
-                    TextButton.icon(
-                      onPressed: _openFilters,
-                      icon: const Icon(Icons.tune_rounded, size: 18),
-                      label: Text(
-                        _year == null && _minRating == 0
-                            ? 'Bộ lọc'
-                            : 'Đang lọc',
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 36,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: _sortOptions.keys.map((option) {
-                      final selected = _sortLabel == option;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: Text(option),
-                          selected: selected,
-                          selectedColor: AppTheme.primaryRed,
-                          backgroundColor: AppTheme.cardBg,
-                          visualDensity: VisualDensity.compact,
-                          labelStyle: TextStyle(
-                            color: selected ? Colors.white : AppTheme.textMuted,
-                            fontSize: 12,
-                          ),
-                          onSelected: (_) {
-                            if (selected) return;
-                            setState(() => _sortLabel = option);
-                            UiStateStore.instance
-                                .setString('$_stateKey.sort', option);
-                            _load(reset: true);
-                          },
+      body: FlixResponsiveContent(
+        maxWidth: 1180,
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+              color: AppTheme.cardBg.withValues(alpha: 0.5),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Text('${_movies.length} phim đã tải',
+                          style: AppTheme.smallText),
+                      const Spacer(),
+                      TextButton.icon(
+                        onPressed: _openFilters,
+                        icon: const Icon(Icons.tune_rounded, size: 18),
+                        label: Text(
+                          _year == null && _minRating == 0
+                              ? 'Bộ lọc'
+                              : 'Đang lọc',
                         ),
-                      );
-                    }).toList(),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  SizedBox(
+                    height: 36,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: _sortOptions.keys.map((option) {
+                        final selected = _sortLabel == option;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(option),
+                            selected: selected,
+                            selectedColor: AppTheme.primaryRed,
+                            backgroundColor: AppTheme.cardBg,
+                            visualDensity: VisualDensity.compact,
+                            labelStyle: TextStyle(
+                              color:
+                                  selected ? Colors.white : AppTheme.textMuted,
+                              fontSize: 12,
+                            ),
+                            onSelected: (_) {
+                              if (selected) return;
+                              setState(() => _sortLabel = option);
+                              UiStateStore.instance
+                                  .setString('$_stateKey.sort', option);
+                              _load(reset: true);
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Expanded(child: _buildContent()),
-          if (_loading && _movies.isNotEmpty)
-            const LinearProgressIndicator(color: AppTheme.primaryRed),
-        ],
+            Expanded(child: _buildContent()),
+            if (_loading && _movies.isNotEmpty)
+              const LinearProgressIndicator(color: AppTheme.primaryRed),
+          ],
+        ),
       ),
     );
   }
@@ -358,8 +363,8 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
     return GridView.builder(
       controller: _gridController,
       padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 210,
         childAspectRatio: 0.65,
         crossAxisSpacing: 14,
         mainAxisSpacing: 14,
