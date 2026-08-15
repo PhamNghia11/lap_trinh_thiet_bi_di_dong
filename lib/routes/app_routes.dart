@@ -23,6 +23,7 @@ import '../screens/profile_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/social_auth_callback_screen.dart';
 import '../screens/my_reviews_screen.dart';
+import '../screens/welcome_screen.dart';
 import '../models/movie_model.dart';
 
 /// Lớp quản lý toàn bộ route/điều hướng của ứng dụng.
@@ -30,6 +31,7 @@ class AppRoutes {
   AppRoutes._();
 
   // ─── Hằng số tên route ────────────────────────────────────────────
+  static const String welcome = '/welcome';
   static const String splash = '/splash';
   static const String onboarding = '/onboarding';
   static const String login = '/login';
@@ -171,13 +173,14 @@ class AppRoutes {
 
     return [
       MaterialPageRoute(
-        settings: const RouteSettings(name: splash),
-        builder: (_) => const SplashScreen(),
+        settings: const RouteSettings(name: welcome),
+        builder: (_) => const WelcomeScreen(),
       ),
     ];
   }
 
   static Map<String, WidgetBuilder> get routes => {
+        welcome: (context) => const WelcomeScreen(),
         splash: (context) => const SplashScreen(),
         onboarding: (context) => const OnboardingScreen(),
         login: (context) => const LoginScreen(),

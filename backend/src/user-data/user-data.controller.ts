@@ -92,7 +92,7 @@ export class UserDataController {
       orderBy: { createdAt: 'desc' },
     });
     return Promise.all(
-      favorites.map(async (favorite) => ({
+      favorites.map(async (favorite: any) => ({
         ...favorite,
         movie: await this.tmdb.detail(favorite.tmdbMovieId),
       })),
@@ -161,7 +161,7 @@ export class UserDataController {
       orderBy: { updatedAt: 'desc' },
     });
     return Promise.all(
-      reviews.map(async (review) => ({
+      reviews.map(async (review: any) => ({
         ...review,
         movie: await this.tmdb.detail(review.tmdbMovieId),
       })),
