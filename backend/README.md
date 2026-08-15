@@ -52,6 +52,8 @@ Sao chép `.env.example` thành `.env`, sau đó điền:
 - `WEB_ORIGIN`: origin Flutter Web nếu sử dụng.
 - `PUBLIC_API_URL`: URL public của backend, không gồm `/api/v1`.
 - `OAUTH_RETURN_URL`: route Flutter Web nhận kết quả đăng nhập social.
+- `OAUTH_MOBILE_RETURN_URL`: deep link Android nhận kết quả đăng nhập social,
+  mặc định `flixapp://auth/callback`.
 - `ENABLE_SWAGGER`: bật Swagger; production mặc định tắt nếu không đặt `true`.
 - `SUPABASE_URL`: URL project Supabase dùng cho Storage.
 - `SUPABASE_SERVICE_ROLE_KEY`: service role key, chỉ lưu ở backend/Render.
@@ -70,6 +72,9 @@ Callback URL cần đăng ký với provider:
   cho phép `http://localhost` khi app ở Development mode, nên không thêm URL
   localhost vào `Valid OAuth Redirect URIs`; chỉ thêm callback HTTPS khi app
   được triển khai lên domain thật.
+
+Không đăng ký `OAUTH_MOBILE_RETURN_URL` với Google/Meta. Provider luôn callback
+về backend HTTPS; backend dùng OAuth state đã ký để chọn URL trả về Web hoặc APK.
 
 Không commit file `.env`.
 

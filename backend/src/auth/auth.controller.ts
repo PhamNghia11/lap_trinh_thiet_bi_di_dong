@@ -71,8 +71,11 @@ export class AuthController {
 
   @Get('oauth/:provider/url')
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
-  socialAuthorizationUrl(@Param('provider') provider: string) {
-    return this.auth.socialAuthorizationUrl(provider);
+  socialAuthorizationUrl(
+    @Param('provider') provider: string,
+    @Query('returnTo') returnTarget: string | undefined,
+  ) {
+    return this.auth.socialAuthorizationUrl(provider, returnTarget);
   }
 
   @Get('oauth/:provider/callback')
@@ -83,6 +86,7 @@ export class AuthController {
     @Query('error_description') providerError: string | undefined,
     @Res() response: Response,
   ) {
+    let returnTarget = await this.auth.socialReturnTarget(provider, state);
     try {
       if (providerError) throw new Error(providerError);
       const session = await this.auth.completeSocialLogin(
@@ -90,16 +94,22 @@ export class AuthController {
         code,
         state,
       );
+      returnTarget = session.returnTarget;
       return response.redirect(
-        this.auth.socialReturnUrl({
-          accessToken: session.accessToken,
-          refreshToken: session.refreshToken,
-        }),
+        this.auth.socialReturnUrl(
+          {
+            accessToken: session.accessToken,
+            refreshToken: session.refreshToken,
+          },
+          returnTarget,
+        ),
       );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Đăng nhập không thành công';
-      return response.redirect(this.auth.socialReturnUrl({ error: message }));
+      return response.redirect(
+        this.auth.socialReturnUrl({ error: message }, returnTarget),
+      );
     }
   }
 

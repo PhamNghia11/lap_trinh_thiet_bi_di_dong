@@ -133,6 +133,8 @@ class AppRoutes {
     if (fragmentRoute.startsWith(socialAuthCallback)) {
       return fragmentRoute;
     }
+    final mobileCallback = normalizeSocialAuthCallbackRoute(platformRouteName);
+    if (mobileCallback != null) return mobileCallback;
     final sharedMovieId = baseUri.queryParameters['movie'];
     if (sharedMovieId != null && int.tryParse(sharedMovieId) != null) {
       return '$movieDetail?movie=${Uri.encodeQueryComponent(sharedMovieId)}';
@@ -140,11 +142,27 @@ class AppRoutes {
     return platformRouteName;
   }
 
+  static String? normalizeSocialAuthCallbackRoute(String routeName) {
+    if (routeName.startsWith(socialAuthCallback)) return routeName;
+    final uri = Uri.tryParse(routeName);
+    if (uri == null ||
+        uri.scheme != 'flixapp' ||
+        uri.host != 'auth' ||
+        uri.path != '/callback') {
+      return null;
+    }
+    return uri.hasQuery
+        ? '$socialAuthCallback?${uri.query}'
+        : socialAuthCallback;
+  }
+
   // ─── Route Map ────────────────────────────────────────────────────
   static List<Route<dynamic>> onGenerateInitialRoutes(String initialRouteName) {
-    if (initialRouteName.startsWith(socialAuthCallback)) {
+    final callbackRouteName =
+        normalizeSocialAuthCallbackRoute(initialRouteName);
+    if (callbackRouteName != null) {
       final callbackRoute = onGenerateRoute(
-        RouteSettings(name: initialRouteName),
+        RouteSettings(name: callbackRouteName),
       );
       if (callbackRoute != null) return [callbackRoute];
     }
@@ -201,10 +219,14 @@ class AppRoutes {
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     final routeName = settings.name ?? '';
-    if (routeName.startsWith(socialAuthCallback)) {
-      final uri = Uri.parse(routeName);
+    final callbackRouteName = normalizeSocialAuthCallbackRoute(routeName);
+    if (callbackRouteName != null) {
+      final uri = Uri.parse(callbackRouteName);
       return MaterialPageRoute(
-        settings: settings,
+        settings: RouteSettings(
+          name: callbackRouteName,
+          arguments: settings.arguments,
+        ),
         builder: (_) => SocialAuthCallbackScreen(
           accessToken: uri.queryParameters['token'],
           refreshToken: uri.queryParameters['refresh'],

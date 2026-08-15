@@ -91,13 +91,14 @@ flutter run --dart-define=FLIX_API_URL=http://10.0.2.2:3000/api/v1
 Khi chạy trên điện thoại thật, thay `10.0.2.2` bằng IP LAN của máy đang chạy
 NestJS, ví dụ `http://192.168.1.10:3000/api/v1`.
 
-## Đăng nhập Google và Facebook trên Web
+## Đăng nhập Google và Facebook trên Web/Android
 
 Social login dùng OAuth callback qua backend. Trong `backend/.env`, cấu hình:
 
 ```env
 PUBLIC_API_URL="http://localhost:3000"
 OAUTH_RETURN_URL="http://localhost:8765/#/auth/callback"
+OAUTH_MOBILE_RETURN_URL="flixapp://auth/callback"
 GOOGLE_CLIENT_ID="..."
 GOOGLE_CLIENT_SECRET="..."
 FACEBOOK_APP_ID="..."
@@ -118,6 +119,13 @@ thay `PUBLIC_API_URL` bằng domain HTTPS thật và thêm callback HTTPS đó v
 Port `8765` trong lệnh Flutter phải khớp `OAUTH_RETURN_URL`. Sau khi thay đổi
 schema hoặc kéo migration mới, chạy `npm run db:generate` và
 `npm run db:deploy` trong thư mục `backend`.
+
+Flutter Web gửi `returnTo=web` và nhận kết quả qua `OAUTH_RETURN_URL`. APK Android
+gửi `returnTo=mobile`; backend ghi lựa chọn này vào OAuth state đã ký rồi trả kết
+quả về `OAUTH_MOBILE_RETURN_URL`. Android Manifest đăng ký deep link
+`flixapp://auth/callback`, nên trình duyệt sẽ mở lại ứng dụng sau khi đăng nhập.
+Callback đã đăng ký với Google/Meta vẫn là URL HTTPS của backend; không đăng ký
+custom scheme tại provider.
 
 ## Khôi phục mật khẩu qua Brevo
 

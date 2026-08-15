@@ -26,10 +26,12 @@ import {
 } from './auth.dto';
 
 export type SocialProvider = 'google' | 'facebook';
+export type SocialReturnTarget = 'web' | 'mobile';
 
 type OAuthState = {
   purpose: 'social_login';
   provider: SocialProvider;
+  returnTarget?: SocialReturnTarget;
 };
 
 type SocialProfile = {
@@ -226,11 +228,15 @@ export class AuthService {
     };
   }
 
-  async socialAuthorizationUrl(providerValue: string) {
+  async socialAuthorizationUrl(
+    providerValue: string,
+    returnTargetValue?: string,
+  ) {
     const provider = this.parseProvider(providerValue);
+    const returnTarget = this.parseReturnTarget(returnTargetValue);
     this.ensureProviderConfigured(provider);
     const state = await this.jwt.signAsync<OAuthState>(
-      { purpose: 'social_login', provider },
+      { purpose: 'social_login', provider, returnTarget },
       { expiresIn: '10m' },
     );
     const redirectUri = this.callbackUrl(provider);
@@ -270,32 +276,50 @@ export class AuthService {
       throw new BadRequestException('Phản hồi đăng nhập không đầy đủ');
     }
 
-    let payload: OAuthState;
-    try {
-      payload = await this.jwt.verifyAsync<OAuthState>(state);
-    } catch {
-      throw new UnauthorizedException('Phiên đăng nhập đã hết hạn');
-    }
-    if (payload.purpose !== 'social_login' || payload.provider !== provider) {
-      throw new UnauthorizedException('Phiên đăng nhập không hợp lệ');
-    }
+    const payload = await this.verifyOAuthState(provider, state);
 
     const profile =
       provider === 'google'
         ? await this.googleProfile(code)
         : await this.facebookProfile(code);
-    return this.upsertSocialUser(profile);
+    return {
+      ...(await this.upsertSocialUser(profile)),
+      returnTarget: this.returnTargetFromState(payload),
+    };
   }
 
-  socialReturnUrl(result: {
-    accessToken?: string;
-    refreshToken?: string;
-    error?: string;
-  }) {
-    const base = this.config.get<string>(
-      'OAUTH_RETURN_URL',
-      'http://localhost:8765/#/auth/callback',
-    );
+  async socialReturnTarget(
+    providerValue: string,
+    state?: string,
+  ): Promise<SocialReturnTarget> {
+    if (!state) return 'web';
+    try {
+      const provider = this.parseProvider(providerValue);
+      const payload = await this.verifyOAuthState(provider, state);
+      return this.returnTargetFromState(payload);
+    } catch {
+      return 'web';
+    }
+  }
+
+  socialReturnUrl(
+    result: {
+      accessToken?: string;
+      refreshToken?: string;
+      error?: string;
+    },
+    returnTarget: SocialReturnTarget = 'web',
+  ) {
+    const base =
+      returnTarget === 'mobile'
+        ? this.config.get<string>(
+            'OAUTH_MOBILE_RETURN_URL',
+            'flixapp://auth/callback',
+          )
+        : this.config.get<string>(
+            'OAUTH_RETURN_URL',
+            'http://localhost:8765/#/auth/callback',
+          );
     const separator = base.includes('?') ? '&' : '?';
     if (result.accessToken && result.refreshToken) {
       const query = new URLSearchParams({
@@ -537,6 +561,32 @@ export class AuthService {
       throw new BadRequestException('Nhà cung cấp đăng nhập không hợp lệ');
     }
     return value;
+  }
+
+  private parseReturnTarget(value?: string): SocialReturnTarget {
+    if (!value || value === 'web') return 'web';
+    if (value === 'mobile') return 'mobile';
+    throw new BadRequestException('Điểm quay lại đăng nhập không hợp lệ');
+  }
+
+  private async verifyOAuthState(
+    provider: SocialProvider,
+    state: string,
+  ): Promise<OAuthState> {
+    let payload: OAuthState;
+    try {
+      payload = await this.jwt.verifyAsync<OAuthState>(state);
+    } catch {
+      throw new UnauthorizedException('Phiên đăng nhập đã hết hạn');
+    }
+    if (payload.purpose !== 'social_login' || payload.provider !== provider) {
+      throw new UnauthorizedException('Phiên đăng nhập không hợp lệ');
+    }
+    return payload;
+  }
+
+  private returnTargetFromState(payload: OAuthState): SocialReturnTarget {
+    return payload.returnTarget === 'mobile' ? 'mobile' : 'web';
   }
 
   private isProviderConfigured(provider: SocialProvider) {

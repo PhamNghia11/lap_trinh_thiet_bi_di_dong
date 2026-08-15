@@ -18,6 +18,7 @@ describe('AuthService social authentication', () => {
     FACEBOOK_GRAPH_VERSION: 'v-test',
     PUBLIC_API_URL: 'http://localhost:3000',
     OAUTH_RETURN_URL: 'http://localhost:8765/#/auth/callback',
+    OAUTH_MOBILE_RETURN_URL: 'flixapp://auth/callback',
     JWT_SECRET: 'test-secret',
     BREVO_API_KEY: 'brevo-api-key',
     BREVO_SENDER_EMAIL: 'no-reply@flix.test',
@@ -60,6 +61,31 @@ describe('AuthService social authentication', () => {
       'http://localhost:3000/api/v1/auth/oauth/google/callback',
     );
     expect(result.url).not.toContain('google-client-secret');
+    // JwtService declares this as a method, while Jest replaces it with a mock.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(jwt.signAsync).toHaveBeenCalledWith(
+      {
+        purpose: 'social_login',
+        provider: 'google',
+        returnTarget: 'web',
+      },
+      { expiresIn: '10m' },
+    );
+  });
+
+  it('binds a mobile return target into the signed OAuth state', async () => {
+    await service.socialAuthorizationUrl('google', 'mobile');
+
+    // JwtService declares this as a method, while Jest replaces it with a mock.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(jwt.signAsync).toHaveBeenCalledWith(
+      {
+        purpose: 'social_login',
+        provider: 'google',
+        returnTarget: 'mobile',
+      },
+      { expiresIn: '10m' },
+    );
   });
 
   it('rejects a callback whose signed state is invalid', async () => {
@@ -79,6 +105,32 @@ describe('AuthService social authentication', () => {
     ).toBe(
       'http://localhost:8765/#/auth/callback?token=a%2Bb%2Fc&refresh=refresh%2B%2Ftoken',
     );
+  });
+
+  it('returns social session tokens to the Android deep link', () => {
+    expect(
+      service.socialReturnUrl(
+        {
+          accessToken: 'mobile-access',
+          refreshToken: 'mobile-refresh',
+        },
+        'mobile',
+      ),
+    ).toBe(
+      'flixapp://auth/callback?token=mobile-access&refresh=mobile-refresh',
+    );
+  });
+
+  it('recovers the mobile return target from a valid signed state', async () => {
+    (jwt.verifyAsync as jest.Mock).mockResolvedValueOnce({
+      purpose: 'social_login',
+      provider: 'facebook',
+      returnTarget: 'mobile',
+    });
+
+    await expect(
+      service.socialReturnTarget('facebook', 'signed-state'),
+    ).resolves.toBe('mobile');
   });
 
   it('gives social-only accounts a clear password-change error', async () => {

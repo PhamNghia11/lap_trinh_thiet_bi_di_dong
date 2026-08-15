@@ -66,22 +66,22 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _startSocialLogin(String provider) async {
-    if (!kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Google/Facebook hiện được cấu hình cho Flutter Web.'),
-        ),
-      );
-      return;
-    }
-
     setState(() => _socialLoading = provider);
     try {
       final data = Map<String, dynamic>.from(
-        await ApiClient.instance.get('/auth/oauth/$provider/url'),
+        await ApiClient.instance.get(
+          socialAuthorizationPath(provider, isWeb: kIsWeb),
+        ),
       );
       final url = Uri.tryParse(data['url'] as String? ?? '');
-      if (url == null || !await launchUrl(url, webOnlyWindowName: '_self')) {
+      if (url == null ||
+          !await launchUrl(
+            url,
+            mode: kIsWeb
+                ? LaunchMode.platformDefault
+                : LaunchMode.externalApplication,
+            webOnlyWindowName: kIsWeb ? '_self' : null,
+          )) {
         throw const ApiException('Không thể mở trang đăng nhập');
       }
     } catch (error) {
@@ -364,4 +364,10 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+}
+
+@visibleForTesting
+String socialAuthorizationPath(String provider, {required bool isWeb}) {
+  final returnTarget = isWeb ? 'web' : 'mobile';
+  return '/auth/oauth/$provider/url?returnTo=$returnTarget';
 }

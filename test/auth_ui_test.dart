@@ -45,7 +45,7 @@ class _MovieListRepository extends TmdbRepository {
 }
 
 void main() {
-  testWidgets('login restores legacy controls and social buttons react',
+  testWidgets('login restores legacy controls and social buttons',
       (tester) async {
     await tester.pumpWidget(_app(const LoginScreen()));
 
@@ -53,12 +53,16 @@ void main() {
     expect(find.text('Ghi nhớ'), findsOneWidget);
     expect(find.text('Google'), findsOneWidget);
     expect(find.text('Facebook'), findsOneWidget);
+  });
 
-    await tester.tap(find.text('Google'));
-    await tester.pump();
+  test('social login requests the correct callback target per platform', () {
     expect(
-      find.text('Google/Facebook hiện được cấu hình cho Flutter Web.'),
-      findsOneWidget,
+      socialAuthorizationPath('google', isWeb: true),
+      '/auth/oauth/google/url?returnTo=web',
+    );
+    expect(
+      socialAuthorizationPath('facebook', isWeb: false),
+      '/auth/oauth/facebook/url?returnTo=mobile',
     );
   });
 
@@ -97,6 +101,31 @@ void main() {
     expect(
       route,
       '/auth/callback?token=google-token&refresh=refresh-token',
+    );
+  });
+
+  test('OAuth callback is recovered from an Android deep link', () {
+    final route = AppRoutes.resolveInitialRouteName(
+      baseUri: Uri(),
+      platformRouteName:
+          'flixapp://auth/callback?token=google-token&refresh=refresh-token',
+    );
+
+    expect(
+      route,
+      '/auth/callback?token=google-token&refresh=refresh-token',
+    );
+    final initialRoutes = AppRoutes.onGenerateInitialRoutes(route);
+    expect(initialRoutes.single.settings.name, route);
+
+    final runtimeRoute = AppRoutes.onGenerateRoute(
+      const RouteSettings(
+        name: 'flixapp://auth/callback?error=mobile-callback-failed',
+      ),
+    );
+    expect(
+      runtimeRoute?.settings.name,
+      '/auth/callback?error=mobile-callback-failed',
     );
   });
 
