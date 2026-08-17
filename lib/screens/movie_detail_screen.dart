@@ -20,6 +20,8 @@ import '../core/app_session.dart';
 import '../models/movie_filter.dart';
 import '../core/ui_state_store.dart';
 import '../core/media_url.dart';
+import '../core/seo_metadata.dart';
+import '../core/seo_url.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   final Movie? movie;
@@ -55,11 +57,13 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
     _isDescriptionExpanded =
         UiStateStore.instance.boolean('$stateKey.descriptionExpanded') ?? false;
     _isFavorite = _currentMovie.isFavorite;
+    updateMovieSeoMetadata(_currentMovie);
     _loadDetail();
   }
 
   @override
   void dispose() {
+    resetSeoMetadata();
     _scrollController.dispose();
     super.dispose();
   }
@@ -100,14 +104,16 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
               .take(8)
               .toList();
       if (mounted) {
+        final resolvedMovie = detail.copyWith(
+          isFavorite: _isFavorite,
+          reviews: reviews,
+        );
         setState(() {
           if (!_favoriteTouched) _isFavorite = favorite;
-          _currentMovie = detail.copyWith(
-            isFavorite: _isFavorite,
-            reviews: reviews,
-          );
+          _currentMovie = resolvedMovie.copyWith(isFavorite: _isFavorite);
           _relatedMovies = related;
         });
+        updateMovieSeoMetadata(_currentMovie);
       }
     } catch (_) {
       // Giữ dữ liệu hiện tại khi kết nối tạm thời không khả dụng.
@@ -377,8 +383,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         try {
                           await SharePlus.instance.share(
                             ShareParams(
-                              text:
-                                  'Xem ${movie.title} trên FLIX: https://flix-da-movie-m-app.web.app/?movie=${movie.id}',
+                              text: 'Xem ${movie.title} trên FLIX: '
+                                  '${movieSeoUrl(movie.title, movie.id)}',
                             ),
                           );
                         } catch (error) {

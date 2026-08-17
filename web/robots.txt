@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+Disallow: /auth/
+
+Sitemap: https://flix-da-movie-m-app.web.app/sitemap.xml

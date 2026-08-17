@@ -24,6 +24,7 @@ jobs:
           set -euo pipefail
           backend=$(mktemp)
           web=$(mktemp)
+          web_url="https://flix-da-movie-m-app.web.app"
           trap 'rm -f "$backend" "$web"' EXIT
           curl --fail-with-body --silent --show-error --max-time 30 \
             --retry 3 --retry-all-errors --retry-delay 5 \
@@ -31,8 +32,11 @@ jobs:
           grep -F '"status":"ok"' "$backend"
           curl --fail-with-body --silent --show-error --max-time 30 \
             --retry 3 --retry-all-errors --retry-delay 5 \
-            https://flix-da-movie-m-app.web.app/ > "$web"
-          grep -F '<title>FLIX</title>' "$web"
+            "$web_url/" > "$web"
+          grep -F '<title>FLIX - Khám phá phim, trailer và đánh giá</title>' "$web"
+          curl --fail --silent --show-error "$web_url/robots.txt" | grep -F 'Sitemap:'
+          curl --fail --silent --show-error "$web_url/sitemap.xml" | grep -F '<urlset'
+          curl --fail --silent --show-error "$web_url/phim/" | grep -F '"@type":"ItemList"'
 
       - name: Open one incident when unhealthy
         if: failure()

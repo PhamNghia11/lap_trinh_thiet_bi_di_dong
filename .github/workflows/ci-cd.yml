@@ -58,6 +58,13 @@ jobs:
           --dart-define=FLIX_ENVIRONMENT=production
           --dart-define=FLIX_RELEASE=${{ github.sha }}
 
+      - name: Generate crawlable SEO pages
+        run: >-
+          dart run tool/generate_seo.dart
+          --output build/web
+          --api-url https://lap-trinh-thiet-bi-di-dong.onrender.com/api/v1
+          --site-url https://flix-da-movie-m-app.web.app
+
       - name: Upload web artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -143,10 +150,14 @@ jobs:
         run: |
           set -euo pipefail
           base_url="https://flix-da-movie-m-app.web.app"
-          curl --fail-with-body --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 "$base_url/" | grep -F '<title>FLIX</title>'
+          curl --fail-with-body --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 "$base_url/" | grep -F '<title>FLIX - Khám phá phim, trailer và đánh giá</title>'
+          curl --fail-with-body --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 "$base_url/robots.txt" | grep -F 'Sitemap: https://flix-da-movie-m-app.web.app/sitemap.xml'
+          curl --fail-with-body --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 "$base_url/sitemap.xml" | grep -F '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+          curl --fail-with-body --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 "$base_url/phim/" | grep -F '"@type":"ItemList"'
           curl --fail-with-body --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 "$base_url/privacy.html" | grep -F '<title>Chính sách bảo mật - FLIX</title>'
           curl --fail-with-body --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 "$base_url/terms.html" | grep -F '<title>Điều khoản sử dụng - FLIX</title>'
           curl --fail-with-body --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 "$base_url/account-deletion.html" | grep -F '<title>Xóa tài khoản - FLIX</title>'
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' "$base_url/duong-dan-khong-ton-tai")" = "404"
 
   deploy_render:
     name: Deploy Render backend
