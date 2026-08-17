@@ -2,9 +2,11 @@ import 'package:flix_app/models/movie_model.dart';
 import 'package:flix_app/routes/app_routes.dart';
 import 'package:flix_app/screens/movie_detail_screen.dart';
 import 'package:flix_app/screens/movie_reviews_screen.dart';
+import 'package:flix_app/viewmodels/movie_note_view_model.dart';
 import 'package:flix_app/widgets/user_review_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
 UserReview review(String name, String comment) => UserReview(
       userName: name,
@@ -47,9 +49,12 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
-        onGenerateRoute: AppRoutes.onGenerateRoute,
-        home: MovieDetailScreen(movie: movie),
+      ChangeNotifierProvider(
+        create: (_) => MovieNoteViewModel(),
+        child: MaterialApp(
+          onGenerateRoute: AppRoutes.onGenerateRoute,
+          home: MovieDetailScreen(movie: movie),
+        ),
       ),
     );
     await tester.drag(

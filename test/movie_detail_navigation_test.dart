@@ -3,8 +3,10 @@ import 'package:flix_app/core/app_preferences.dart';
 import 'package:flix_app/routes/app_routes.dart';
 import 'package:flix_app/screens/home_screen.dart';
 import 'package:flix_app/screens/movie_detail_screen.dart';
+import 'package:flix_app/viewmodels/movie_note_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   const movie = Movie(
@@ -28,18 +30,27 @@ void main() {
     addTearDown(() => FlutterError.onError = previousErrorHandler);
   }
 
+  Widget withMovieNotes(Widget child) => ChangeNotifierProvider(
+        create: (_) => MovieNoteViewModel(),
+        child: child,
+      );
+
   testWidgets('nút quay lại về Home khi chi tiết phim là route gốc',
       (tester) async {
     ignoreNetworkImages();
 
     await tester.pumpWidget(
-      MaterialApp(
-        routes: {
-          AppRoutes.home: (_) => const Scaffold(body: Text('HOME_SCREEN')),
-        },
-        home: const MovieDetailScreen(movie: movie),
+      withMovieNotes(
+        MaterialApp(
+          routes: {
+            AppRoutes.home: (_) => const Scaffold(body: Text('HOME_SCREEN')),
+          },
+          home: const MovieDetailScreen(movie: movie),
+        ),
       ),
     );
+
+    expect(find.byKey(const Key('movie-note-action')), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
@@ -52,18 +63,20 @@ void main() {
     ignoreNetworkImages();
 
     await tester.pumpWidget(
-      MaterialApp(
-        routes: {
-          AppRoutes.movieDetail: (_) => const MovieDetailScreen(movie: movie),
-        },
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: ElevatedButton(
-              onPressed: () => Navigator.pushNamed(
-                context,
-                AppRoutes.movieDetail,
+      withMovieNotes(
+        MaterialApp(
+          routes: {
+            AppRoutes.movieDetail: (_) => const MovieDetailScreen(movie: movie),
+          },
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: ElevatedButton(
+                onPressed: () => Navigator.pushNamed(
+                  context,
+                  AppRoutes.movieDetail,
+                ),
+                child: const Text('OPEN_DETAIL'),
               ),
-              child: const Text('OPEN_DETAIL'),
             ),
           ),
         ),
@@ -102,12 +115,14 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
-        routes: {
-          AppRoutes.trailer: (_) =>
-              const Scaffold(body: Text('TRAILER_SCREEN')),
-        },
-        home: const MovieDetailScreen(movie: movieWithTrailer),
+      withMovieNotes(
+        MaterialApp(
+          routes: {
+            AppRoutes.trailer: (_) =>
+                const Scaffold(body: Text('TRAILER_SCREEN')),
+          },
+          home: const MovieDetailScreen(movie: movieWithTrailer),
+        ),
       ),
     );
     await tester.pumpAndSettle();

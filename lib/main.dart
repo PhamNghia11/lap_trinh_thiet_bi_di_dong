@@ -1,12 +1,14 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'theme/app_theme.dart';
 import 'routes/app_routes.dart';
 import 'core/ui_state_store.dart';
 import 'core/app_session.dart';
 import 'core/app_preferences.dart';
+import 'viewmodels/movie_note_view_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -77,6 +79,10 @@ class _FlixBootstrapState extends State<_FlixBootstrap> {
       _guardInitialization(
         'preferences',
         AppPreferences.instance.load(),
+      ),
+      _guardInitialization(
+        'movie notes',
+        MovieNoteViewModel.instance.initialize(),
       ),
     ]);
   }
@@ -194,20 +200,27 @@ class _FlixAppState extends State<FlixApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'FLIX',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme(),
-      navigatorKey: _navigatorKey,
-      scaffoldMessengerKey: _messengerKey,
-      initialRoute: widget.initialRouteName,
-      onGenerateInitialRoutes: AppRoutes.onGenerateInitialRoutes,
-      routes: AppRoutes.routes,
-      onGenerateRoute: AppRoutes.onGenerateRoute,
-      navigatorObservers: [
-        AppRoutes.navigationObserver,
-        if (_sentryDsn.isNotEmpty) SentryNavigatorObserver(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: AppSession.instance),
+        ChangeNotifierProvider.value(value: AppPreferences.instance),
+        ChangeNotifierProvider.value(value: MovieNoteViewModel.instance),
       ],
+      child: MaterialApp(
+        title: 'FLIX',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.darkTheme(),
+        navigatorKey: _navigatorKey,
+        scaffoldMessengerKey: _messengerKey,
+        initialRoute: widget.initialRouteName,
+        onGenerateInitialRoutes: AppRoutes.onGenerateInitialRoutes,
+        routes: AppRoutes.routes,
+        onGenerateRoute: AppRoutes.onGenerateRoute,
+        navigatorObservers: [
+          AppRoutes.navigationObserver,
+          if (_sentryDsn.isNotEmpty) SentryNavigatorObserver(),
+        ],
+      ),
     );
   }
 }

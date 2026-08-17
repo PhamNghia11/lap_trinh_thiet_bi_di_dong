@@ -2,6 +2,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
@@ -10,6 +11,7 @@ import 'home_screen.dart';
 import '../models/movie_model.dart';
 import '../data/mock_data.dart';
 import '../widgets/movie_card.dart';
+import '../widgets/movie_note_sheet.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/flix_network_image.dart';
 import '../widgets/user_review_card.dart';
@@ -22,6 +24,7 @@ import '../core/ui_state_store.dart';
 import '../core/media_url.dart';
 import '../core/seo_metadata.dart';
 import '../core/seo_url.dart';
+import '../viewmodels/movie_note_view_model.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   final Movie? movie;
@@ -197,6 +200,35 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
             .showSnackBar(SnackBar(content: Text('$error')));
       }
     }
+  }
+
+  Future<void> _openMovieNote(Movie movie) async {
+    final result = await showModalBottomSheet<MovieNoteSheetResult>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: AppTheme.cardBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppTheme.radiusXl),
+        ),
+      ),
+      builder: (_) => MovieNoteSheet(
+        movieId: movie.id,
+        movieTitle: movie.title,
+      ),
+    );
+    if (!mounted || result == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result == MovieNoteSheetResult.saved
+              ? 'Đã lưu ghi chú trên thiết bị.'
+              : 'Đã xóa ghi chú.',
+        ),
+      ),
+    );
   }
 
   Future<void> _openExternal(String url) async {
@@ -597,6 +629,19 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                                   size: 18),
                               label: const Text('Danh sách của tôi',
                                   style: TextStyle(color: Colors.white)),
+                            ),
+                            Consumer<MovieNoteViewModel>(
+                              builder: (context, notes, _) {
+                                final hasNote = notes.noteFor(movie.id) != null;
+                                return OutlinedActionButton(
+                                  key: const Key('movie-note-action'),
+                                  text: hasNote ? 'Ghi chú đã lưu' : 'Ghi chú',
+                                  icon: hasNote
+                                      ? Icons.note_alt_rounded
+                                      : Icons.note_add_outlined,
+                                  onPressed: () => _openMovieNote(movie),
+                                );
+                              },
                             ),
                           ],
                         ),
