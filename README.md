@@ -249,7 +249,9 @@ nằm tại [`docs/PRODUCTION_RUNBOOK.md`](docs/PRODUCTION_RUNBOOK.md).
 ```text
 .
 ├── .github/
-│   └── workflows/ci-cd.yml       # CI Flutter/backend và CD Render/Firebase
+│   └── workflows/                # CI/CD và kiểm tra uptime production
+├── assets/
+│   └── branding/                 # Ảnh nguồn icon ứng dụng FLIX
 ├── backend/
 │   ├── prisma/
 │   │   ├── migrations/           # Lịch sử migration PostgreSQL
@@ -270,16 +272,18 @@ nằm tại [`docs/PRODUCTION_RUNBOOK.md`](docs/PRODUCTION_RUNBOOK.md).
 ├── lib/
 │   ├── core/                     # API client, session, preferences, UI state
 │   ├── data/                     # TMDB/user repositories và fallback data
-│   ├── models/                   # Movie và bộ lọc
+│   ├── models/                   # Movie, bộ lọc và ghi chú phim
 │   ├── routes/                   # Route declarations
 │   ├── screens/                  # Các màn hình Flutter hiện tại
 │   ├── theme/                    # Theme, màu sắc và style dùng chung
-│   ├── widgets/                  # Movie card, navigation, media và review
+│   ├── viewmodels/               # Provider và CRUD ghi chú phim bằng Hive
+│   ├── widgets/                  # Movie card, navigation, media, note và review
 │   └── main.dart                 # Entry point
-├── test/                         # Widget, navigation, state và API tests
-├── web/                          # Bootstrap, manifest, favicon và PWA icons
+├── test/                         # Widget, navigation, state, Hive, API và SEO tests
+├── tool/                         # Sinh trang phim crawlable và sitemap khi build
+├── web/                          # Bootstrap, PWA, SEO, robots, sitemap và trang pháp lý
 ├── .firebaserc                   # Firebase project flix-da-movie-m-app
-├── firebase.json                 # Hosting build/web và SPA rewrite
+├── firebase.json                 # Firebase Hosting, cache và security headers
 ├── pubspec.yaml                  # Flutter dependencies
 └── README.md
 ```
