@@ -56,6 +56,22 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
+          Image.asset(
+            'assets/welcome/welcome_background.jpg',
+            fit: BoxFit.cover,
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.72),
+                  const Color(0xFF0D0D0D).withValues(alpha: 0.9),
+                ],
+              ),
+            ),
+          ),
           Center(
             child: Container(
               width: 320,
