@@ -66,8 +66,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.72),
-                  const Color(0xFF0D0D0D).withValues(alpha: 0.9),
+                  Colors.black.withValues(alpha: 0.38),
+                  const Color(0xFF0D0D0D).withValues(alpha: 0.68),
                 ],
               ),
             ),
