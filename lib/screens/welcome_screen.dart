@@ -13,9 +13,9 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   static const _slides = [
     (
-      label: 'DEVELOPED BY · PROJECT',
+      label: 'DEVELOPED BY',
       title: 'Ứng dụng tra cứu\nphim',
-      description: 'Phạm Lê Nghĩa · Nguyễn Xuân Bách\nỨng dụng tra cứu phim',
+      description: 'Phạm Lê Nghĩa · Nguyễn Xuân Bách',
     ),
     (
       label: 'DISCOVER',
