@@ -17,6 +17,14 @@ void main() {
     expect(find.text('Khám phá ngay'), findsOneWidget);
 
     await tester.tap(find.text('Khám phá ngay'));
+    await tester.pumpAndSettle();
+    expect(find.text('Tìm phim bạn\nmuốn xem'), findsOneWidget);
+
+    await tester.tap(find.text('Tiếp tục'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bắt đầu hành\ntrình điện ảnh'), findsOneWidget);
+
+    await tester.tap(find.text('Bắt đầu ngay'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 

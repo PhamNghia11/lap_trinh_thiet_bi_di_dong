@@ -14,6 +14,7 @@
 .history
 .svn/
 migrate_working_dir/
+/output/
 
 # IntelliJ related
 *.iml

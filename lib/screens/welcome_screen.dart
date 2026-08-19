@@ -1,10 +1,53 @@
-// lib/screens/welcome_screen.dart
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
-import '../routes/app_routes.dart';
 
-class WelcomeScreen extends StatelessWidget {
+import '../routes/app_routes.dart';
+import '../theme/app_theme.dart';
+
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  static const _slides = [
+    (
+      label: 'WELCOME TO FLIX',
+      title: 'Ứng dụng tra cứu\nphim',
+      description: 'Khám phá thế giới điện ảnh theo cách riêng của bạn.',
+    ),
+    (
+      label: 'DISCOVER',
+      title: 'Tìm phim bạn\nmuốn xem',
+      description: 'Duyệt phim đa dạng, xem trailer và đọc đánh giá thật.',
+    ),
+    (
+      label: 'READY?',
+      title: 'Bắt đầu hành\ntrình điện ảnh',
+      description: 'Lưu lại những bộ phim yêu thích và khám phá điều mới.',
+    ),
+  ];
+
+  final _pageController = PageController();
+  int _pageIndex = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _next() {
+    if (_pageIndex == _slides.length - 1) {
+      Navigator.pushReplacementNamed(context, AppRoutes.splash);
+      return;
+    }
+    _pageController.nextPage(
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +56,6 @@ class WelcomeScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Ambient Red Glow Background
           Center(
             child: Container(
               width: 320,
@@ -30,8 +72,6 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // Main Card & Content
           SafeArea(
             child: Center(
               child: ConstrainedBox(
@@ -40,109 +80,57 @@ class WelcomeScreen extends StatelessWidget {
                   width: double.infinity,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 24.0, vertical: 32.0),
+                        horizontal: 24, vertical: 32),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Spacer(),
-
-                        // Brand Title FLIX
                         const Text(
                           'FLIX',
                           style: TextStyle(
                             fontSize: 48,
                             fontWeight: FontWeight.w900,
                             color: AppTheme.primaryRed,
-                            letterSpacing: 3.0,
+                            letterSpacing: 3,
                           ),
                         ),
-
                         const SizedBox(height: 28),
-
-                        // Center Dark Card Container
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24.0,
-                            vertical: 36.0,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF161616),
-                            borderRadius: BorderRadius.circular(24.0),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.08),
-                              width: 1.0,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.6),
-                                blurRadius: 24,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Section 1: DEVELOPED BY
-                              Text(
-                                'DEVELOPED BY',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white.withValues(alpha: 0.45),
-                                  letterSpacing: 2.0,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'Phạm Lê Nghĩa',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              const Text(
-                                'Nguyễn Xuân Bách',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                ),
-                              ),
-
-                              const SizedBox(height: 32),
-
-                              // Section 2: PROJECT
-                              Text(
-                                'PROJECT',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white.withValues(alpha: 0.45),
-                                  letterSpacing: 2.0,
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-                              const Text(
-                                'Ứng dụng tra cứu\nphim',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  height: 1.35,
-                                ),
-                              ),
-                            ],
+                        SizedBox(
+                          height: 276,
+                          child: PageView.builder(
+                            controller: _pageController,
+                            itemCount: _slides.length,
+                            onPageChanged: (index) =>
+                                setState(() => _pageIndex = index),
+                            itemBuilder: (_, index) {
+                              final item = _slides[index];
+                              return _WelcomeCard(
+                                label: item.label,
+                                title: item.title,
+                                description: item.description,
+                              );
+                            },
                           ),
                         ),
-
-                        const SizedBox(height: 36),
-
-                        // Pill Button: Khám phá ngay ->
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            _slides.length,
+                            (index) => AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
+                              width: index == _pageIndex ? 32 : 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: index == _pageIndex
+                                    ? AppTheme.primaryRed
+                                    : AppTheme.inactiveIndicator,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 28),
                         SizedBox(
                           width: double.infinity,
                           height: 56,
@@ -153,37 +141,32 @@ class WelcomeScreen extends StatelessWidget {
                               shadowColor:
                                   AppTheme.primaryRed.withValues(alpha: 0.6),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(28.0),
+                                borderRadius: BorderRadius.circular(28),
                               ),
                             ),
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(
-                                context,
-                                AppRoutes.splash,
-                              );
-                            },
-                            child: const Row(
+                            onPressed: _next,
+                            child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Khám phá ngay',
-                                  style: TextStyle(
+                                  _pageIndex == 0
+                                      ? 'Khám phá ngay'
+                                      : _pageIndex == _slides.length - 1
+                                          ? 'Bắt đầu ngay'
+                                          : 'Tiếp tục',
+                                  style: const TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.w800,
                                     color: Colors.white,
                                   ),
                                 ),
-                                SizedBox(width: 10),
-                                Icon(
-                                  Icons.arrow_forward_rounded,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
+                                const SizedBox(width: 10),
+                                const Icon(Icons.arrow_forward_rounded,
+                                    color: Colors.white, size: 22),
                               ],
                             ),
                           ),
                         ),
-
                         const Spacer(),
                       ],
                     ),
@@ -196,4 +179,65 @@ class WelcomeScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _WelcomeCard extends StatelessWidget {
+  const _WelcomeCard({
+    required this.label,
+    required this.title,
+    required this.description,
+  });
+
+  final String label;
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+        decoration: BoxDecoration(
+          color: const Color(0xFF161616),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.6),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: Colors.white.withValues(alpha: 0.45),
+                letterSpacing: 2,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                height: 1.25,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppTheme.textMuted, height: 1.4),
+            ),
+          ],
+        ),
+      );
 }
