@@ -13,9 +13,9 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   static const _slides = [
     (
-      label: 'WELCOME TO FLIX',
+      label: 'DEVELOPED BY · PROJECT',
       title: 'Ứng dụng tra cứu\nphim',
-      description: 'Khám phá thế giới điện ảnh theo cách riêng của bạn.',
+      description: 'Phạm Lê Nghĩa · Nguyễn Xuân Bách\nỨng dụng tra cứu phim',
     ),
     (
       label: 'DISCOVER',
