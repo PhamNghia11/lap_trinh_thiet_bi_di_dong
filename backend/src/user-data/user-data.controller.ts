@@ -146,11 +146,21 @@ export class UserDataController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('me/history')
-  history(@CurrentUser() user: AuthUser) {
-    return this.prisma.watchHistory.findMany({
+  async history(@CurrentUser() user: AuthUser) {
+    const history = await this.prisma.watchHistory.findMany({
       where: { userId: user.id },
       orderBy: { lastWatchedAt: 'desc' },
     });
+    return Promise.all(
+      history.map(async (item) => {
+        try {
+          const movie = await this.tmdb.detail(item.tmdbMovieId);
+          return { ...item, movie };
+        } catch {
+          return { ...item, movie: null };
+        }
+      }),
+    );
   }
 
   @UseGuards(AuthGuard('jwt'))

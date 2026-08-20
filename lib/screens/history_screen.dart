@@ -66,7 +66,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
     try {
       final rows = await _userData.history();
       final entries = await Future.wait(rows.map((row) async {
-        final movie = await _movies.detail('${row['tmdbMovieId']}');
+        Movie movie;
+        if (row['movie'] is Map) {
+          movie = Movie.fromTmdbJson(
+            Map<String, dynamic>.from(row['movie'] as Map),
+          );
+        } else {
+          try {
+            movie = await _movies.detail('${row['tmdbMovieId']}');
+          } catch (_) {
+            movie = Movie(
+              id: '${row['tmdbMovieId']}',
+              title: row['title']?.toString() ?? 'Phim #${row['tmdbMovieId']}',
+              genres: const [],
+              year: 0,
+              rating: 0,
+              duration: '',
+              description: '',
+              imageUrl: '',
+              reviews: const [],
+            );
+          }
+        }
         return HistoryEntry(
           movie: movie,
           progress: ((row['progress'] as num?)?.toDouble() ?? 0).clamp(0, 1),
@@ -508,40 +529,105 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         ),
                       ],
                     ),
+                    if (movie.genres.isNotEmpty ||
+                        movie.year > 0 ||
+                        movie.rating > 0) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          if (movie.year > 0) ...[
+                            Text(
+                              '${movie.year}',
+                              style: const TextStyle(
+                                  color: AppTheme.textMuted, fontSize: 11),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          if (movie.rating > 0) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 1.5),
+                              decoration: BoxDecoration(
+                                color:
+                                    AppTheme.accentGold.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.star_rounded,
+                                      size: 11, color: AppTheme.accentGold),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    movie.rating.toStringAsFixed(1),
+                                    style: const TextStyle(
+                                      color: AppTheme.accentGold,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          if (movie.genres.isNotEmpty)
+                            Expanded(
+                              child: Text(
+                                movie.genres.take(2).join(', '),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    color: AppTheme.textMuted, fontSize: 11),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 6),
                     Text(
                       'Xem lúc ${_lastWatchedLabel(entry.lastWatchedAt)}'
-                      '${duration > 0 ? ' • ${_durationLabel(entry.watchedSeconds)} / ${_durationLabel(duration)}' : ''}',
+                      '${duration > 0 ? ' • ${_durationLabel(entry.watchedSeconds)} / ${_durationLabel(duration)}' : (movie.duration.isNotEmpty ? ' • ${movie.duration}' : '')}',
                       style: AppTheme.smallText,
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: entry.progress,
-                              minHeight: 6,
-                              color: AppTheme.primaryRed,
-                              backgroundColor: Colors.white12,
+                    if (entry.progress > 0) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: entry.progress,
+                                minHeight: 4,
+                                color: AppTheme.primaryRed,
+                                backgroundColor: Colors.white12,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text('$percent%', style: AppTheme.smallText),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
+                          const SizedBox(width: 8),
+                          Text('$percent%', style: AppTheme.smallText),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 6),
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton.icon(
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         onPressed: () => Navigator.pushNamed(
                           context,
                           AppRoutes.movieDetail,
                           arguments: movie,
                         ),
                         icon: const Icon(Icons.play_arrow_rounded, size: 16),
-                        label: const Text('Tiếp tục xem'),
+                        label: const Text('Xem chi tiết',
+                            style: TextStyle(fontSize: 12)),
                       ),
                     ),
                   ],

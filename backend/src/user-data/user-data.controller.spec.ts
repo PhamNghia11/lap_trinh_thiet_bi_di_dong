@@ -7,11 +7,13 @@ describe('UserDataController favorites', () => {
   const findUnique = jest.fn();
   const findMany = jest.fn();
   const upsertReview = jest.fn();
+  const findManyHistory = jest.fn();
   const deleteUser = jest.fn();
   const movieDetail = jest.fn();
   const prisma = {
     favorite: { findUnique, findMany },
     review: { upsert: upsertReview },
+    watchHistory: { findMany: findManyHistory },
     user: { delete: deleteUser },
   } as unknown as PrismaService;
   const tmdb = { detail: movieDetail } as unknown as TmdbService;
@@ -59,6 +61,20 @@ describe('UserDataController favorites', () => {
       {
         userId: user.id,
         tmdbMovieId: 42,
+        movie: { id: 42, title: 'Dune' },
+      },
+    ]);
+  });
+
+  it('returns watch history rows with movie metadata', async () => {
+    findManyHistory.mockResolvedValueOnce([{ userId: user.id, tmdbMovieId: 42, watchedSeconds: 120 }]);
+    movieDetail.mockResolvedValueOnce({ id: 42, title: 'Dune' });
+
+    await expect(controller.history(user)).resolves.toEqual([
+      {
+        userId: user.id,
+        tmdbMovieId: 42,
+        watchedSeconds: 120,
         movie: { id: 42, title: 'Dune' },
       },
     ]);

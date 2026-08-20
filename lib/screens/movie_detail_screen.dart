@@ -117,6 +117,9 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
           _relatedMovies = related;
         });
         updateMovieSeoMetadata(_currentMovie);
+        if (AppSession.instance.isAuthenticated) {
+          _userData.saveHistory(detail.id);
+        }
       }
     } catch (_) {
       // Giữ dữ liệu hiện tại khi kết nối tạm thời không khả dụng.
