@@ -67,7 +67,9 @@ describe('UserDataController favorites', () => {
   });
 
   it('returns watch history rows with movie metadata', async () => {
-    findManyHistory.mockResolvedValueOnce([{ userId: user.id, tmdbMovieId: 42, watchedSeconds: 120 }]);
+    findManyHistory.mockResolvedValueOnce([
+      { userId: user.id, tmdbMovieId: 42, watchedSeconds: 120 },
+    ]);
     movieDetail.mockResolvedValueOnce({ id: 42, title: 'Dune' });
 
     await expect(controller.history(user)).resolves.toEqual([
