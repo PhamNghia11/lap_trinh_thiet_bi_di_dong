@@ -217,11 +217,46 @@ class _SearchScreenState extends State<SearchScreen> {
                     style: const TextStyle(color: Colors.redAccent))),
           Expanded(
             child: _results.isEmpty && !_loading
-                ? const Center(
-                    child: Text(
-                        'Không tìm thấy phim phù hợp. Hãy thử nới bộ lọc.',
-                        style: AppTheme.bodyText,
-                        textAlign: TextAlign.center))
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.search_off_rounded,
+                              size: 56, color: AppTheme.textMuted),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Không tìm thấy phim phù hợp',
+                            style: AppTheme.headingSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Hãy thử tìm với từ khóa khác hoặc thiết lập lại bộ lọc.',
+                            style: AppTheme.smallText,
+                            textAlign: TextAlign.center,
+                          ),
+                          if (_filter.isActive) ...[
+                            const SizedBox(height: 16),
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                setState(() => _filter = const MovieFilter());
+                                UiStateStore.instance.setJson(
+                                  'search.filter',
+                                  const MovieFilter().toJson(),
+                                );
+                                _runSearch();
+                              },
+                              icon: const Icon(Icons.clear_all_rounded,
+                                  size: 16, color: AppTheme.primaryRed),
+                              label: const Text('Đặt lại bộ lọc',
+                                  style: TextStyle(color: AppTheme.primaryRed)),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  )
                 : ListView.separated(
                     controller: _scrollController,
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 90),

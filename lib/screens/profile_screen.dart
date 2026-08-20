@@ -535,7 +535,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           '${(_session.user?['_count'] as Map<String, dynamic>?)?['history'] ?? 0}',
                       label: 'Đã xem',
                       onTap: () =>
-                          Navigator.pushNamed(context, AppRoutes.history),
+                          Navigator.pushNamed(context, AppRoutes.history)
+                              .then((_) {
+                        _session.refreshProfile();
+                        _loadRecentActivities();
+                      }),
                     ),
                   ),
                   Container(height: 32, width: 1, color: Colors.white12),
@@ -545,7 +549,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           '${(_session.user?['_count'] as Map<String, dynamic>?)?['favorites'] ?? 0}',
                       label: 'Yêu thích',
                       onTap: () =>
-                          Navigator.pushNamed(context, AppRoutes.favorites),
+                          Navigator.pushNamed(context, AppRoutes.favorites)
+                              .then((_) {
+                        _session.refreshProfile();
+                        _loadRecentActivities();
+                      }),
                     ),
                   ),
                   Container(height: 32, width: 1, color: Colors.white12),
@@ -555,7 +563,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           '${(_session.user?['_count'] as Map<String, dynamic>?)?['reviews'] ?? 0}',
                       label: 'Đánh giá',
                       onTap: () =>
-                          Navigator.pushNamed(context, AppRoutes.myReviews),
+                          Navigator.pushNamed(context, AppRoutes.myReviews)
+                              .then((_) {
+                        _session.refreshProfile();
+                        _loadRecentActivities();
+                      }),
                     ),
                   ),
                 ],
@@ -655,8 +667,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     icon: Icons.history_rounded,
                     iconColor: AppTheme.textMuted,
                     title: 'Lịch sử xem phim',
-                    onTap: () =>
-                        Navigator.pushNamed(context, AppRoutes.history),
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.history)
+                        .then((_) {
+                      _session.refreshProfile();
+                      _loadRecentActivities();
+                    }),
                   ),
                   const Divider(color: Colors.white10, height: 1),
                   _buildNavTile(
@@ -664,7 +679,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     iconColor: AppTheme.primaryRed,
                     title: 'Phim đã lưu & Yêu thích',
                     onTap: () =>
-                        Navigator.pushNamed(context, AppRoutes.favorites),
+                        Navigator.pushNamed(context, AppRoutes.favorites)
+                            .then((_) {
+                      _session.refreshProfile();
+                      _loadRecentActivities();
+                    }),
                   ),
                   const Divider(color: Colors.white10, height: 1),
                   _buildNavTile(
@@ -672,7 +691,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     iconColor: AppTheme.accentGold,
                     title: 'Đánh giá của tôi',
                     onTap: () =>
-                        Navigator.pushNamed(context, AppRoutes.myReviews),
+                        Navigator.pushNamed(context, AppRoutes.myReviews)
+                            .then((_) {
+                      _session.refreshProfile();
+                      _loadRecentActivities();
+                    }),
                   ),
                   const Divider(color: Colors.white10, height: 1),
                   _buildNavTile(

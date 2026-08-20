@@ -450,7 +450,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           context,
           AppRoutes.movieDetail,
           arguments: movie,
-        ),
+        ).then((_) => _load()),
         borderRadius: BorderRadius.circular(AppTheme.radiusXl),
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
@@ -624,7 +624,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           context,
                           AppRoutes.movieDetail,
                           arguments: movie,
-                        ),
+                        ).then((_) => _load()),
                         icon: const Icon(Icons.play_arrow_rounded, size: 16),
                         label: const Text('Xem chi tiết',
                             style: TextStyle(fontSize: 12)),

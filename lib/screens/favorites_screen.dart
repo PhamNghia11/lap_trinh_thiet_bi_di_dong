@@ -425,7 +425,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                 context,
                                 AppRoutes.movieDetail,
                                 arguments: movie,
-                              ),
+                              ).then((_) => _load()),
                         child: Stack(
                           children: [
                             Positioned.fill(
