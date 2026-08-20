@@ -8,6 +8,7 @@ import 'package:flix_app/screens/history_screen.dart';
 import 'package:flix_app/screens/login_screen.dart';
 import 'package:flix_app/screens/movie_list_screen.dart';
 import 'package:flix_app/screens/social_auth_callback_screen.dart';
+import 'package:flix_app/screens/welcome_screen.dart';
 import 'package:flix_app/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -127,6 +128,27 @@ void main() {
       runtimeRoute?.settings.name,
       '/auth/callback?error=mobile-callback-failed',
     );
+  });
+
+  testWidgets('FlixApp intercepts runtime deep link when returning from OAuth',
+      (tester) async {
+    await tester.pumpWidget(
+      const FlixApp(),
+    );
+    await tester.pump();
+
+    // Verify initial launch screen
+    expect(find.byType(WelcomeScreen), findsOneWidget);
+
+    // Simulate platform deep link arrival while running
+    await tester.binding.handlePushRoute(
+      'flixapp://auth/callback?error=Google%20runtime%20error',
+    );
+    await tester.pumpAndSettle();
+
+    // Verify navigated to callback screen
+    expect(find.byType(SocialAuthCallbackScreen), findsOneWidget);
+    expect(find.text('Google runtime error'), findsOneWidget);
   });
 
   test('shared movie URL opens the matching movie detail route', () {

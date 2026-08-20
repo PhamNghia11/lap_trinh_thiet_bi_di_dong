@@ -145,10 +145,11 @@ class AppRoutes {
   static String? normalizeSocialAuthCallbackRoute(String routeName) {
     if (routeName.startsWith(socialAuthCallback)) return routeName;
     final uri = Uri.tryParse(routeName);
-    if (uri == null ||
-        uri.scheme != 'flixapp' ||
-        uri.host != 'auth' ||
-        uri.path != '/callback') {
+    if (uri == null || uri.scheme != 'flixapp' || uri.host != 'auth') {
+      return null;
+    }
+    final normalizedPath = uri.path.replaceAll(RegExp(r'/+$'), '');
+    if (normalizedPath != '/callback' && normalizedPath != 'callback') {
       return null;
     }
     return uri.hasQuery

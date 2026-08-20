@@ -95,21 +95,69 @@ export class AuthController {
         state,
       );
       returnTarget = session.returnTarget;
-      return response.redirect(
-        this.auth.socialReturnUrl(
-          {
-            accessToken: session.accessToken,
-            refreshToken: session.refreshToken,
-          },
-          returnTarget,
-        ),
+      const targetUrl = this.auth.socialReturnUrl(
+        {
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken,
+        },
+        returnTarget,
       );
+      if (returnTarget === 'mobile') {
+        return response.type('html').send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đang chuyển về FLIX...</title>
+  <style>
+    body { background: #0f0a0c; color: white; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; padding: 20px; box-sizing: border-box; }
+    .btn { display: inline-block; background: #e50914; color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; margin-top: 24px; font-size: 16px; }
+    .loader { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.15); border-top-color: #e50914; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="loader"></div>
+  <h2 style="margin-top: 24px; margin-bottom: 8px;">Đang chuyển về ứng dụng FLIX...</h2>
+  <p style="color: #888; font-size: 14px; margin: 0;">Nếu ứng dụng không tự mở, vui lòng nhấn nút bên dưới:</p>
+  <a class="btn" href="${targetUrl}">Mở ứng dụng FLIX</a>
+  <script>
+    setTimeout(function() { window.location.href = "${targetUrl}"; }, 100);
+  </script>
+</body>
+</html>`);
+      }
+      return response.redirect(targetUrl);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Đăng nhập không thành công';
-      return response.redirect(
-        this.auth.socialReturnUrl({ error: message }, returnTarget),
+      const errorUrl = this.auth.socialReturnUrl(
+        { error: message },
+        returnTarget,
       );
+      if (returnTarget === 'mobile') {
+        return response.type('html').send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lỗi đăng nhập FLIX</title>
+  <style>
+    body { background: #0f0a0c; color: white; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; padding: 20px; box-sizing: border-box; }
+    .btn { display: inline-block; background: #333; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; margin-top: 20px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h2 style="color: #e50914;">Đăng nhập không thành công</h2>
+  <p style="color: #aaa;">${message}</p>
+  <a class="btn" href="${errorUrl}">Quay lại ứng dụng FLIX</a>
+  <script>
+    setTimeout(function() { window.location.href = "${errorUrl}"; }, 100);
+  </script>
+</body>
+</html>`);
+      }
+      return response.redirect(errorUrl);
     }
   }
 

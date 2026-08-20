@@ -163,21 +163,38 @@ class FlixApp extends StatefulWidget {
   State<FlixApp> createState() => _FlixAppState();
 }
 
-class _FlixAppState extends State<FlixApp> {
+class _FlixAppState extends State<FlixApp> with WidgetsBindingObserver {
   final _navigatorKey = GlobalKey<NavigatorState>();
   final _messengerKey = GlobalKey<ScaffoldMessengerState>();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     AppSession.instance.addListener(_handleSessionChange);
     _handleSessionChange();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     AppSession.instance.removeListener(_handleSessionChange);
     super.dispose();
+  }
+
+  @override
+  Future<bool> didPushRouteInformation(
+      RouteInformation routeInformation) async {
+    final path = routeInformation.uri.toString();
+    final callback = AppRoutes.normalizeSocialAuthCallbackRoute(path);
+    if (callback != null) {
+      _navigatorKey.currentState?.pushNamedAndRemoveUntil(
+        callback,
+        (_) => false,
+      );
+      return true;
+    }
+    return super.didPushRouteInformation(routeInformation);
   }
 
   void _handleSessionChange() {
