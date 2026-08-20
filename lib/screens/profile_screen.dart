@@ -2,13 +2,37 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../core/api_client.dart';
 import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../core/app_session.dart';
 import '../core/ui_state_store.dart';
+import '../data/tmdb_repository.dart';
+import '../data/user_data_repository.dart';
 import '../widgets/flix_network_image.dart';
 import '../widgets/profile_media_editor.dart';
+
+class _RecentActivityData {
+  final String? lastMovieTitle;
+  final String? lastWatchedTime;
+  final String? lastFavoriteTitle;
+  final String? lastReviewMovieTitle;
+  final int? lastReviewRating;
+
+  const _RecentActivityData({
+    this.lastMovieTitle,
+    this.lastWatchedTime,
+    this.lastFavoriteTitle,
+    this.lastReviewMovieTitle,
+    this.lastReviewRating,
+  });
+
+  bool get isEmpty =>
+      lastMovieTitle == null &&
+      lastFavoriteTitle == null &&
+      lastReviewMovieTitle == null;
+}
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -20,11 +44,90 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final _session = AppSession.instance;
   final _scrollController = PersistentScrollController('profile.scroll');
+  _RecentActivityData? _recentActivities;
+  bool _loadingActivities = false;
 
   String get _memberSince {
     final createdAt = _session.user?['createdAt'] as String?;
     return DateTime.tryParse(createdAt ?? '')?.year.toString() ??
         DateTime.now().year.toString();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecentActivities();
+  }
+
+  Future<void> _loadRecentActivities() async {
+    if (!_session.isAuthenticated) return;
+    setState(() => _loadingActivities = true);
+    try {
+      final userData = UserDataRepository();
+      final tmdb = TmdbRepository();
+
+      String? lastMovieTitle;
+      String? lastWatchedTime;
+      String? lastFavoriteTitle;
+      String? lastReviewMovieTitle;
+      int? lastReviewRating;
+
+      try {
+        final historyRows = await userData.history();
+        if (historyRows.isNotEmpty) {
+          final first = historyRows.first;
+          final movieId = '${first['tmdbMovieId']}';
+          final movie = await tmdb.detail(movieId);
+          lastMovieTitle = movie.title;
+          final lastWatchedAt =
+              DateTime.tryParse('${first['lastWatchedAt'] ?? ''}')?.toLocal();
+          if (lastWatchedAt != null) {
+            final diff = DateTime.now().difference(lastWatchedAt);
+            if (diff.inMinutes < 60) {
+              lastWatchedTime = '${diff.inMinutes.clamp(1, 60)} phút trước';
+            } else if (diff.inHours < 24) {
+              lastWatchedTime = '${diff.inHours} giờ trước';
+            } else {
+              lastWatchedTime = '${diff.inDays} ngày trước';
+            }
+          }
+        }
+      } catch (_) {}
+
+      try {
+        final favs = await userData.favorites();
+        if (favs.isNotEmpty) {
+          lastFavoriteTitle = favs.first.title;
+        }
+      } catch (_) {}
+
+      try {
+        final reviewsData =
+            await ApiClient.instance.get('/me/reviews', authenticated: true);
+        if (reviewsData is List && reviewsData.isNotEmpty) {
+          final first = Map<String, dynamic>.from(reviewsData.first as Map);
+          final movie = first['movie'] as Map?;
+          lastReviewMovieTitle =
+              movie?['title'] as String? ?? 'Phim #${first['tmdbMovieId']}';
+          lastReviewRating = first['rating'] as int?;
+        }
+      } catch (_) {}
+
+      if (mounted) {
+        setState(() {
+          _recentActivities = _RecentActivityData(
+            lastMovieTitle: lastMovieTitle,
+            lastWatchedTime: lastWatchedTime,
+            lastFavoriteTitle: lastFavoriteTitle,
+            lastReviewMovieTitle: lastReviewMovieTitle,
+            lastReviewRating: lastReviewRating,
+          );
+          _loadingActivities = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingActivities = false);
+    }
   }
 
   @override
@@ -608,51 +711,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 28),
 
               // ─── Phần Hoạt Động Gần Đây (Timeline) ────────────────
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'HOẠT ĐỘNG GẦN ĐÂY',
-                  style: TextStyle(
-                    color: AppTheme.textMuted,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
+              Row(
+                children: [
+                  const Text(
+                    'HOẠT ĐỘNG GẦN ĐÂY',
+                    style: TextStyle(
+                      color: AppTheme.textMuted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
                   ),
-                ),
+                  const Spacer(),
+                  if (_loadingActivities)
+                    const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppTheme.primaryRed,
+                      ),
+                    )
+                  else
+                    InkWell(
+                      onTap: _loadRecentActivities,
+                      borderRadius: BorderRadius.circular(4),
+                      child: const Padding(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        child: Text('Làm mới',
+                            style: TextStyle(
+                                color: AppTheme.primaryRed, fontSize: 12)),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardBg.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                  border: Border.all(color: Colors.white10),
-                ),
-                child: Column(
-                  children: [
-                    _buildTimelineItem(
-                      icon: Icons.play_circle_fill_rounded,
-                      iconColor: AppTheme.primaryRed,
-                      text: 'Lịch sử xem phim sẽ hiển thị tại đây',
-                      time: 'Đồng bộ từ máy chủ',
-                    ),
-                    const Divider(color: Colors.white10, height: 16),
-                    _buildTimelineItem(
-                      icon: Icons.star_rounded,
-                      iconColor: AppTheme.accentGold,
-                      text: 'Đánh giá của bạn được lưu trong tài khoản',
-                      time: 'Đồng bộ từ máy chủ',
-                    ),
-                    const Divider(color: Colors.white10, height: 16),
-                    _buildTimelineItem(
-                      icon: Icons.favorite_rounded,
-                      iconColor: AppTheme.primaryRed,
-                      text: 'Phim yêu thích được đồng bộ tự động',
-                      time: 'Đồng bộ từ máy chủ',
-                    ),
-                  ],
-                ),
-              ),
+              _buildRecentActivitiesSection(),
             ],
             const SizedBox(height: 32),
 
@@ -771,13 +866,126 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildRecentActivitiesSection() {
+    if (_loadingActivities) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        alignment: Alignment.center,
+        child: const SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+              strokeWidth: 2, color: AppTheme.primaryRed),
+        ),
+      );
+    }
+
+    final data = _recentActivities;
+    final hasAny = data != null && !data.isEmpty;
+
+    if (!hasAny) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBg.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.movie_filter_outlined,
+                size: 36, color: AppTheme.textMuted),
+            const SizedBox(height: 10),
+            const Text(
+              'Chưa có hoạt động nào',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Lịch sử xem, phim yêu thích và đánh giá của bạn sẽ xuất hiện tại đây khi trải nghiệm.',
+              textAlign: TextAlign.center,
+              style: AppTheme.smallText,
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppTheme.primaryRed, width: 1),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              ),
+              onPressed: () =>
+                  Navigator.pushReplacementNamed(context, AppRoutes.home),
+              icon: const Icon(Icons.explore_rounded,
+                  size: 16, color: AppTheme.primaryRed),
+              label: const Text('Khám phá phim ngay',
+                  style: TextStyle(color: AppTheme.primaryRed, fontSize: 12)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final items = <Widget>[];
+
+    if (data.lastMovieTitle != null) {
+      items.add(_buildTimelineItem(
+        icon: Icons.play_circle_fill_rounded,
+        iconColor: AppTheme.primaryRed,
+        text: 'Đã xem: ${data.lastMovieTitle}',
+        time: data.lastWatchedTime ?? 'Gần đây',
+        onTap: () => Navigator.pushNamed(context, AppRoutes.history),
+      ));
+    }
+
+    if (data.lastFavoriteTitle != null) {
+      if (items.isNotEmpty) {
+        items.add(const Divider(color: Colors.white10, height: 16));
+      }
+      items.add(_buildTimelineItem(
+        icon: Icons.favorite_rounded,
+        iconColor: AppTheme.primaryRed,
+        text: 'Đã thích: ${data.lastFavoriteTitle}',
+        time: 'Yêu thích',
+        onTap: () => Navigator.pushNamed(context, AppRoutes.favorites),
+      ));
+    }
+
+    if (data.lastReviewMovieTitle != null) {
+      if (items.isNotEmpty) {
+        items.add(const Divider(color: Colors.white10, height: 16));
+      }
+      items.add(_buildTimelineItem(
+        icon: Icons.star_rounded,
+        iconColor: AppTheme.accentGold,
+        text:
+            'Đánh giá: ${data.lastReviewMovieTitle} (${data.lastReviewRating ?? 5}★)',
+        time: 'Đã viết',
+        onTap: () => Navigator.pushNamed(context, AppRoutes.myReviews),
+      ));
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBg.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(children: items),
+    );
+  }
+
   Widget _buildTimelineItem({
     required IconData icon,
     required Color iconColor,
     required String text,
     required String time,
+    VoidCallback? onTap,
   }) {
-    return Row(
+    final row = Row(
       children: [
         Icon(icon, color: iconColor, size: 18),
         const SizedBox(width: 10),
@@ -785,8 +993,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Text(text,
               style: const TextStyle(color: Colors.white, fontSize: 13)),
         ),
+        const SizedBox(width: 8),
         Text(time, style: AppTheme.smallText),
+        if (onTap != null) ...[
+          const SizedBox(width: 4),
+          const Icon(Icons.chevron_right_rounded,
+              color: AppTheme.textMuted, size: 16),
+        ],
       ],
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: row,
+        ),
+      );
+    }
+    return row;
   }
 }

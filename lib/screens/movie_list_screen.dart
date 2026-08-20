@@ -95,30 +95,45 @@ class _MovieListScreenState extends State<MovieListScreen> {
     super.dispose();
   }
 
+  void _goBack() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    navigator.pushReplacementNamed(AppRoutes.home);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.scaffoldBg,
-      appBar: AppBar(
-        backgroundColor: AppTheme.appBarBg,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppTheme.primaryRed),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          _title,
-          style:
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Tải lại',
-            onPressed: () => _load(reset: true),
-            icon: const Icon(Icons.refresh_rounded),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _goBack();
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.scaffoldBg,
+        appBar: AppBar(
+          backgroundColor: AppTheme.appBarBg,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppTheme.primaryRed),
+            onPressed: _goBack,
           ),
-        ],
+          title: Text(
+            _title,
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          actions: [
+            IconButton(
+              tooltip: 'Tải lại',
+              onPressed: () => _load(reset: true),
+              icon: const Icon(Icons.refresh_rounded),
+            ),
+          ],
+        ),
+        body: FlixResponsiveContent(maxWidth: 920, child: _buildBody()),
       ),
-      body: FlixResponsiveContent(maxWidth: 920, child: _buildBody()),
     );
   }
 

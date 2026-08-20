@@ -195,7 +195,18 @@ class _ReviewScreenState extends State<ReviewScreen> {
     );
 
     await UiStateStore.instance.remove(_draftKey);
-    if (mounted) Navigator.pop(context);
+    if (!mounted) return;
+    _goBack();
+  }
+
+  void _goBack() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    navigator.pushReplacementNamed(AppRoutes.movieDetail,
+        arguments: _targetMovie);
   }
 
   @override
@@ -204,364 +215,374 @@ class _ReviewScreenState extends State<ReviewScreen> {
     final textLength = _reviewController.text.length;
     final isSubmitEnabled = _rating > 0 && !_isSubmitting;
 
-    return Scaffold(
-      backgroundColor: AppTheme.scaffoldBg,
-      resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppTheme.primaryRed),
-          onPressed: () => Navigator.pop(context),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _goBack();
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.scaffoldBg,
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppTheme.primaryRed),
+            onPressed: _goBack,
+          ),
+          title: const Text('Viết Đánh Giá Phim',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ),
-        title: const Text('Viết Đánh Giá Phim',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-      ),
-      body: SingleChildScrollView(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ─── Header Card Thông Tin Phim Đang Đánh Giá ──────────────
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.cardBg,
-                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                border: Border.all(color: Colors.white10),
-              ),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    child: FlixNetworkImage(
-                      movie.imageUrl,
-                      width: 55,
-                      height: 75,
-                      fit: BoxFit.cover,
+        body: SingleChildScrollView(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ─── Header Card Thông Tin Phim Đang Đánh Giá ──────────────
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardBg,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      child: FlixNetworkImage(
+                        movie.imageUrl,
+                        width: 55,
+                        height: 75,
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            movie.title,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${movie.year} • ${movie.genreText}',
+                            style: AppTheme.smallText,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              const Icon(Icons.star_rounded,
+                                  color: AppTheme.accentGold, size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                movie.ratingText,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // ─── Phần Chấm Sao Chuyển Động & Nhãn Cảm Xúc ────────────
+              const Text('Đánh giá của bạn', style: AppTheme.headingSmall),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardBg.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        final starIndex = index + 1;
+                        final isSelected = starIndex <= _rating;
+
+                        return Semantics(
+                          label: '$starIndex sao',
+                          button: true,
+                          selected: isSelected,
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _rating = starIndex;
+                              });
+                              _saveDraft();
+                            },
+                            child: AnimatedScale(
+                              duration: const Duration(milliseconds: 200),
+                              scale: isSelected ? 1.2 : 1.0,
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 4),
+                                child: Icon(
+                                  isSelected
+                                      ? Icons.star_rounded
+                                      : Icons.star_border_rounded,
+                                  color: isSelected
+                                      ? AppTheme.accentGold
+                                      : AppTheme.textMuted,
+                                  size: 40,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Nhãn cảm xúc + Số điểm hiển thị
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          movie.title,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          _getRatingLabel(_rating),
+                          style: TextStyle(
+                            color: _rating > 0
+                                ? AppTheme.accentGold
+                                : AppTheme.textMuted,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${movie.year} • ${movie.genreText}',
-                          style: AppTheme.smallText,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            const Icon(Icons.star_rounded,
-                                color: AppTheme.accentGold, size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              movie.ratingText,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
+                        if (_rating > 0) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            '($_rating.0 / 5)',
+                            style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500),
+                          ),
+                        ],
                       ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // ─── Phần Chip Cảm Nhận Nhanh (Quick Tags) ────────────────
+              const Text('Cảm nhận nhanh', style: AppTheme.headingSmall),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _quickTags.map((tag) {
+                  final selected = _selectedQuickTags.contains(tag);
+                  return FilterChip(
+                    label: Text(tag),
+                    selected: selected,
+                    selectedColor: AppTheme.primaryRed,
+                    backgroundColor: AppTheme.cardBg,
+                    side: BorderSide(
+                        color: selected ? AppTheme.primaryRed : Colors.white12),
+                    labelStyle: TextStyle(
+                      color: selected ? Colors.white : AppTheme.textLight,
+                      fontSize: 12,
+                      fontWeight:
+                          selected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    onSelected: (val) => _toggleQuickTag(tag),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+
+              // ─── Phần Ô Nhập Viết Đánh Giá Nâng Cấp ────────────────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Nội dung đánh giá', style: AppTheme.headingSmall),
+                  Text(
+                    '$textLength / 500',
+                    style: TextStyle(
+                      color: textLength > 450
+                          ? AppTheme.primaryRed
+                          : AppTheme.textMuted,
+                      fontSize: 12,
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
-
-            // ─── Phần Chấm Sao Chuyển Động & Nhãn Cảm Xúc ────────────
-            const Text('Đánh giá của bạn', style: AppTheme.headingSmall),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.cardBg.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                border: Border.all(color: Colors.white10),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (index) {
-                      final starIndex = index + 1;
-                      final isSelected = starIndex <= _rating;
-
-                      return Semantics(
-                        label: '$starIndex sao',
-                        button: true,
-                        selected: isSelected,
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _rating = starIndex;
-                            });
-                            _saveDraft();
-                          },
-                          child: AnimatedScale(
-                            duration: const Duration(milliseconds: 200),
-                            scale: isSelected ? 1.2 : 1.0,
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 4),
-                              child: Icon(
-                                isSelected
-                                    ? Icons.star_rounded
-                                    : Icons.star_border_rounded,
-                                color: isSelected
-                                    ? AppTheme.accentGold
-                                    : AppTheme.textMuted,
-                                size: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _reviewController,
+                maxLines: 5,
+                maxLength: 500,
+                buildCounter: (context,
+                        {required currentLength,
+                        required isFocused,
+                        maxLength}) =>
+                    const SizedBox.shrink(),
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText:
+                      'Chia sẻ cảm nghĩ của bạn về diễn xuất, kịch bản, âm nhạc...',
+                  hintStyle:
+                      const TextStyle(color: Color(0x80E9BCB6), fontSize: 13),
+                  filled: true,
+                  fillColor: AppTheme.cardBg,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                    borderSide: BorderSide.none,
                   ),
-                  const SizedBox(height: 10),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                    borderSide: const BorderSide(
+                        color: AppTheme.primaryRed, width: 1.5),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
 
-                  // Nhãn cảm xúc + Số điểm hiển thị
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _getRatingLabel(_rating),
-                        style: TextStyle(
-                          color: _rating > 0
+              // Nút đính kèm ảnh placeholder + Checkbox Spoiler
+              Row(
+                children: [
+                  OutlinedButton.icon(
+                    style: AppTheme.outlinedButtonStyle(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8)),
+                    onPressed: () async {
+                      if (_attachedImageUrl != null) {
+                        setState(() => _attachedImageUrl = null);
+                        _saveDraft();
+                        return;
+                      }
+                      final imageUrl = await ProfileMediaEditor.pickAndEdit(
+                        context,
+                        isCover: true,
+                        mediaLabel: 'ảnh đánh giá',
+                      );
+                      if (!mounted || imageUrl == null) return;
+                      setState(() => _attachedImageUrl = imageUrl);
+                      _saveDraft();
+                    },
+                    icon: Icon(
+                      _attachedImageUrl != null
+                          ? Icons.image_rounded
+                          : Icons.add_a_photo_outlined,
+                      color: _attachedImageUrl != null
+                          ? AppTheme.accentGold
+                          : AppTheme.textMuted,
+                      size: 18,
+                    ),
+                    label: Text(
+                      _attachedImageUrl != null
+                          ? 'Đã chọn ảnh'
+                          : 'Đính kèm ảnh',
+                      style: TextStyle(
+                          color: _attachedImageUrl != null
                               ? AppTheme.accentGold
                               : AppTheme.textMuted,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
+                          fontSize: 12),
+                    ),
+                  ),
+                  const Spacer(),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _hasSpoiler,
+                        activeColor: AppTheme.primaryRed,
+                        onChanged: (val) {
+                          setState(() {
+                            _hasSpoiler = val ?? false;
+                          });
+                          _saveDraft();
+                        },
                       ),
-                      if (_rating > 0) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          '($_rating.0 / 5)',
-                          style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500),
-                        ),
-                      ],
+                      const Text('Tiết lộ nội dung (Spoiler)',
+                          style: TextStyle(
+                              color: AppTheme.textMuted, fontSize: 12)),
                     ],
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
-
-            // ─── Phần Chip Cảm Nhận Nhanh (Quick Tags) ────────────────
-            const Text('Cảm nhận nhanh', style: AppTheme.headingSmall),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _quickTags.map((tag) {
-                final selected = _selectedQuickTags.contains(tag);
-                return FilterChip(
-                  label: Text(tag),
-                  selected: selected,
-                  selectedColor: AppTheme.primaryRed,
-                  backgroundColor: AppTheme.cardBg,
-                  side: BorderSide(
-                      color: selected ? AppTheme.primaryRed : Colors.white12),
-                  labelStyle: TextStyle(
-                    color: selected ? Colors.white : AppTheme.textLight,
-                    fontSize: 12,
-                    fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                  onSelected: (val) => _toggleQuickTag(tag),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 24),
-
-            // ─── Phần Ô Nhập Viết Đánh Giá Nâng Cấp ────────────────────
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Nội dung đánh giá', style: AppTheme.headingSmall),
-                Text(
-                  '$textLength / 500',
-                  style: TextStyle(
-                    color: textLength > 450
-                        ? AppTheme.primaryRed
-                        : AppTheme.textMuted,
-                    fontSize: 12,
+              if (_attachedImageUrl != null) ...[
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  child: FlixNetworkImage(
+                    _attachedImageUrl!,
+                    width: double.infinity,
+                    height: 160,
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _reviewController,
-              maxLines: 5,
-              maxLength: 500,
-              buildCounter: (context,
-                      {required currentLength,
-                      required isFocused,
-                      maxLength}) =>
-                  const SizedBox.shrink(),
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              decoration: InputDecoration(
-                hintText:
-                    'Chia sẻ cảm nghĩ của bạn về diễn xuất, kịch bản, âm nhạc...',
-                hintStyle:
-                    const TextStyle(color: Color(0x80E9BCB6), fontSize: 13),
-                filled: true,
-                fillColor: AppTheme.cardBg,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                  borderSide:
-                      const BorderSide(color: AppTheme.primaryRed, width: 1.5),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 28),
 
-            // Nút đính kèm ảnh placeholder + Checkbox Spoiler
-            Row(
-              children: [
-                OutlinedButton.icon(
-                  style: AppTheme.outlinedButtonStyle(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8)),
-                  onPressed: () async {
-                    if (_attachedImageUrl != null) {
-                      setState(() => _attachedImageUrl = null);
-                      _saveDraft();
-                      return;
-                    }
-                    final imageUrl = await ProfileMediaEditor.pickAndEdit(
-                      context,
-                      isCover: true,
-                      mediaLabel: 'ảnh đánh giá',
-                    );
-                    if (!mounted || imageUrl == null) return;
-                    setState(() => _attachedImageUrl = imageUrl);
-                    _saveDraft();
-                  },
-                  icon: Icon(
-                    _attachedImageUrl != null
-                        ? Icons.image_rounded
-                        : Icons.add_a_photo_outlined,
-                    color: _attachedImageUrl != null
-                        ? AppTheme.accentGold
-                        : AppTheme.textMuted,
-                    size: 18,
+              // ─── Nút Gửi Đánh Giá với Trạng thái Disabled & Loading ─────
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        isSubmitEnabled ? AppTheme.primaryRed : Colors.white12,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusLg)),
+                    elevation: isSubmitEnabled ? 6 : 0,
                   ),
-                  label: Text(
-                    _attachedImageUrl != null ? 'Đã chọn ảnh' : 'Đính kèm ảnh',
-                    style: TextStyle(
-                        color: _attachedImageUrl != null
-                            ? AppTheme.accentGold
-                            : AppTheme.textMuted,
-                        fontSize: 12),
-                  ),
-                ),
-                const Spacer(),
-                Row(
-                  children: [
-                    Checkbox(
-                      value: _hasSpoiler,
-                      activeColor: AppTheme.primaryRed,
-                      onChanged: (val) {
-                        setState(() {
-                          _hasSpoiler = val ?? false;
-                        });
-                        _saveDraft();
-                      },
-                    ),
-                    const Text('Tiết lộ nội dung (Spoiler)',
-                        style:
-                            TextStyle(color: AppTheme.textMuted, fontSize: 12)),
-                  ],
-                ),
-              ],
-            ),
-            if (_attachedImageUrl != null) ...[
-              const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                child: FlixNetworkImage(
-                  _attachedImageUrl!,
-                  width: double.infinity,
-                  height: 160,
+                  onPressed: isSubmitEnabled ? _submitReview : null,
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          'Gửi Đánh Giá',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                isSubmitEnabled ? Colors.white : Colors.white38,
+                          ),
+                        ),
                 ),
               ),
+              const SizedBox(height: 36),
+
+              // ─── Đánh Giá Từ Người Dùng Khác (Review Mẫu) ───────────────
+              const Text('Đánh giá từ người xem khác',
+                  style: AppTheme.headingSmall),
+              const SizedBox(height: 12),
+              Column(
+                children: movie.reviews
+                    .map((review) => UserReviewCard(review: review))
+                    .toList(),
+              ),
+              const SizedBox(height: 30),
             ],
-            const SizedBox(height: 28),
-
-            // ─── Nút Gửi Đánh Giá với Trạng thái Disabled & Loading ─────
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      isSubmitEnabled ? AppTheme.primaryRed : Colors.white12,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusLg)),
-                  elevation: isSubmitEnabled ? 6 : 0,
-                ),
-                onPressed: isSubmitEnabled ? _submitReview : null,
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : Text(
-                        'Gửi Đánh Giá',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color:
-                              isSubmitEnabled ? Colors.white : Colors.white38,
-                        ),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 36),
-
-            // ─── Đánh Giá Từ Người Dùng Khác (Review Mẫu) ───────────────
-            const Text('Đánh giá từ người xem khác',
-                style: AppTheme.headingSmall),
-            const SizedBox(height: 12),
-            Column(
-              children: movie.reviews
-                  .map((review) => UserReviewCard(review: review))
-                  .toList(),
-            ),
-            const SizedBox(height: 30),
-          ],
+          ),
         ),
       ),
     );

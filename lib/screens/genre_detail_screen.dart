@@ -210,99 +210,116 @@ class _GenreDetailScreenState extends State<GenreDetailScreen> {
     await _load(reset: true);
   }
 
+  void _goBack() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    navigator.pushReplacementNamed(AppRoutes.home);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.scaffoldBg,
-      appBar: AppBar(
-        backgroundColor: AppTheme.appBarBg,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppTheme.primaryRed),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(widget.genreTitle,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold)),
-        actions: [
-          IconButton(
-            tooltip: _gridView ? 'Chế độ Danh sách' : 'Chế độ Lưới',
-            onPressed: () {
-              setState(() => _gridView = !_gridView);
-              UiStateStore.instance.setBool('$_stateKey.grid', _gridView);
-            },
-            icon: Icon(
-                _gridView ? Icons.view_list_rounded : Icons.grid_view_rounded),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _goBack();
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.scaffoldBg,
+        appBar: AppBar(
+          backgroundColor: AppTheme.appBarBg,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppTheme.primaryRed),
+            onPressed: _goBack,
           ),
-          IconButton(
-            tooltip: 'Tìm kiếm',
-            onPressed: () => Navigator.pushNamed(context, AppRoutes.search),
-            icon: const Icon(Icons.search, color: AppTheme.textMuted),
-          ),
-        ],
-      ),
-      body: FlixResponsiveContent(
-        maxWidth: 1180,
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-              color: AppTheme.cardBg.withValues(alpha: 0.5),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Text('${_movies.length} phim đã tải',
-                          style: AppTheme.smallText),
-                      const Spacer(),
-                      TextButton.icon(
-                        onPressed: _openFilters,
-                        icon: const Icon(Icons.tune_rounded, size: 18),
-                        label: Text(
-                          _year == null && _minRating == 0
-                              ? 'Bộ lọc'
-                              : 'Đang lọc',
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: 36,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: _sortOptions.keys.map((option) {
-                        final selected = _sortLabel == option;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text(option),
-                            selected: selected,
-                            selectedColor: AppTheme.primaryRed,
-                            backgroundColor: AppTheme.cardBg,
-                            visualDensity: VisualDensity.compact,
-                            labelStyle: TextStyle(
-                              color:
-                                  selected ? Colors.white : AppTheme.textMuted,
-                              fontSize: 12,
-                            ),
-                            onSelected: (_) {
-                              if (selected) return;
-                              setState(() => _sortLabel = option);
-                              UiStateStore.instance
-                                  .setString('$_stateKey.sort', option);
-                              _load(reset: true);
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ],
-              ),
+          title: Text(widget.genreTitle,
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold)),
+          actions: [
+            IconButton(
+              tooltip: _gridView ? 'Chế độ Danh sách' : 'Chế độ Lưới',
+              onPressed: () {
+                setState(() => _gridView = !_gridView);
+                UiStateStore.instance.setBool('$_stateKey.grid', _gridView);
+              },
+              icon: Icon(_gridView
+                  ? Icons.view_list_rounded
+                  : Icons.grid_view_rounded),
             ),
-            Expanded(child: _buildContent()),
-            if (_loading && _movies.isNotEmpty)
-              const LinearProgressIndicator(color: AppTheme.primaryRed),
+            IconButton(
+              tooltip: 'Tìm kiếm',
+              onPressed: () => Navigator.pushNamed(context, AppRoutes.search),
+              icon: const Icon(Icons.search, color: AppTheme.textMuted),
+            ),
           ],
+        ),
+        body: FlixResponsiveContent(
+          maxWidth: 1180,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+                color: AppTheme.cardBg.withValues(alpha: 0.5),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Text('${_movies.length} phim đã tải',
+                            style: AppTheme.smallText),
+                        const Spacer(),
+                        TextButton.icon(
+                          onPressed: _openFilters,
+                          icon: const Icon(Icons.tune_rounded, size: 18),
+                          label: Text(
+                            _year == null && _minRating == 0
+                                ? 'Bộ lọc'
+                                : 'Đang lọc',
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      height: 36,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: _sortOptions.keys.map((option) {
+                          final selected = _sortLabel == option;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Text(option),
+                              selected: selected,
+                              selectedColor: AppTheme.primaryRed,
+                              backgroundColor: AppTheme.cardBg,
+                              visualDensity: VisualDensity.compact,
+                              labelStyle: TextStyle(
+                                color: selected
+                                    ? Colors.white
+                                    : AppTheme.textMuted,
+                                fontSize: 12,
+                              ),
+                              onSelected: (_) {
+                                if (selected) return;
+                                setState(() => _sortLabel = option);
+                                UiStateStore.instance
+                                    .setString('$_stateKey.sort', option);
+                                _load(reset: true);
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(child: _buildContent()),
+              if (_loading && _movies.isNotEmpty)
+                const LinearProgressIndicator(color: AppTheme.primaryRed),
+            ],
+          ),
         ),
       ),
     );

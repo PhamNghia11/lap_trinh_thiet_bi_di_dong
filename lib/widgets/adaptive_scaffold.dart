@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/app_session.dart';
 import '../routes/app_routes.dart';
@@ -36,7 +37,7 @@ class FlixResponsiveContent extends StatelessWidget {
   }
 }
 
-class FlixAdaptiveScaffold extends StatelessWidget {
+class FlixAdaptiveScaffold extends StatefulWidget {
   const FlixAdaptiveScaffold({
     super.key,
     required this.currentIndex,
@@ -55,49 +56,96 @@ class FlixAdaptiveScaffold extends StatelessWidget {
   final double contentMaxWidth;
 
   @override
-  Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.sizeOf(context).width >= flixDesktopBreakpoint;
-    if (!isDesktop) {
-      return Scaffold(
-        backgroundColor: AppTheme.scaffoldBg,
-        appBar: appBar,
-        body: body,
-        drawer: drawer,
-        bottomNavigationBar: FlixBottomNavBar(currentIndex: currentIndex),
-      );
+  State<FlixAdaptiveScaffold> createState() => _FlixAdaptiveScaffoldState();
+}
+
+class _FlixAdaptiveScaffoldState extends State<FlixAdaptiveScaffold> {
+  static DateTime? _lastBackPressTime;
+
+  void _onBackInvoked(bool didPop) {
+    if (didPop) return;
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    if (widget.currentIndex != 0) {
+      navigator.pushReplacementNamed(AppRoutes.home);
+      return;
     }
 
-    return Scaffold(
-      backgroundColor: AppTheme.scaffoldBg,
-      body: Row(
-        children: [
-          _DesktopNavigation(currentIndex: currentIndex),
-          const VerticalDivider(width: 1, thickness: 1, color: Colors.white10),
-          Expanded(
-            child: Column(
+    final now = DateTime.now();
+    if (_lastBackPressTime == null ||
+        now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+      _lastBackPressTime = now;
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nhấn lần nữa để thoát ứng dụng'),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    SystemNavigator.pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.sizeOf(context).width >= flixDesktopBreakpoint;
+    final scaffold = !isDesktop
+        ? Scaffold(
+            backgroundColor: AppTheme.scaffoldBg,
+            appBar: widget.appBar,
+            body: widget.body,
+            drawer: widget.drawer,
+            bottomNavigationBar:
+                FlixBottomNavBar(currentIndex: widget.currentIndex),
+          )
+        : Scaffold(
+            backgroundColor: AppTheme.scaffoldBg,
+            body: Row(
               children: [
-                if (desktopAppBar ?? appBar case final desktopBar?) desktopBar,
+                _DesktopNavigation(currentIndex: widget.currentIndex),
+                const VerticalDivider(
+                    width: 1, thickness: 1, color: Colors.white10),
                 Expanded(
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: contentMaxWidth),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: body,
+                  child: Column(
+                    children: [
+                      if (widget.desktopAppBar ?? widget.appBar
+                          case final desktopBar?)
+                        desktopBar,
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.topCenter,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                                maxWidth: widget.contentMaxWidth),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: double.infinity,
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 24),
+                                child: widget.body,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
+          );
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) => _onBackInvoked(didPop),
+      child: scaffold,
     );
   }
 }

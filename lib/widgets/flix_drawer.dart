@@ -18,7 +18,8 @@ class FlixDrawer extends StatelessWidget {
             UserAccountsDrawerHeader(
               decoration: const BoxDecoration(color: AppTheme.cardBg),
               accountName: Text(user?['fullName'] as String? ?? 'Khách FLIX'),
-              accountEmail: Text(user?['email'] as String? ?? 'Khám phá phim cùng FLIX'),
+              accountEmail:
+                  Text(user?['email'] as String? ?? 'Khám phá phim cùng FLIX'),
               currentAccountPicture: const CircleAvatar(
                 backgroundColor: AppTheme.primaryRed,
                 child: Icon(Icons.movie_filter_rounded, color: Colors.white),
@@ -26,17 +27,22 @@ class FlixDrawer extends StatelessWidget {
             ),
             _item(context, Icons.home_outlined, 'Trang chủ', AppRoutes.home),
             _item(context, Icons.search_rounded, 'Tìm kiếm', AppRoutes.search),
-            _item(context, Icons.favorite_border_rounded, 'Yêu thích', AppRoutes.favorites),
-            _item(context, Icons.history_rounded, 'Lịch sử xem', AppRoutes.history),
+            _item(context, Icons.favorite_border_rounded, 'Yêu thích',
+                AppRoutes.favorites),
+            _item(context, Icons.history_rounded, 'Lịch sử xem',
+                AppRoutes.history),
             const Divider(color: Colors.white12),
-            _item(context, Icons.person_outline_rounded, 'Trang cá nhân', AppRoutes.profile),
-            _item(context, Icons.settings_outlined, 'Cài đặt', AppRoutes.settings),
+            _item(context, Icons.person_outline_rounded, 'Trang cá nhân',
+                AppRoutes.profile),
+            _item(context, Icons.settings_outlined, 'Cài đặt',
+                AppRoutes.settings),
             const Spacer(),
             const Padding(
               padding: EdgeInsets.all(20),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('FLIX  •  1.0.0', style: TextStyle(color: AppTheme.textMuted, fontSize: 12)),
+                child: Text('FLIX  •  1.0.0',
+                    style: TextStyle(color: AppTheme.textMuted, fontSize: 12)),
               ),
             ),
           ],
@@ -45,7 +51,9 @@ class FlixDrawer extends StatelessWidget {
     );
   }
 
-  Widget _item(BuildContext context, IconData icon, String label, String route) => ListTile(
+  Widget _item(
+          BuildContext context, IconData icon, String label, String route) =>
+      ListTile(
         leading: Icon(icon, color: AppTheme.textMuted),
         title: Text(label, style: const TextStyle(color: Colors.white)),
         onTap: () {

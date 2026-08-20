@@ -158,170 +158,178 @@ class _TrailerScreenState extends State<TrailerScreen> {
     final backdrop =
         _movie.backdropUrl.isNotEmpty ? _movie.backdropUrl : _movie.imageUrl;
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppTheme.primaryRed),
-            )
-          : LayoutBuilder(
-              builder: (context, constraints) {
-                final maxPlayerHeight = constraints.maxHeight *
-                    (constraints.maxWidth > constraints.maxHeight
-                        ? 0.82
-                        : 0.58);
-                final minPlayerHeight =
-                    maxPlayerHeight < 240 ? maxPlayerHeight : 240.0;
-                final playerHeight = (constraints.maxWidth * 9 / 16)
-                    .clamp(minPlayerHeight, maxPlayerHeight);
-                return Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    FlixNetworkImage(backdrop, fit: BoxFit.cover),
-                    BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                      child: ColoredBox(
-                        color: Colors.black.withValues(alpha: 0.66),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _goBack();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: _loading
+            ? const Center(
+                child: CircularProgressIndicator(color: AppTheme.primaryRed),
+              )
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxPlayerHeight = constraints.maxHeight *
+                      (constraints.maxWidth > constraints.maxHeight
+                          ? 0.82
+                          : 0.58);
+                  final minPlayerHeight =
+                      maxPlayerHeight < 240 ? maxPlayerHeight : 240.0;
+                  final playerHeight = (constraints.maxWidth * 9 / 16)
+                      .clamp(minPlayerHeight, maxPlayerHeight);
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      FlixNetworkImage(backdrop, fit: BoxFit.cover),
+                      BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                        child: ColoredBox(
+                          color: Colors.black.withValues(alpha: 0.66),
+                        ),
                       ),
-                    ),
-                    SafeArea(
-                      bottom: false,
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            height: 56,
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  tooltip: 'Quay lại',
-                                  onPressed: _goBack,
-                                  icon: const Icon(Icons.arrow_back_rounded),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    _movie.title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                              ],
-                            ),
-                          ),
-                          SizedBox(
-                            width: double.infinity,
-                            height: playerHeight,
-                            child: trailerKey == null
-                                ? Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      FlixNetworkImage(backdrop,
-                                          fit: BoxFit.cover),
-                                      Container(color: Colors.black54),
-                                      const Icon(Icons.videocam_off_outlined,
-                                          color: AppTheme.textMuted, size: 54),
-                                    ],
-                                  )
-                                : EmbeddedYoutubePlayer(
-                                    key: ValueKey(trailerKey),
-                                    videoId: trailerKey,
-                                    autoPlay:
-                                        AppPreferences.instance.autoPlayTrailer,
-                                    quality: _youtubeQuality,
-                                    interactive: !_videoPickerOpen,
-                                  ),
-                          ),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              controller: _contentController,
-                              padding:
-                                  const EdgeInsets.fromLTRB(20, 22, 20, 32),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                      SafeArea(
+                        bottom: false,
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              height: 56,
+                              child: Row(
                                 children: [
-                                  Text(_selectedVideo?.name ?? _movie.title,
-                                      style: AppTheme.headingMedium),
-                                  if (_selectedVideo != null) ...[
-                                    const SizedBox(height: 4),
-                                    Text(_movie.title,
-                                        style: AppTheme.smallText),
-                                  ],
-                                  const SizedBox(height: 14),
-                                  _PlaybackSettings(
-                                    autoPlay:
-                                        AppPreferences.instance.autoPlayTrailer,
-                                    quality:
-                                        AppPreferences.instance.videoQuality,
+                                  IconButton(
+                                    tooltip: 'Quay lại',
+                                    onPressed: _goBack,
+                                    icon: const Icon(Icons.arrow_back_rounded),
                                   ),
-                                  if (AppPreferences.instance.autoPlayTrailer &&
-                                      trailerKey != null) ...[
-                                    const SizedBox(height: 14),
-                                    const Text(
-                                      'Trailer tự phát ở chế độ tắt tiếng. Chạm biểu tượng loa trong trình phát để bật âm thanh.',
-                                      style: AppTheme.smallText,
-                                    ),
-                                  ],
-                                  if (_error != null) ...[
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      _error!,
+                                  Expanded(
+                                    child: Text(
+                                      _movie.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
-                                          color: AppTheme.textMuted),
-                                    ),
-                                  ],
-                                  if (trailerKey != null) ...[
-                                    const SizedBox(height: 18),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: OutlinedButton.icon(
-                                        onPressed: _openOnYouTube,
-                                        icon: const Icon(Icons.open_in_new,
-                                            size: 18),
-                                        label: const Text('Mở trên YouTube'),
+                                        color: Colors.white,
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
-                                  ],
-                                  if (_relatedVideos.isNotEmpty) ...[
-                                    const SizedBox(height: 24),
-                                    Row(
-                                      children: [
-                                        const Expanded(
-                                          child: Text('Video liên quan',
-                                              style: AppTheme.headingSmall),
-                                        ),
-                                        if (_relatedVideos.length >
-                                            _relatedVideoLimit)
-                                          TextButton(
-                                            onPressed: _showAllVideos,
-                                            child: const Text('Xem tất cả'),
-                                          ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    for (final video in _relatedVideos
-                                        .take(_relatedVideoLimit))
-                                      _VideoOption(
-                                        video: video,
-                                        selected: false,
-                                        onTap: () => _selectVideo(video),
-                                      ),
-                                  ],
+                                  ),
+                                  const SizedBox(width: 12),
                                 ],
                               ),
                             ),
-                          ),
-                        ],
+                            SizedBox(
+                              width: double.infinity,
+                              height: playerHeight,
+                              child: trailerKey == null
+                                  ? Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        FlixNetworkImage(backdrop,
+                                            fit: BoxFit.cover),
+                                        Container(color: Colors.black54),
+                                        const Icon(Icons.videocam_off_outlined,
+                                            color: AppTheme.textMuted,
+                                            size: 54),
+                                      ],
+                                    )
+                                  : EmbeddedYoutubePlayer(
+                                      key: ValueKey(trailerKey),
+                                      videoId: trailerKey,
+                                      autoPlay: AppPreferences
+                                          .instance.autoPlayTrailer,
+                                      quality: _youtubeQuality,
+                                      interactive: !_videoPickerOpen,
+                                    ),
+                            ),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                controller: _contentController,
+                                padding:
+                                    const EdgeInsets.fromLTRB(20, 22, 20, 32),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(_selectedVideo?.name ?? _movie.title,
+                                        style: AppTheme.headingMedium),
+                                    if (_selectedVideo != null) ...[
+                                      const SizedBox(height: 4),
+                                      Text(_movie.title,
+                                          style: AppTheme.smallText),
+                                    ],
+                                    const SizedBox(height: 14),
+                                    _PlaybackSettings(
+                                      autoPlay: AppPreferences
+                                          .instance.autoPlayTrailer,
+                                      quality:
+                                          AppPreferences.instance.videoQuality,
+                                    ),
+                                    if (AppPreferences
+                                            .instance.autoPlayTrailer &&
+                                        trailerKey != null) ...[
+                                      const SizedBox(height: 14),
+                                      const Text(
+                                        'Trailer tự phát ở chế độ tắt tiếng. Chạm biểu tượng loa trong trình phát để bật âm thanh.',
+                                        style: AppTheme.smallText,
+                                      ),
+                                    ],
+                                    if (_error != null) ...[
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        _error!,
+                                        style: const TextStyle(
+                                            color: AppTheme.textMuted),
+                                      ),
+                                    ],
+                                    if (trailerKey != null) ...[
+                                      const SizedBox(height: 18),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: OutlinedButton.icon(
+                                          onPressed: _openOnYouTube,
+                                          icon: const Icon(Icons.open_in_new,
+                                              size: 18),
+                                          label: const Text('Mở trên YouTube'),
+                                        ),
+                                      ),
+                                    ],
+                                    if (_relatedVideos.isNotEmpty) ...[
+                                      const SizedBox(height: 24),
+                                      Row(
+                                        children: [
+                                          const Expanded(
+                                            child: Text('Video liên quan',
+                                                style: AppTheme.headingSmall),
+                                          ),
+                                          if (_relatedVideos.length >
+                                              _relatedVideoLimit)
+                                            TextButton(
+                                              onPressed: _showAllVideos,
+                                              child: const Text('Xem tất cả'),
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      for (final video in _relatedVideos
+                                          .take(_relatedVideoLimit))
+                                        _VideoOption(
+                                          video: video,
+                                          selected: false,
+                                          onTap: () => _selectVideo(video),
+                                        ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                    ],
+                  );
+                },
+              ),
+      ),
     );
   }
 }

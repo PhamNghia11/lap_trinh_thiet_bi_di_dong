@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/api_client.dart';
 import '../core/app_session.dart';
+import '../routes/app_routes.dart';
 import '../theme/app_theme.dart';
 import '../widgets/adaptive_scaffold.dart';
 
@@ -23,6 +24,15 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
         .toList();
   }
 
+  void _goBack() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    navigator.pushReplacementNamed(AppRoutes.profile);
+  }
+
   Future<void> _delete(String id) async {
     await ApiClient.instance.delete('/reviews/$id', authenticated: true);
     await AppSession.instance.refreshProfile();
@@ -34,74 +44,89 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.scaffoldBg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text('Đánh giá của tôi'),
-      ),
-      body: FlixResponsiveContent(
-        maxWidth: 900,
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _reviews,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(
-                child: TextButton.icon(
-                  onPressed: () => setState(() => _reviews = _load()),
-                  icon: const Icon(Icons.refresh),
-                  label: Text('Tải lại (${snapshot.error})'),
-                ),
-              );
-            }
-            final reviews = snapshot.data ?? const [];
-            if (reviews.isEmpty) {
-              return const Center(
-                child: Text('Bạn chưa viết đánh giá nào',
-                    style: AppTheme.mutedText),
-              );
-            }
-            return ListView.separated(
-              padding: const EdgeInsets.all(20),
-              itemCount: reviews.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final review = reviews[index];
-                final rating = review['rating'] as int? ?? 0;
-                final movie = review['movie'] as Map?;
-                final movieTitle = movie?['title'] as String? ??
-                    'Phim #${review['tmdbMovieId']}';
-                return Material(
-                  color: AppTheme.cardBg,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                  child: ListTile(
-                    title: Text(movieTitle,
-                        style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold)),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 6),
-                        Text('★' * rating,
-                            style: const TextStyle(color: AppTheme.accentGold)),
-                        Text(review['comment'] as String? ?? '',
-                            style: AppTheme.mutedText),
-                      ],
-                    ),
-                    trailing: IconButton(
-                      tooltip: 'Xóa đánh giá',
-                      onPressed: () => _delete(review['id'] as String),
-                      icon: const Icon(Icons.delete_outline,
-                          color: AppTheme.primaryRed),
-                    ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _goBack();
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.scaffoldBg,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppTheme.primaryRed),
+            onPressed: _goBack,
+          ),
+          title: const Text('Đánh giá của tôi',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
+        body: FlixResponsiveContent(
+          maxWidth: 900,
+          child: FutureBuilder<List<Map<String, dynamic>>>(
+            future: _reviews,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(
+                  child: TextButton.icon(
+                    onPressed: () => setState(() => _reviews = _load()),
+                    icon: const Icon(Icons.refresh),
+                    label: Text('Tải lại (${snapshot.error})'),
                   ),
                 );
-              },
-            );
-          },
+              }
+              final reviews = snapshot.data ?? const [];
+              if (reviews.isEmpty) {
+                return const Center(
+                  child: Text('Bạn chưa viết đánh giá nào',
+                      style: AppTheme.mutedText),
+                );
+              }
+              return ListView.separated(
+                padding: const EdgeInsets.all(20),
+                itemCount: reviews.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final review = reviews[index];
+                  final rating = review['rating'] as int? ?? 0;
+                  final movie = review['movie'] as Map?;
+                  final movieTitle = movie?['title'] as String? ??
+                      'Phim #${review['tmdbMovieId']}';
+                  return Material(
+                    color: AppTheme.cardBg,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                    child: ListTile(
+                      title: Text(movieTitle,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 6),
+                          Text('★' * rating,
+                              style:
+                                  const TextStyle(color: AppTheme.accentGold)),
+                          Text(review['comment'] as String? ?? '',
+                              style: AppTheme.mutedText),
+                        ],
+                      ),
+                      trailing: IconButton(
+                        tooltip: 'Xóa đánh giá',
+                        onPressed: () => _delete(review['id'] as String),
+                        icon: const Icon(Icons.delete_outline,
+                            color: AppTheme.primaryRed),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );
