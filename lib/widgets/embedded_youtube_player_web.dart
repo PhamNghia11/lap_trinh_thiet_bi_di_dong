@@ -32,13 +32,19 @@ class _EmbeddedYoutubePlayerState extends State<EmbeddedYoutubePlayer> {
     ui_web.platformViewRegistry.registerViewFactory(_viewType, (_) {
       final autoPlay = widget.autoPlay ? 1 : 0;
       final mute = widget.autoPlay ? 1 : 0;
+      final origin = Uri.encodeComponent(
+        web.window.location.origin.isNotEmpty
+            ? web.window.location.origin
+            : 'http://localhost',
+      );
       final iframe = web.HTMLIFrameElement()
-        ..src = 'https://www.youtube-nocookie.com/embed/${widget.videoId}'
+        ..src = 'https://www.youtube.com/embed/${widget.videoId}'
             '?autoplay=$autoPlay&mute=$mute&controls=1&playsinline=1&rel=0'
-            '&fs=1&enablejsapi=1&vq=${widget.quality}'
+            '&fs=1&enablejsapi=1&origin=$origin'
         ..title = 'Trailer YouTube'
         ..allow =
             'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
       iframe
         ..style.border = '0'
         ..style.display = 'block'
