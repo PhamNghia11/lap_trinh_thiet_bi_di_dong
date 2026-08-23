@@ -99,12 +99,10 @@ export class UserDataController {
         ),
       ),
     );
-    return Promise.all(
-      favorites.map((favorite) => ({
-        ...favorite,
-        movie: movies.get(favorite.tmdbMovieId),
-      })),
-    );
+    return favorites.map((favorite) => ({
+      ...favorite,
+      movie: movies.get(favorite.tmdbMovieId),
+    }));
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -172,9 +170,10 @@ export class UserDataController {
         ),
       ),
     );
-    return Promise.all(
-      history.map((item) => ({ ...item, movie: movies.get(item.tmdbMovieId) })),
-    );
+    return history.map((item) => ({
+      ...item,
+      movie: movies.get(item.tmdbMovieId),
+    }));
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -192,12 +191,10 @@ export class UserDataController {
         ),
       ),
     );
-    return Promise.all(
-      reviews.map((review) => ({
-        ...review,
-        movie: movies.get(review.tmdbMovieId),
-      })),
-    );
+    return reviews.map((review) => ({
+      ...review,
+      movie: movies.get(review.tmdbMovieId),
+    }));
   }
 
   @UseGuards(AuthGuard('jwt'))
