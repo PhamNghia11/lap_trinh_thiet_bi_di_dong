@@ -237,17 +237,26 @@ class AppRoutes {
     }
     switch (settings.name) {
       case movieDetail:
+        if (settings.arguments is! Movie) {
+          return onGenerateRoute(const RouteSettings(name: home));
+        }
         return MaterialPageRoute(
           settings: settings,
           builder: (_) =>
               MovieDetailScreen(movie: settings.arguments as Movie?),
         );
       case trailer:
+        if (settings.arguments is! Movie) {
+          return onGenerateRoute(const RouteSettings(name: home));
+        }
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => TrailerScreen(movie: settings.arguments as Movie?),
         );
       case review:
+        if (settings.arguments is! Movie) {
+          return onGenerateRoute(const RouteSettings(name: home));
+        }
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => ReviewScreen(movie: settings.arguments as Movie?),

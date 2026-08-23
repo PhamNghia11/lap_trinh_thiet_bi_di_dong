@@ -91,10 +91,18 @@ export class UserDataController {
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
     });
+    const movies = new Map(
+      await Promise.all(
+        [...new Set(favorites.map(({ tmdbMovieId }) => tmdbMovieId))].map(
+          async (movieId) =>
+            [movieId, await this.tmdb.detail(movieId)] as const,
+        ),
+      ),
+    );
     return Promise.all(
-      favorites.map(async (favorite) => ({
+      favorites.map((favorite) => ({
         ...favorite,
-        movie: await this.tmdb.detail(favorite.tmdbMovieId),
+        movie: movies.get(favorite.tmdbMovieId),
       })),
     );
   }
@@ -151,15 +159,21 @@ export class UserDataController {
       where: { userId: user.id },
       orderBy: { lastWatchedAt: 'desc' },
     });
+    const movies = new Map(
+      await Promise.all(
+        [...new Set(history.map(({ tmdbMovieId }) => tmdbMovieId))].map(
+          async (movieId) => {
+            try {
+              return [movieId, await this.tmdb.detail(movieId)] as const;
+            } catch {
+              return [movieId, null] as const;
+            }
+          },
+        ),
+      ),
+    );
     return Promise.all(
-      history.map(async (item) => {
-        try {
-          const movie = await this.tmdb.detail(item.tmdbMovieId);
-          return { ...item, movie };
-        } catch {
-          return { ...item, movie: null };
-        }
-      }),
+      history.map((item) => ({ ...item, movie: movies.get(item.tmdbMovieId) })),
     );
   }
 
@@ -170,10 +184,18 @@ export class UserDataController {
       where: { userId: user.id },
       orderBy: { updatedAt: 'desc' },
     });
+    const movies = new Map(
+      await Promise.all(
+        [...new Set(reviews.map(({ tmdbMovieId }) => tmdbMovieId))].map(
+          async (movieId) =>
+            [movieId, await this.tmdb.detail(movieId)] as const,
+        ),
+      ),
+    );
     return Promise.all(
-      reviews.map(async (review) => ({
+      reviews.map((review) => ({
         ...review,
-        movie: await this.tmdb.detail(review.tmdbMovieId),
+        movie: movies.get(review.tmdbMovieId),
       })),
     );
   }

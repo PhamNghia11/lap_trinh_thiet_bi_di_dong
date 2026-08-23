@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/app_preferences.dart';
-import '../data/mock_data.dart';
 import '../data/tmdb_repository.dart';
 import '../data/user_data_repository.dart';
 import '../models/movie_model.dart';
@@ -42,7 +41,8 @@ class _TrailerScreenState extends State<TrailerScreen> {
   @override
   void initState() {
     super.initState();
-    _movie = widget.movie ?? mockMovies.first;
+    assert(widget.movie != null, 'TrailerScreen requires a movie');
+    _movie = widget.movie!;
     final hasTrailer = _hasTrailer(_movie);
     _loading = !hasTrailer;
     if (hasTrailer) _saveHistoryOnce();

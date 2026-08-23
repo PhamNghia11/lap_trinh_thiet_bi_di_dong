@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../models/movie_model.dart';
-import '../data/mock_data.dart';
 import '../widgets/flix_network_image.dart';
 import '../widgets/profile_media_editor.dart';
 import '../data/user_data_repository.dart';
@@ -48,7 +47,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
   @override
   void initState() {
     super.initState();
-    _targetMovie = widget.movie ?? mockMovies.first;
+    assert(widget.movie != null, 'ReviewScreen requires a movie');
+    _targetMovie = widget.movie!;
     _draftKey = 'review.${_targetMovie.id}';
     _scrollController = PersistentScrollController('$_draftKey.scroll');
     final draft = UiStateStore.instance.json(_draftKey);

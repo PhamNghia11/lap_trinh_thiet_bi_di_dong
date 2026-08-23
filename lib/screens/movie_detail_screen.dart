@@ -9,7 +9,6 @@ import '../theme/app_theme.dart';
 import '../routes/app_routes.dart';
 import 'home_screen.dart';
 import '../models/movie_model.dart';
-import '../data/mock_data.dart';
 import '../widgets/movie_card.dart';
 import '../widgets/movie_note_sheet.dart';
 import '../widgets/custom_button.dart';
@@ -52,7 +51,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _currentMovie = widget.movie ?? mockMovies.first;
+    assert(widget.movie != null, 'MovieDetailScreen requires a movie');
+    _currentMovie = widget.movie!;
     final stateKey = 'movie.${_currentMovie.id}';
     _scrollController = PersistentScrollController('$stateKey.scroll');
     _isRatingExpanded =

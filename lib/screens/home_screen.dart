@@ -12,10 +12,12 @@ import '../widgets/movie_card.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../data/tmdb_repository.dart';
+import '../data/user_data_repository.dart';
 import '../models/movie_filter.dart';
 import '../widgets/flix_drawer.dart';
 import '../core/ui_state_store.dart';
 import '../core/media_url.dart';
+import '../core/app_session.dart';
 
 Map<String, List<Movie>> diversifyGenreMovies(
   Iterable<MapEntry<String, List<Movie>>> collections, {
@@ -48,15 +50,19 @@ class _HomeScreenState extends State<HomeScreen> {
   int _bannerIndex = UiStateStore.instance.integer('home.banner') ?? 0;
   final _scrollController = PersistentScrollController('home.scroll');
   final TmdbRepository _repository = TmdbRepository();
-  List<Movie> _movies = mockMovies;
+  final UserDataRepository _userData = UserDataRepository();
+  List<Movie> _movies = const [];
   List<Movie> _nowPlaying = const [];
+  List<Movie> _continueWatching = const [];
   final Map<String, List<Movie>> _genreMovies = {};
   int _catalogSeed = DateTime.now().difference(DateTime(2020)).inDays;
+  String? _loadError;
 
   @override
   void initState() {
     super.initState();
     _loadMovies();
+    _loadContinueWatching();
   }
 
   @override
@@ -117,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       if (!mounted) return;
       setState(() {
+        _loadError = null;
         if (unique.isNotEmpty) _movies = unique.values.toList();
         if (nowPlaying.isNotEmpty) _nowPlaying = nowPlaying;
         for (final entry in diverseCollections.entries) {
@@ -124,14 +131,33 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       });
     } catch (_) {
-      // Giữ dữ liệu mẫu để ứng dụng vẫn sử dụng được khi backend đang tắt.
-      if (forceRefresh && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không thể cập nhật dữ liệu. Vui lòng thử lại.'),
-          ),
-        );
-      }
+      if (mounted) setState(() => _loadError = 'Không thể tải danh sách phim.');
+    }
+  }
+
+  Future<void> _loadContinueWatching() async {
+    if (!AppSession.instance.isAuthenticated) {
+      return;
+    }
+    try {
+      final rows = await _userData.history();
+      final entries = rows
+          .map((row) {
+            final progress = (row['progress'] as num?)?.toDouble() ?? 0;
+            final movieData = row['movie'];
+            if (movieData is! Map || progress <= 0 || progress >= .95) {
+              return null;
+            }
+            return Movie.fromTmdbJson(
+              Map<String, dynamic>.from(movieData),
+            ).copyWith(watchProgress: progress);
+          })
+          .whereType<Movie>()
+          .take(8)
+          .toList(growable: false);
+      if (mounted) setState(() => _continueWatching = entries);
+    } catch (_) {
+      // Continue Watching is optional; catalog loading remains independent.
     }
   }
 
@@ -203,269 +229,343 @@ class _HomeScreenState extends State<HomeScreen> {
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             controller: _scrollController,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Auto-playing Hero Banner Carousel
-                Stack(
-                  children: [
-                    CarouselSlider(
-                      options: CarouselOptions(
-                        initialPage: _bannerIndex,
-                        height: 380,
-                        viewportFraction: 1.0,
-                        autoPlay: true,
-                        autoPlayInterval: const Duration(seconds: 3),
-                        autoPlayAnimationDuration:
-                            const Duration(milliseconds: 800),
-                        onPageChanged: (index, reason) {
-                          setState(() {
-                            _bannerIndex = index;
-                          });
-                          UiStateStore.instance.setInt('home.banner', index);
-                        },
+            child: _movies.isEmpty && _loadError != null
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.cloud_off_rounded,
+                              size: 56, color: AppTheme.textMuted),
+                          const SizedBox(height: 12),
+                          Text(_loadError!, textAlign: TextAlign.center),
+                          TextButton.icon(
+                            onPressed: _loadMovies,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Thử lại'),
+                          ),
+                        ],
                       ),
-                      items: featuredMovies.map((movie) {
-                        return Builder(
-                          builder: (BuildContext context) {
-                            final hasBackdrop = movie.backdropUrl.isNotEmpty;
-                            final bannerUrl = hasBackdrop
-                                ? movie.backdropUrl
-                                : movie.imageUrl;
-                            return GestureDetector(
-                              onTap: () => Navigator.pushNamed(
-                                  context, AppRoutes.movieDetail,
-                                  arguments: movie),
-                              child: Stack(
-                                children: [
-                                  Container(
-                                    height: 380,
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.appBarBg,
-                                      image: DecorationImage(
-                                        image: NetworkImage(
-                                            resolveImageUrl(bannerUrl)),
-                                        fit: BoxFit.cover,
-                                        alignment: Alignment.center,
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    height: 380,
-                                    decoration: BoxDecoration(
-                                        gradient: AppTheme.bannerGradient()),
-                                  ),
-                                  Positioned(
-                                    bottom: 24,
-                                    left: 20,
-                                    right: 20,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                    ),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Auto-playing Hero Banner Carousel
+                      Stack(
+                        children: [
+                          CarouselSlider(
+                            options: CarouselOptions(
+                              initialPage: _bannerIndex,
+                              height: 380,
+                              viewportFraction: 1.0,
+                              autoPlay: true,
+                              autoPlayInterval: const Duration(seconds: 3),
+                              autoPlayAnimationDuration:
+                                  const Duration(milliseconds: 800),
+                              onPageChanged: (index, reason) {
+                                setState(() {
+                                  _bannerIndex = index;
+                                });
+                                UiStateStore.instance
+                                    .setInt('home.banner', index);
+                              },
+                            ),
+                            items: featuredMovies.map((movie) {
+                              return Builder(
+                                builder: (BuildContext context) {
+                                  final hasBackdrop =
+                                      movie.backdropUrl.isNotEmpty;
+                                  final bannerUrl = hasBackdrop
+                                      ? movie.backdropUrl
+                                      : movie.imageUrl;
+                                  return GestureDetector(
+                                    onTap: () => Navigator.pushNamed(
+                                        context, AppRoutes.movieDetail,
+                                        arguments: movie),
+                                    child: Stack(
                                       children: [
                                         Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 10, vertical: 4),
+                                          height: 380,
+                                          width: double.infinity,
                                           decoration: BoxDecoration(
-                                            color: AppTheme.primaryRed,
-                                            borderRadius: BorderRadius.circular(
-                                                AppTheme.radiusSm),
-                                          ),
-                                          child: const Text(
-                                            'NỔI BẬT',
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.bold),
+                                            color: AppTheme.appBarBg,
+                                            image: DecorationImage(
+                                              image: NetworkImage(
+                                                  resolveImageUrl(bannerUrl)),
+                                              fit: BoxFit.cover,
+                                              alignment: Alignment.center,
+                                            ),
                                           ),
                                         ),
-                                        const SizedBox(height: 8),
-                                        Text(movie.title,
-                                            style: AppTheme.headingLarge),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '${movie.genreText.toUpperCase()} • ${movie.duration}',
-                                          style: AppTheme.mutedText,
+                                        Container(
+                                          height: 380,
+                                          decoration: BoxDecoration(
+                                              gradient:
+                                                  AppTheme.bannerGradient()),
                                         ),
-                                        const SizedBox(height: 16),
-                                        Row(
-                                          children: [
-                                            PrimaryIconButton(
-                                              text: 'Xem Trailer',
-                                              icon: Icons.play_arrow,
-                                              onPressed: () =>
-                                                  Navigator.pushNamed(context,
-                                                      AppRoutes.trailer,
-                                                      arguments: movie),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            OutlinedActionButton(
-                                              text: 'Chi tiết',
-                                              icon: Icons.info_outline,
-                                              onPressed: () =>
-                                                  Navigator.pushNamed(context,
-                                                      AppRoutes.movieDetail,
-                                                      arguments: movie),
-                                            ),
-                                          ],
+                                        Positioned(
+                                          bottom: 24,
+                                          left: 20,
+                                          right: 20,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 10,
+                                                        vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.primaryRed,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          AppTheme.radiusSm),
+                                                ),
+                                                child: const Text(
+                                                  'NỔI BẬT',
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(movie.title,
+                                                  style: AppTheme.headingLarge),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '${movie.genreText.toUpperCase()} • ${movie.duration}',
+                                                style: AppTheme.mutedText,
+                                              ),
+                                              const SizedBox(height: 16),
+                                              Row(
+                                                children: [
+                                                  PrimaryIconButton(
+                                                    text: 'Xem Trailer',
+                                                    icon: Icons.play_arrow,
+                                                    onPressed: () =>
+                                                        Navigator.pushNamed(
+                                                            context,
+                                                            AppRoutes.trailer,
+                                                            arguments: movie),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  OutlinedActionButton(
+                                                    text: 'Chi tiết',
+                                                    icon: Icons.info_outline,
+                                                    onPressed: () =>
+                                                        Navigator.pushNamed(
+                                                            context,
+                                                            AppRoutes
+                                                                .movieDetail,
+                                                            arguments: movie),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ],
                                     ),
+                                  );
+                                },
+                              );
+                            }).toList(),
+                          ),
+
+                          // Dot Indicators ở phía dưới Banner
+                          Positioned(
+                            bottom: 8,
+                            left: 0,
+                            right: 0,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children:
+                                  featuredMovies.asMap().entries.map((entry) {
+                                final isSelected = _bannerIndex == entry.key;
+                                return AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  width: isSelected ? 24.0 : 8.0,
+                                  height: 8.0,
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 4.0),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(4.0),
+                                    color: isSelected
+                                        ? AppTheme.primaryRed
+                                        : Colors.white38,
                                   ),
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                      }).toList(),
-                    ),
-
-                    // Dot Indicators ở phía dưới Banner
-                    Positioned(
-                      bottom: 8,
-                      left: 0,
-                      right: 0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: featuredMovies.asMap().entries.map((entry) {
-                          final isSelected = _bannerIndex == entry.key;
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            width: isSelected ? 24.0 : 8.0,
-                            height: 8.0,
-                            margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(4.0),
-                              color: isSelected
-                                  ? AppTheme.primaryRed
-                                  : Colors.white38,
+                                );
+                              }).toList(),
                             ),
-                          );
-                        }).toList(),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
 
-                // Category Chips
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Thể loại', style: AppTheme.headingMedium),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        height: 40,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: genreList.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 10),
-                              child: ActionChip(
-                                backgroundColor: AppTheme.cardBg,
-                                labelStyle:
-                                    const TextStyle(color: AppTheme.textLight),
-                                side: const BorderSide(color: Colors.white12),
-                                label: Text(genreList[index]),
-                                onPressed: () => Navigator.pushNamed(
-                                    context, AppRoutes.genreDetail,
-                                    arguments: 'Phim ${genreList[index]}'),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                if (_nowPlaying.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Phim đang chiếu',
-                            style: AppTheme.headingMedium),
-                        TextButton(
-                          onPressed: () => Navigator.pushNamed(
-                              context, AppRoutes.nowPlaying),
-                          child: const Text('Xem tất cả',
-                              style: TextStyle(color: AppTheme.primaryRed)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    height: 220,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _nowPlaying.length,
-                      itemBuilder: (context, index) {
-                        final movie = _nowPlaying[index];
-                        return MovieCard.poster(
-                          movie: movie,
-                          onTap: () => Navigator.pushNamed(
-                              context, AppRoutes.movieDetail,
-                              arguments: movie),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-                // Các hàng phim theo từng thể loại
-                ...genreList.map((genre) {
-                  final movies = _moviesByGenre(genre);
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                      // Category Chips
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Phim $genre', style: AppTheme.headingMedium),
-                            TextButton(
-                              onPressed: () => Navigator.pushNamed(
-                                  context, AppRoutes.genreDetail,
-                                  arguments: 'Phim $genre'),
-                              child: const Text('Xem tất cả',
-                                  style: TextStyle(color: AppTheme.primaryRed)),
+                            const Text('Thể loại',
+                                style: AppTheme.headingMedium),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              height: 40,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: genreList.length,
+                                itemBuilder: (context, index) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 10),
+                                    child: ActionChip(
+                                      backgroundColor: AppTheme.cardBg,
+                                      labelStyle: const TextStyle(
+                                          color: AppTheme.textLight),
+                                      side: const BorderSide(
+                                          color: Colors.white12),
+                                      label: Text(genreList[index]),
+                                      onPressed: () => Navigator.pushNamed(
+                                          context, AppRoutes.genreDetail,
+                                          arguments:
+                                              'Phim ${genreList[index]}'),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      SizedBox(
-                        height: 220,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          scrollDirection: Axis.horizontal,
-                          itemCount: movies.length,
-                          itemBuilder: (context, index) {
-                            final movie = movies[index];
-                            return MovieCard.poster(
-                              movie: movie,
-                              onTap: () => Navigator.pushNamed(
-                                  context, AppRoutes.movieDetail,
-                                  arguments: movie),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  );
-                }),
 
-                const SizedBox(height: 80),
-              ],
-            ),
+                      if (_nowPlaying.isNotEmpty) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Phim đang chiếu',
+                                  style: AppTheme.headingMedium),
+                              TextButton(
+                                onPressed: () => Navigator.pushNamed(
+                                    context, AppRoutes.nowPlaying),
+                                child: const Text('Xem tất cả',
+                                    style:
+                                        TextStyle(color: AppTheme.primaryRed)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                          height: 220,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _nowPlaying.length,
+                            itemBuilder: (context, index) {
+                              final movie = _nowPlaying[index];
+                              return MovieCard.poster(
+                                movie: movie,
+                                onTap: () => Navigator.pushNamed(
+                                    context, AppRoutes.movieDetail,
+                                    arguments: movie),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      if (_continueWatching.isNotEmpty) ...[
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child:
+                              Text('Xem tiếp', style: AppTheme.headingMedium),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: 132,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _continueWatching.length,
+                            itemBuilder: (context, index) {
+                              final movie = _continueWatching[index];
+                              return SizedBox(
+                                width: 320,
+                                child: MovieCard.listTile(
+                                  movie: movie,
+                                  showProgress: true,
+                                  onTap: () => Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.trailer,
+                                    arguments: movie,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // Các hàng phim theo từng thể loại
+                      ...genreList.map((genre) {
+                        final movies = _moviesByGenre(genre);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('Phim $genre',
+                                      style: AppTheme.headingMedium),
+                                  TextButton(
+                                    onPressed: () => Navigator.pushNamed(
+                                        context, AppRoutes.genreDetail,
+                                        arguments: 'Phim $genre'),
+                                    child: const Text('Xem tất cả',
+                                        style: TextStyle(
+                                            color: AppTheme.primaryRed)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              height: 220,
+                              child: ListView.builder(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                scrollDirection: Axis.horizontal,
+                                itemCount: movies.length,
+                                itemBuilder: (context, index) {
+                                  final movie = movies[index];
+                                  return MovieCard.poster(
+                                    movie: movie,
+                                    onTap: () => Navigator.pushNamed(
+                                        context, AppRoutes.movieDetail,
+                                        arguments: movie),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        );
+                      }),
+
+                      const SizedBox(height: 80),
+                    ],
+                  ),
           ),
         ),
       ),

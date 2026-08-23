@@ -24,6 +24,37 @@ import {
 import { CurrentUser } from './current-user.decorator';
 import type { AuthUser } from './current-user.decorator';
 
+function escapeHtml(value: string) {
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[character]!,
+  );
+}
+
+function escapeJavaScript(value: string) {
+  return value.replace(
+    /[\\'"\r\n<>&]/g,
+    (character) =>
+      ({
+        '\\': '\\\\',
+        "'": "\\'",
+        '"': '\\"',
+        '\r': '\\r',
+        '\n': '\\n',
+        '<': '\\x3C',
+        '>': '\\x3E',
+        '&': '\\x26',
+      })[character]!,
+  );
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
@@ -135,6 +166,8 @@ export class AuthController {
         { error: message },
         returnTarget,
       );
+      const safeMessage = escapeHtml(message);
+      const safeErrorUrl = escapeJavaScript(errorUrl);
       if (returnTarget === 'mobile') {
         return response.type('html').send(`<!DOCTYPE html>
 <html>
@@ -149,10 +182,10 @@ export class AuthController {
 </head>
 <body>
   <h2 style="color: #e50914;">Đăng nhập không thành công</h2>
-  <p style="color: #aaa;">${message}</p>
+  <p style="color: #aaa;">${safeMessage}</p>
   <a class="btn" href="${errorUrl}">Quay lại ứng dụng FLIX</a>
   <script>
-    setTimeout(function() { window.location.href = "${errorUrl}"; }, 100);
+    setTimeout(function() { window.location.href = "${safeErrorUrl}"; }, 100);
   </script>
 </body>
 </html>`);

@@ -54,7 +54,10 @@ describe('UserDataController favorites', () => {
   });
 
   it('returns favorite rows with movie metadata', async () => {
-    findMany.mockResolvedValueOnce([{ userId: user.id, tmdbMovieId: 42 }]);
+    findMany.mockResolvedValueOnce([
+      { userId: user.id, tmdbMovieId: 42 },
+      { userId: user.id, tmdbMovieId: 42 },
+    ]);
     movieDetail.mockResolvedValueOnce({ id: 42, title: 'Dune' });
 
     await expect(controller.favorites(user)).resolves.toEqual([
@@ -63,7 +66,13 @@ describe('UserDataController favorites', () => {
         tmdbMovieId: 42,
         movie: { id: 42, title: 'Dune' },
       },
+      {
+        userId: user.id,
+        tmdbMovieId: 42,
+        movie: { id: 42, title: 'Dune' },
+      },
     ]);
+    expect(movieDetail).toHaveBeenCalledTimes(1);
   });
 
   it('returns watch history rows with movie metadata', async () => {
