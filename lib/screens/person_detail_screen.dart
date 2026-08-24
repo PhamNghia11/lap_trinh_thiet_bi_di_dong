@@ -21,6 +21,7 @@ class _PersonDetailScreenState extends State<PersonDetailScreen> {
   Map<String, dynamic>? _person;
   String? _error;
   bool _expandedBio = false;
+  bool _showAllMovies = false;
 
   @override
   void initState() {
@@ -140,7 +141,17 @@ class _PersonDetailScreenState extends State<PersonDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: AppTheme.headingLarge),
+                  Text(
+                    name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 25,
+                      height: 1.08,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Text(_text('known_for_department'),
                       style: AppTheme.mutedText),
@@ -277,68 +288,87 @@ class _PersonDetailScreenState extends State<PersonDetailScreen> {
     return _Section(
       title: 'Phim đã tham gia',
       trailing: Text('${movies.length} phim', style: AppTheme.smallText),
-      child: SizedBox(
-        height: 258,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: movies.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 12),
-          itemBuilder: (context, index) {
-            final movie = movies[index];
-            return SizedBox(
-              width: 132,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                onTap: () => Navigator.pushNamed(context, AppRoutes.movieDetail,
-                    arguments: movie),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        child: movie.imageUrl.isEmpty
-                            ? Container(
-                                height: 190,
-                                color: AppTheme.inputBg,
-                                child: const Icon(Icons.movie_outlined))
-                            : Image.network(resolveImageUrl(movie.imageUrl),
-                                height: 190,
-                                width: 132,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                    height: 190,
-                                    color: AppTheme.inputBg,
-                                    child: const Icon(Icons.movie_outlined))),
-                      ),
-                      const SizedBox(height: 7),
-                      Text(movie.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 3),
-                      Row(children: [
-                        const Icon(Icons.star,
-                            size: 14, color: AppTheme.accentGold),
-                        const SizedBox(width: 3),
-                        Text(
-                            movie.rating > 0
-                                ? movie.rating.toStringAsFixed(1)
-                                : 'Chưa có điểm',
-                            style: AppTheme.smallText),
-                        if (movie.year > 0) ...[
-                          const Text(' • ',
-                              style: TextStyle(color: AppTheme.textTertiary)),
-                          Text('${movie.year}', style: AppTheme.smallText),
-                        ],
-                      ]),
-                    ]),
+      child: Column(
+        children: [
+          ...(_showAllMovies ? movies : movies.take(4)).map(_movieRow),
+          if (movies.length > 4)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: OutlinedButton.icon(
+                onPressed: () => setState(() => _showAllMovies = !_showAllMovies),
+                icon: Icon(_showAllMovies ? Icons.expand_less : Icons.expand_more),
+                label: Text(_showAllMovies
+                    ? 'Thu gọn'
+                    : 'Xem tất cả ${movies.length} phim'),
               ),
-            );
-          },
-        ),
+            ),
+        ],
       ),
     );
   }
+
+  Widget _movieRow(Movie movie) => Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          onTap: () => Navigator.pushNamed(context, AppRoutes.movieDetail,
+              arguments: movie),
+          child: Row(children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              child: movie.imageUrl.isEmpty
+                  ? Container(
+                      width: 58,
+                      height: 78,
+                      color: AppTheme.inputBg,
+                      child: const Icon(Icons.movie_outlined),
+                    )
+                  : Image.network(
+                      resolveImageUrl(movie.imageUrl),
+                      width: 58,
+                      height: 78,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 58,
+                        height: 78,
+                        color: AppTheme.inputBg,
+                        child: const Icon(Icons.movie_outlined),
+                      ),
+                    ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(movie.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 15)),
+                  const SizedBox(height: 7),
+                  Row(children: [
+                    const Icon(Icons.star,
+                        size: 15, color: AppTheme.accentGold),
+                    const SizedBox(width: 4),
+                    Text(
+                        movie.rating > 0
+                            ? movie.rating.toStringAsFixed(1)
+                            : 'Chưa có điểm',
+                        style: AppTheme.smallText),
+                    if (movie.year > 0) ...[
+                      const Text('  •  ',
+                          style: TextStyle(color: AppTheme.textTertiary)),
+                      Text('${movie.year}', style: AppTheme.smallText),
+                    ],
+                  ]),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+          ]),
+        ),
+      );
 }
 
 class _Section extends StatelessWidget {
