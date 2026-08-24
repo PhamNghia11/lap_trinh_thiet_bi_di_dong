@@ -285,6 +285,10 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
 
   /// Dialog/BottomSheet xem thông tin chi tiết Diễn viên
   void _showActorInfoBottomSheet(CastMember actor) {
+    if (actor.id > 0) {
+      Navigator.pushNamed(context, AppRoutes.personDetail, arguments: actor);
+      return;
+    }
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.cardBg,
@@ -837,6 +841,14 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                           const Text(
                               'Thông tin nhà cung cấp từ JustWatch/TMDB.',
                               style: AppTheme.smallText),
+                          const SizedBox(height: 10),
+                          OutlinedButton.icon(
+                            onPressed: () => _openExternal(
+                              'https://www.justwatch.com/us/search?q=${Uri.encodeQueryComponent(movie.title)}',
+                            ),
+                            icon: const Icon(Icons.open_in_new, size: 16),
+                            label: const Text('Tìm nơi xem hợp pháp'),
+                          ),
                         ],
                         if (movie.keywords.isNotEmpty) ...[
                           const SizedBox(height: 24),

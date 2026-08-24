@@ -62,6 +62,12 @@ class TmdbRepository {
     return Movie.fromTmdbJson(data);
   }
 
+  Future<Map<String, dynamic>> person(int id) async =>
+      Map<String, dynamic>.from(await _client.getCached(
+        '/movies/people/$id',
+        ttl: const Duration(hours: 6),
+      ));
+
   Future<List<Movie>> _movies(String path, {bool forceRefresh = false}) async {
     final data = Map<String, dynamic>.from(
       await _client.getCached(path, forceRefresh: forceRefresh),

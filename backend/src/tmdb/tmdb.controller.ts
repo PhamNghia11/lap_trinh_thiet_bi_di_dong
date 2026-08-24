@@ -63,6 +63,9 @@ export class TmdbController {
   @Get('trending') trending() {
     return this.tmdb.trending();
   }
+  @Get('people/:id') person(@Param('id', ParseIntPipe) id: number) {
+    return this.tmdb.person(id);
+  }
   @Get('search') search(
     @Query('query') query: string,
     @Query('page') page?: string,

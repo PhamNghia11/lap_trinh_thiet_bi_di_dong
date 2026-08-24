@@ -24,6 +24,7 @@ import '../screens/settings_screen.dart';
 import '../screens/social_auth_callback_screen.dart';
 import '../screens/my_reviews_screen.dart';
 import '../screens/welcome_screen.dart';
+import '../screens/person_detail_screen.dart';
 import '../models/movie_model.dart';
 
 /// Lớp quản lý toàn bộ route/điều hướng của ứng dụng.
@@ -53,6 +54,7 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String settings = '/settings';
   static const String socialAuthCallback = '/auth/callback';
+  static const String personDetail = '/person_detail';
 
   static final NavigatorObserver navigationObserver =
       _PersistentNavigationObserver();
@@ -266,6 +268,16 @@ class AppRoutes {
           settings: settings,
           builder: (_) =>
               MovieReviewsScreen(movie: settings.arguments as Movie?),
+        );
+      case personDetail:
+        if (settings.arguments is! CastMember) {
+          return onGenerateRoute(const RouteSettings(name: home));
+        }
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => PersonDetailScreen(
+            person: settings.arguments as CastMember,
+          ),
         );
       case genreDetail:
         return MaterialPageRoute(

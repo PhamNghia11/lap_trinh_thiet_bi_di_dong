@@ -70,6 +70,11 @@ export class TmdbService {
   trending() {
     return this.get('/trending/movie/week');
   }
+  person(id: number) {
+    return this.get(`/person/${id}`, {
+      append_to_response: 'combined_credits,external_ids',
+    });
+  }
   search(query: string, page = 1, year?: number) {
     return this.get('/search/movie', {
       query,

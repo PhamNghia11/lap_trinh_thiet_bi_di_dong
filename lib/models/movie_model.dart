@@ -2,12 +2,14 @@
 
 /// Class đại diện cho một diễn viên và vai diễn trong phim
 class CastMember {
+  final int id;
   final String name;
   final String role;
   final String avatarUrl;
   final String bio;
 
   const CastMember({
+    this.id = 0,
     required this.name,
     required this.role,
     required this.avatarUrl,
@@ -15,10 +17,16 @@ class CastMember {
         'Diễn viên điện ảnh nổi tiếng với nhiều vai diễn ấn tượng trong các phim bom tấn.',
   });
 
-  Map<String, dynamic> toJson() =>
-      {'name': name, 'role': role, 'avatarUrl': avatarUrl, 'bio': bio};
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'role': role,
+        'avatarUrl': avatarUrl,
+        'bio': bio,
+      };
 
   factory CastMember.fromJson(Map<String, dynamic> json) => CastMember(
+        id: (json['id'] as num?)?.toInt() ?? 0,
         name: json['name'] as String? ?? '',
         role: json['role'] as String? ?? '',
         avatarUrl: json['avatarUrl'] as String? ?? '',
@@ -266,6 +274,7 @@ class Movie {
         .whereType<Map<String, dynamic>>()
         .take(12)
         .map((person) => CastMember(
+              id: (person['id'] as num?)?.toInt() ?? 0,
               name: person['name'] as String? ?? 'Đang cập nhật',
               role: person['character'] as String? ?? '',
               avatarUrl: person['profile_path'] == null
