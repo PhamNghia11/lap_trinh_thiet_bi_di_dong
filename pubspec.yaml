@@ -20,7 +20,7 @@ dependencies:
   shared_preferences: ^2.3.5
   image_picker: 1.2.3
   crop_your_image: 2.0.0
-  image: 4.9.1
+  image: 4.9.2
   web: ^1.1.1
   youtube_player_iframe: ^5.2.2
   share_plus: ^12.0.2
